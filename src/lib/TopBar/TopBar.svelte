@@ -1,8 +1,10 @@
 <div
-	class="outer bg-stone-900 text-stone-50 flex place-items-center
+	class="outer flex place-items-center
     text-sm px-4"
 >
-	<div class="inner flex place-items-center">tubes</div>
+	<div class="inner flex place-items-center">
+		⛺ tubes!
+	</div>
 </div>
 
 <style>
@@ -20,7 +22,7 @@
 	}
 	@media (display-mode: window-controls-overlay) {
 		.outer {
-            height: calc(env(titlebar-area-height) + 0.5rem);
+			height: calc(env(titlebar-area-height) + 0.5rem);
 		}
 	}
 </style>
