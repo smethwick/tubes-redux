@@ -8,7 +8,7 @@
 		app-region: drag;
 	}
     .sidebar > * {
-        -webkit-app-region: no-drag;
-		app-region: no-drag;
+        -webkit-app-region: inital;
+		app-region: inital;
     }
 </style>
