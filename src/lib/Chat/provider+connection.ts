@@ -3,10 +3,25 @@ import { LocalProvider } from "./providers/local";
 export interface ConnectionInfo {
     name: string;
     icon?: typeof SVGElement;
+    
+    url: URL;
+    secure: boolean;
+    server_password?: string;
 
-    hostname: string;
-    port: number;
+    nick: string;
+    realname: string;
+    username: string;
 }
+
+export const default_config: ConnectionInfo = {
+    name: "",
+    url: new URL("wss://example.org"),
+    secure: false,
+    nick: "tubes_user",
+    realname: "https://leahc.gay/tubes",
+    username: "tubes"
+}
+
 
 // type ProviderDef = {
 //     display_name: string,
@@ -70,7 +85,8 @@ export interface iIrcConnection {
      * Establish a connection to the server.
      */
     connect(): boolean;
+    isConnected: boolean;
 
-    writer: ReadableStream;
-    sender: WritableStream;
+    writer?: ReadableStream;
+    sender?: WritableStream;
 }
