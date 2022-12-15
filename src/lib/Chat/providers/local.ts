@@ -4,6 +4,7 @@ import {
     type ConnectionInfo,
     ProviderError
 } from "../provider+connection";
+import { handle_raw_irc_msg } from "./common";
 
 enum LocalProviderError {
     NoWebsocket = "No websocket in this thing"
@@ -39,10 +40,9 @@ export class LocalProvider implements iIrcProvider {
 class LocalIrcConnection implements iIrcConnection {
     connection_info: ConnectionInfo;
     isConnected: boolean;
+    channels: (string | "server_msgs")[] = [];
 
     websocket?: WebSocket;
-    writer?: ReadableStream<string>;
-    sender?: WritableStream<string>;
 
     constructor(ci: ConnectionInfo) {
         this.isConnected = false;
@@ -53,16 +53,24 @@ class LocalIrcConnection implements iIrcConnection {
         this._establish_connection();
 
         if (this.websocket) {
-            this.websocket.onopen = (e) => {
+            this.websocket.onopen = () => {
                 this._identify();
+                this.isConnected = true;
             }
             this.websocket.onmessage = (event) => {
                 console.log(event.data);
+
+                handle_raw_irc_msg(event.data, (msg) => {
+                    console.log(msg);
+                    this.websocket?.send(msg)
+                });
+            }
+            this.websocket.onclose = () => {
+                console.info("Closed connection", this.connection_info.name)
+                this.isConnected = false;
             }
         }
 
-
-        throw new Error("not yet implemented");
         return true;
     }
 
@@ -92,5 +100,16 @@ class LocalIrcConnection implements iIrcConnection {
             console.log(msg);
             this.websocket.send(msg);
         }
+    }
+    private send_msg(msg: string) {
+        if (this.websocket) {
+            console.log(msg);
+            this.websocket.send(msg);
+        } else {
+            throw new Error(LocalProviderError.NoWebsocket);
+        }
+    }
+    private async handle_msg(e: MessageEvent) {
+        console.log(e.data);
     }
 }

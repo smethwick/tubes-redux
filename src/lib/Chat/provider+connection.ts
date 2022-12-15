@@ -87,6 +87,17 @@ export interface iIrcConnection {
     connect(): boolean;
     isConnected: boolean;
 
+    channels: (string | "server_msgs")[];
+
     writer?: ReadableStream;
     sender?: WritableStream;
+
+    on_connect?: () => void;
+    on_msg?: (event: IrcMessageEvent) => void;
+}
+
+export interface IrcMessageEvent {
+    nick: string;
+    content: string;
+    timestamp: Date;
 }
