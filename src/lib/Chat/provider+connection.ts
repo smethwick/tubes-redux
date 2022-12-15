@@ -97,7 +97,8 @@ export interface iIrcConnection {
 }
 
 export interface IrcMessageEvent {
-    nick: string;
-    content: string;
-    timestamp: Date;
+    raw_tags?: string;
+    source?: string;
+    command: string;
+    params: string[];
 }

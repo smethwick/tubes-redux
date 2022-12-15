@@ -1,31 +1,29 @@
 import type { IrcMessageEvent } from "../provider+connection";
 
-export async function handle_raw_irc_msg(
+export function handle_raw_irc_msg(
     raw: string,
     resp: (msg: string) => void
-): Promise<IrcMessageEvent | null | undefined> {
+): IrcMessageEvent {
     if (raw.startsWith("PING")) resp(raw.replace("PING", "PONG"));
 
     let state = raw;
 
-    let raw_tags = "";
-    let source = "";
-    let command = "";
-    let params: string[] = [];
-
+    let raw_tags;
     if (state.trimStart().startsWith("@")) {
         raw_tags = state.substring(0, state.search(" "));
         state = state.replace(raw_tags, "").trimStart();
     }
 
+    let source;
     if (state.trimStart().startsWith(":")) {
         source = state.substring(0, state.search(" "));
         state = state.replace(source, "").trimStart();
     }
 
-    command = state.trimStart().substring(0, state.search(" "));
+    const command = state.trimStart().substring(0, state.search(" "));
     state = state.replace(command, "").trimStart();
 
+    let params: string[] = [];
     const raw_params = state.split(" ");
     for (const param of raw_params) {
         if (param.startsWith(":")) {
@@ -41,7 +39,7 @@ export async function handle_raw_irc_msg(
         state.replace(param, "");
     }
 
-    console.log({ raw_tags, source, command, params })
-
-    return null;
+    return {
+        raw_tags, source, command, params
+    };
 }

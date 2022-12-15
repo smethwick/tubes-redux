@@ -16,7 +16,7 @@
 	<TopBar />
 	<div class="flex h-full">
 		<Sidebar />
-		<main class="bg-stone-50 border-t border-l w-full h-full rounded-tl-md p-4">
+		<main class="bg-stone-50 border-t border-l w-full h-full rounded-tl-md p-4 overflow-y-scroll">
 			<slot />
 		</main>
 	</div>

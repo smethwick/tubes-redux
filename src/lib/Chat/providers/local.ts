@@ -2,7 +2,8 @@ import {
     type iIrcProvider,
     type iIrcConnection,
     type ConnectionInfo,
-    ProviderError
+    ProviderError,
+    type IrcMessageEvent
 } from "../provider+connection";
 import { handle_raw_irc_msg } from "./common";
 
@@ -44,6 +45,8 @@ class LocalIrcConnection implements iIrcConnection {
 
     websocket?: WebSocket;
 
+    on_msg?: (event: IrcMessageEvent) => void;
+
     constructor(ci: ConnectionInfo) {
         this.isConnected = false;
         this.connection_info = ci;
@@ -58,12 +61,14 @@ class LocalIrcConnection implements iIrcConnection {
                 this.isConnected = true;
             }
             this.websocket.onmessage = (event) => {
-                console.log(event.data);
-
-                handle_raw_irc_msg(event.data, (msg) => {
-                    console.log(msg);
+                const msg = handle_raw_irc_msg(event.data, (msg) => {
+                    console.log("sent", msg);
                     this.websocket?.send(msg)
                 });
+
+                if (this.on_msg) {
+                    this.on_msg(msg);
+                }
             }
             this.websocket.onclose = () => {
                 console.info("Closed connection", this.connection_info.name)
