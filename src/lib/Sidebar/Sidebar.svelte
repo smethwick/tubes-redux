@@ -1,4 +1,4 @@
-<aside class="sidebar min-w-[18rem] h-full px-4 pt-2">
+<aside class="sidebar min-w-[18rem] px-4 pt-2">
 	a sidebar <a href="https://google.com">aaa</a>
 </aside>
 

@@ -12,11 +12,11 @@
 	<meta name="theme-color" content="#f5f5f4">
 </svelte:head>
 
-<div class="font-serif bg-stone-100 text-stone-900 h-screen w-screen overflow-hidden">
+<div class="font-serif bg-stone-100 text-stone-900 max-h-screen flex flex-col">
 	<TopBar />
-	<div class="flex h-full">
+	<div class="flex h-screen max-w-screen">
 		<Sidebar />
-		<main class="bg-stone-50 border-t border-l w-full h-full rounded-tl-md p-4 overflow-y-scroll">
+		<main class="bg-stone-50 border-t border-l w-full h-full rounded-tl-md p-4 overflow-y-auto">
 			<slot />
 		</main>
 	</div>
