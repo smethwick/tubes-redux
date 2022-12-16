@@ -1,38 +1,33 @@
-# create-svelte
+# tubes redux
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+tubes redux is a lot like tubes, the main difference being that this time i remembered
+to make the api good.
 
-## Creating a project
+## build it
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+you'll need: 
+- a computer
+- an operating system that can run node.js
+- a copy of [node.js](https://nodejs.org/) installed on your computer
+- an internet connection
+- git
 
 ```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+git clone https://tildegit.org/leah/tubes-redux.git
+cd tubes-redux
+npm install
 ```
 
-## Building
-
-To create a production version of your app:
+### build for production
 
 ```bash
 npm run build
+# put the contents of `build` on a web server somewhere (github pages works quite well).
 ```
 
-You can preview the production build with `npm run preview`.
+### build for development
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+```bash
+npm run dev
+# navigate to the port it shows in the output
+```
