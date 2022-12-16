@@ -1,5 +1,5 @@
 <div
-	class="outer flex place-items-center
+	class="outer fixed flex place-items-center
     text-sm px-4"
 >
 	<div class="inner flex place-items-center">
@@ -11,6 +11,8 @@
 	.outer {
 		-webkit-app-region: drag;
 		app-region: drag;
+		left: env(titlebar-area-x, 0);
+		top: env(titlebar-area-y, 0);
 		width: 100%;
 		height: 2rem;
 	}
