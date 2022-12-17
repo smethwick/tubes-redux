@@ -1,4 +1,4 @@
-# tubes redux
+# tubes redux - "an irc client"
 
 tubes redux is a lot like tubes, the main difference being that this time i remembered
 to make the api good.
@@ -30,4 +30,17 @@ npm run build
 ```bash
 npm run dev
 # navigate to the port it shows in the output
+```
+
+### run the tests
+
+```bash
+# unit tests
+npm run test:unit
+
+# if you want a fancy ui for lookin at them
+npm run test:unit -- --ui --open
+
+# at some point we'll have slightly fancier tests, which you can run like this.
+npm run tests
 ```
