@@ -96,7 +96,7 @@ class LocalIrcConnection implements iIrcConnection {
             "CAP LS 302",
             conninfo.server_password ? `PASS ${conninfo.server_password}` : ``,
             `NICK ${conninfo.nick}`,
-            `USER ${conninfo.username} 0 * ${conninfo.realname}`,
+            `USER ${conninfo.username} 0 * :${conninfo.realname}`,
             // do capability negotiation here at some point
             "CAP END",
         ];
