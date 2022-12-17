@@ -27,7 +27,7 @@ test("transform_raw_tags() escaped", () => {
 })
 
 test("try and parse a message", () => {
-    const input = `@id=234AB :dan!d@localhost PRIVMSG #chan :Hey what's up!`
+    const input = ` @id=234AB :dan!d@localhost PRIVMSG #chan :Hey what's up!`
     const expected = {
         tags: [
             {"key": "id", "value": "234AB"}
