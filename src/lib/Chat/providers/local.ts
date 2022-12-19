@@ -12,14 +12,14 @@ enum LocalProviderError {
 }
 
 export class LocalProvider implements iIrcProvider {
-    connections: LocalIrcConnection[] = [];
+    connections: Map<string, LocalIrcConnection> = new Map;
 
     connect_all() {
         let result = true;
 
         if (this.connections) {
             for (const connection of this.connections) {
-                const connection_result = connection.connect();
+                const connection_result = connection[1].connect();
 
                 // return false if any connection fails.
                 if (result == true) {
@@ -33,8 +33,14 @@ export class LocalProvider implements iIrcProvider {
         return result;
     }
 
-    add_connection(ci: ConnectionInfo) {
-        this.connections.push(new LocalIrcConnection(ci));
+    add_connection(ci: ConnectionInfo): LocalIrcConnection {
+        this.connections.set(ci.name, new LocalIrcConnection(ci));
+        const conn = this.connections.get(ci.name);
+        if (conn) {
+            return conn;
+        } else {
+            throw new Error("couldn't get connection from provider")
+        }
     }
 }
 

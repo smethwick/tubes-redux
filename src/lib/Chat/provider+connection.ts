@@ -1,4 +1,4 @@
-import { LocalProvider } from "./providers/local";
+import { LocalProvider } from "./Providers/local";
 
 export interface ConnectionInfo {
     name: string;
@@ -58,7 +58,7 @@ export interface iIrcProvider {
     /**
      * Every connection in this provider. Use `connect_all()` to connect to em.
      */
-    connections: iIrcConnection[] | null;
+    connections: Map<string, iIrcConnection> | null;
 
     /**
      * The place to check if the provider can use the current environment.
