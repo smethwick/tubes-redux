@@ -4,6 +4,7 @@ import Dexie, { type Table } from 'dexie';
 export interface Network {
   id?: number;
   name: string;
+  provider_id: string;
   /** Used to generate a new `Connection` when the app starts up */
   conn_blueprint: ConnectionInfo;
 }
@@ -20,7 +21,7 @@ export class TubesDatabase extends Dexie {
   constructor() {
     super('TubesDB');
     this.version(1).stores({
-      networks: '++id, name, conn_blueprint',
+      networks: '++id, name, conn_blueprint, provider_id',
       messages: "++id, origin",
     });
   }

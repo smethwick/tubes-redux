@@ -6,20 +6,32 @@ import {
     type IrcMessageEvent
 } from "../provider+connection";
 import { handle_raw_irc_msg } from "./common";
+import { db, type Network } from "$lib/Storage/db";
 
 enum LocalProviderError {
     NoWebsocket = "No websocket in this thing"
 }
 
 export class LocalProvider implements iIrcProvider {
-    connections: Map<string, LocalIrcConnection> = new Map;
+    provider_id = "LocalProvider";
+
+    connections: LocalIrcConnection[] = [];
+
+    async up() {
+        const conns = await this.fetch_persistent_connections()
+        conns.forEach(
+            (o) => {
+                this.connections = [...this.connections, new LocalIrcConnection(o.conn_blueprint)];
+            }
+        );
+    }
 
     connect_all() {
         let result = true;
 
         if (this.connections) {
             for (const connection of this.connections) {
-                const connection_result = connection[1].connect();
+                const connection_result = connection.connect();
 
                 // return false if any connection fails.
                 if (result == true) {
@@ -34,13 +46,30 @@ export class LocalProvider implements iIrcProvider {
     }
 
     add_connection(ci: ConnectionInfo): LocalIrcConnection {
-        this.connections.set(ci.name, new LocalIrcConnection(ci));
-        const conn = this.connections.get(ci.name);
+        this.connections = [...this.connections, new LocalIrcConnection(ci)];
+        const conn = this.connections.filter((o) => o.connection_info.name == ci.name)[0];
         if (conn) {
             return conn;
         } else {
             throw new Error("couldn't get connection from provider")
         }
+    }
+
+    add_persistent_connection(ci: ConnectionInfo): LocalIrcConnection {
+        const conn = this.add_connection(ci);
+        db.networks.add({
+            name: ci.name,
+            conn_blueprint: ci,
+            provider_id: this.provider_id
+        })
+        return conn;
+    }
+
+    async fetch_persistent_connections(): Promise<Network[]> {
+        return db.networks
+            .where("provider_id")
+            .equals(this.provider_id)
+            .toArray();
     }
 }
 
@@ -57,6 +86,9 @@ class LocalIrcConnection implements iIrcConnection {
         this.isConnected = false;
         this.connection_info = ci;
     }
+    writer?: ReadableStream<any> | undefined;
+    sender?: WritableStream<any> | undefined;
+    on_connect?: (() => void) | undefined;
 
     connect() {
         this._establish_connection();
@@ -85,6 +117,13 @@ class LocalIrcConnection implements iIrcConnection {
         return true;
     }
 
+    async join_channel(chan: string): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    async privmsg(msg: string, target: string): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+
     private _establish_connection() {
         const url = this.connection_info.url;
 
@@ -111,16 +150,5 @@ class LocalIrcConnection implements iIrcConnection {
             console.log(msg);
             this.websocket.send(msg);
         }
-    }
-    private send_msg(msg: string) {
-        if (this.websocket) {
-            console.log(msg);
-            this.websocket.send(msg);
-        } else {
-            throw new Error(LocalProviderError.NoWebsocket);
-        }
-    }
-    private async handle_msg(e: MessageEvent) {
-        console.log(e.data);
     }
 }

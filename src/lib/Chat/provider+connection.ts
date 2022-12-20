@@ -4,7 +4,7 @@ export interface ConnectionInfo {
     name: string;
     icon?: typeof SVGElement;
     
-    url: URL;
+    url: string;
     secure: boolean;
     server_password?: string;
 
@@ -15,7 +15,7 @@ export interface ConnectionInfo {
 
 export const default_config: ConnectionInfo = {
     name: "",
-    url: new URL("wss://example.org"),
+    url: "wss://example.org",
     secure: false,
     nick: "tubes_user",
     realname: "https://leahc.gay/tubes",
@@ -58,7 +58,7 @@ export interface iIrcProvider {
     /**
      * Every connection in this provider. Use `connect_all()` to connect to em.
      */
-    connections: Map<string, iIrcConnection> | null;
+    connections: iIrcConnection[] | null;
 
     /**
      * The place to check if the provider can use the current environment.
@@ -68,6 +68,9 @@ export interface iIrcProvider {
      * with this provider.
      */
     supportsEnvironment?: (() => boolean);
+
+    up(): void;
+    down?(): void;
 
     /**
      * Establish a connection to every connection in the `connections` field.
@@ -91,6 +94,9 @@ export interface iIrcConnection {
 
     writer?: ReadableStream;
     sender?: WritableStream;
+
+    join_channel(chan: string): Promise<void>;
+    privmsg(msg: string, target: string): Promise<void>;
 
     on_connect?: () => void;
     on_msg?: (event: IrcMessageEvent) => void;
