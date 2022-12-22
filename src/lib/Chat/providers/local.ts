@@ -120,7 +120,7 @@ class LocalIrcConnection implements iIrcConnection {
     async join_channel(chan: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    async privmsg(msg: string, target: string): Promise<void> {
+    async privmsg(target: string, msg: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
 

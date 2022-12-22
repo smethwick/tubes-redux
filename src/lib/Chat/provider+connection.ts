@@ -96,7 +96,7 @@ export interface iIrcConnection {
     sender?: WritableStream;
 
     join_channel(chan: string): Promise<void>;
-    privmsg(msg: string, target: string): Promise<void>;
+    privmsg(target: string, msg: string): Promise<void>;
 
     on_connect?: () => void;
     on_msg?: (event: IrcMessageEvent) => void;
