@@ -6,7 +6,8 @@
 
 <li
 	class="
-		flex w-10 h-10 aspect-square bg-neutral-700/5 rounded-3xl 
+		flex w-10 h-10 aspect-square bg-neutral-700/5 rounded-2xl
+		text-sm 
 		place-items-center justify-center border border-neutral-300"
 	aria-label={network.name}
 >

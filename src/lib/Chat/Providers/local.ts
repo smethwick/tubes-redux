@@ -29,6 +29,14 @@ export class LocalProvider extends IrcProvider {
         );
     }
 
+    supportsEnvironment = () => {
+        return true;
+    };
+
+    down() {
+        throw new Error(ProviderError.UnimplementedMethod)
+    }
+
     add_connection(ci: ConnectionInfo): LocalIrcConnection {
         this.connections = [...this.connections, new LocalIrcConnection(ci)];
         const conn = this.connections.filter((o) => o.connection_info.name == ci.name)[0];
@@ -49,7 +57,7 @@ export class LocalProvider extends IrcProvider {
         return conn;
     }
 
-    async fetch_persistent_connections(): Promise<Network[]> {
+    async fetch_persistent_connections() {
         return db.networks
             .where("provider_id")
             .equals(this.provider_id)

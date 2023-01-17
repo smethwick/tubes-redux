@@ -39,7 +39,7 @@ export enum ProviderError {
 }
 
 /**
- * An IRC Provider.
+ * ## An IRC Provider
  * 
  * Providers are used by Tubes as a way to interact with many of the
  * 100 quadrillion methods of getting your ass on an IRC network
@@ -50,7 +50,7 @@ export enum ProviderError {
  * implement this interface and hook the right things up to its api
  * or whatever. Have fun!
  */
-export class IrcProvider {
+export abstract class IrcProvider {
     /**
      * Every connection in this provider. Use `connect_all()` to connect to em.
      */
@@ -63,17 +63,15 @@ export class IrcProvider {
      * browser-specific stuff. If this fails, Tubes will refuse to do anything
      * with this provider.
      */
-    supportsEnvironment?: (() => boolean);
+    abstract supportsEnvironment?: (() => boolean);
 
     capabilities: Capability[] = [];
     supports(cap: Capability): boolean {
         return this.capabilities.includes(cap);
     }
 
-    up(): void {
-        throw new Error(ProviderError.UnimplementedMethod);
-    }
-    down?(): void;
+    abstract up(): void;
+    abstract down?(): void;
 
     /**
      * Establish a connection to every connection in the `connections` field.
@@ -98,21 +96,9 @@ export class IrcProvider {
         return result;
     }
 
-    add_connection(ci: ConnectionInfo): iIrcConnection {
-        throw new Error(ProviderError.UnimplementedMethod);
-    }
-    add_persistent_connection(ci: ConnectionInfo): iIrcConnection {
-        throw new Error(ProviderError.UnimplementedMethod);
-    }
-    async fetch_persistent_connections(): Promise<Network[]> {
-        throw new Error(ProviderError.UnimplementedMethod);
-    }
-
-    constructor() {
-        if (this.constructor == IrcProvider) {
-            throw new Error(ProviderError.ThisIsAnAbstractClass);
-        }
-    }
+    abstract add_connection(ci: ConnectionInfo): iIrcConnection
+    abstract add_persistent_connection(ci: ConnectionInfo): iIrcConnection 
+    abstract fetch_persistent_connections(): Promise<Network[]>
 }
 
 /**
