@@ -1,9 +1,10 @@
-import { LocalProvider } from "./Providers/local";
+import type { Network } from "$lib/Storage/db";
+import type { Capability } from "./caps";
 
 export interface ConnectionInfo {
     name: string;
-    icon?: typeof SVGElement;
-    
+    icon: string;
+
     url: string;
     secure: boolean;
     server_password?: string;
@@ -13,10 +14,13 @@ export interface ConnectionInfo {
     username: string;
 }
 
+export const default_icons = ['🍄', '🧅', '🧄', '🫘', '🌰', '🥜', '🥦', '🥬', '🍆'];
+
 export const default_config: ConnectionInfo = {
     name: "",
     url: "wss://example.org",
     secure: false,
+    icon: default_icons[Math.floor(Math.random() * default_icons.length)],
     nick: "tubes_user",
     realname: "https://leahc.gay/tubes",
     username: "tubes"
@@ -28,18 +32,10 @@ export const default_config: ConnectionInfo = {
 //     provider: instanceof,
 // }
 
-/**
- * A list of providers with a friendly display name.
- */
-export const Providers = [
-    {
-        display_name: "🖥️ Local",
-        provider: LocalProvider
-    }
-]
-
 export enum ProviderError {
-    NoConnectionsInProvider = "this provider has no connections in it"
+    NoConnectionsInProvider = "this provider has no connections in it",
+    UnimplementedMethod = "you gotta implement this",
+    ThisIsAnAbstractClass = "this is an abstract class. don't try to instantiate it",
 }
 
 /**
@@ -54,11 +50,11 @@ export enum ProviderError {
  * implement this interface and hook the right things up to its api
  * or whatever. Have fun!
  */
-export interface iIrcProvider {
+export class IrcProvider {
     /**
      * Every connection in this provider. Use `connect_all()` to connect to em.
      */
-    connections: iIrcConnection[] | null;
+    connections: iIrcConnection[] = [];
 
     /**
      * The place to check if the provider can use the current environment.
@@ -69,13 +65,54 @@ export interface iIrcProvider {
      */
     supportsEnvironment?: (() => boolean);
 
-    up(): void;
+    capabilities: Capability[] = [];
+    supports(cap: Capability): boolean {
+        return this.capabilities.includes(cap);
+    }
+
+    up(): void {
+        throw new Error(ProviderError.UnimplementedMethod);
+    }
     down?(): void;
 
     /**
      * Establish a connection to every connection in the `connections` field.
      */
-    connect_all(): boolean;
+    connect_all(): boolean {
+        let result = true;
+        this.connections.forEach((o) => {
+            if (this.connections) {
+                for (const connection of this.connections) {
+                    const connection_result = connection.connect();
+
+                    // return false if any connection fails.
+                    if (result == true) {
+                        result = connection_result;
+                    }
+                }
+            } else {
+                throw new Error(ProviderError.NoConnectionsInProvider);
+            }
+
+        })
+        return result;
+    }
+
+    add_connection(ci: ConnectionInfo): iIrcConnection {
+        throw new Error(ProviderError.UnimplementedMethod);
+    }
+    add_persistent_connection(ci: ConnectionInfo): iIrcConnection {
+        throw new Error(ProviderError.UnimplementedMethod);
+    }
+    async fetch_persistent_connections(): Promise<Network[]> {
+        throw new Error(ProviderError.UnimplementedMethod);
+    }
+
+    constructor() {
+        if (this.constructor == IrcProvider) {
+            throw new Error(ProviderError.ThisIsAnAbstractClass);
+        }
+    }
 }
 
 /**
@@ -103,7 +140,7 @@ export interface iIrcConnection {
 }
 
 export interface IrcMessageEvent {
-    tags?: {key: string, value?: string}[];
+    tags?: { key: string, value?: string }[];
     source?: string;
     command: string;
     params: string[];

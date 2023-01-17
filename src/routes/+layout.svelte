@@ -5,6 +5,7 @@
 	import '@fontsource/roboto-serif/variable-full.css';
 	import '@fontsource/roboto-serif/variable-italic.css';
 	import '../app.css';
+	import { provider } from '$lib/Chat';
 </script>
 
 <svelte:head>
@@ -12,15 +13,19 @@
 	<meta name="theme-color" content="#f5f5f4" />
 </svelte:head>
 
-<div class="font-serif bg-stone-100 text-stone-900 h-screen flex flex-col">
-	<TopBar />
-	<div class="inner flex h-full w-screen">
-		<Sidebar />
-		<main class="bg-stone-50 border-t w-full border-l rounded-tl-md p-4 overflow-y-auto">
-			<slot />
-		</main>
+{#await $provider.up()}
+	hold on
+{:then}
+	<div class="font-serif bg-stone-100 text-stone-900 h-screen flex flex-col">
+		<TopBar />
+		<div class="inner flex h-full w-screen">
+			<Sidebar />
+			<main class="bg-stone-50 border-t w-full border-l rounded-tl-md p-4 overflow-y-auto">
+				<slot />
+			</main>
+		</div>
 	</div>
-</div>
+{/await}
 
 <!-- this is one hell of a hack. sorry about that -->
 <style>

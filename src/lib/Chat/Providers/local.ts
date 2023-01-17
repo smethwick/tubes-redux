@@ -1,5 +1,5 @@
 import {
-    type iIrcProvider,
+    IrcProvider,
     type iIrcConnection,
     type ConnectionInfo,
     ProviderError,
@@ -7,15 +7,18 @@ import {
 } from "../provider+connection";
 import { handle_raw_irc_msg } from "./common";
 import { db, type Network } from "$lib/Storage/db";
+import { Capability } from "../caps";
 
 enum LocalProviderError {
     NoWebsocket = "No websocket in this thing"
 }
 
-export class LocalProvider implements iIrcProvider {
+export class LocalProvider extends IrcProvider {
     provider_id = "LocalProvider";
 
     connections: LocalIrcConnection[] = [];
+
+    capabilities: Capability[] = [Capability.MultipleConnections];
 
     async up() {
         const conns = await this.fetch_persistent_connections()
@@ -24,25 +27,6 @@ export class LocalProvider implements iIrcProvider {
                 this.connections = [...this.connections, new LocalIrcConnection(o.conn_blueprint)];
             }
         );
-    }
-
-    connect_all() {
-        let result = true;
-
-        if (this.connections) {
-            for (const connection of this.connections) {
-                const connection_result = connection.connect();
-
-                // return false if any connection fails.
-                if (result == true) {
-                    result = connection_result;
-                }
-            }
-        } else {
-            throw new Error(ProviderError.NoConnectionsInProvider);
-        }
-
-        return result;
     }
 
     add_connection(ci: ConnectionInfo): LocalIrcConnection {
@@ -80,7 +64,9 @@ class LocalIrcConnection implements iIrcConnection {
 
     websocket?: WebSocket;
 
-    on_msg?: (event: IrcMessageEvent) => void;
+    on_msg?: (event: IrcMessageEvent) => void = async (e) => {
+        await db.messages.add({ origin: e });
+    };
 
     constructor(ci: ConnectionInfo) {
         this.isConnected = false;
