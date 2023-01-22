@@ -1,5 +1,6 @@
 import type { Network } from "$lib/Storage/db";
 import type { Capability } from "./caps";
+import type { Source } from "./Providers/common";
 
 export interface ConnectionInfo {
     name: string;
@@ -78,27 +79,24 @@ export abstract class IrcProvider {
      */
     connect_all(): boolean {
         let result = true;
-        this.connections.forEach((o) => {
-            if (this.connections) {
-                for (const connection of this.connections) {
-                    const connection_result = connection.connect();
+        if (this.connections) {
+            for (const connection of this.connections) {
+                const connection_result = connection.connect();
 
-                    // return false if any connection fails.
-                    if (result == true) {
-                        result = connection_result;
-                    }
+                // return false if any connection fails.
+                if (result == true) {
+                    result = connection_result;
                 }
-            } else {
-                throw new Error(ProviderError.NoConnectionsInProvider);
             }
-
-        })
+        } else {
+            throw new Error(ProviderError.NoConnectionsInProvider);
+        }
         return result;
     }
 
-    abstract add_connection(ci: ConnectionInfo): iIrcConnection
-    abstract add_persistent_connection(ci: ConnectionInfo): iIrcConnection 
-    abstract fetch_persistent_connections(): Promise<Network[]>
+    abstract add_connection?(ci: ConnectionInfo): iIrcConnection
+    abstract add_persistent_connection?(ci: ConnectionInfo): iIrcConnection
+    abstract fetch_persistent_connections?(): Promise<Network[]>
 }
 
 /**
@@ -120,6 +118,7 @@ export interface iIrcConnection {
 
     join_channel(chan: string): Promise<void>;
     privmsg(target: string, msg: string): Promise<void>;
+    send_raw(msg: string): Promise<void>;
 
     on_connect?: () => void;
     on_msg?: (event: IrcMessageEvent) => void;
@@ -127,7 +126,7 @@ export interface iIrcConnection {
 
 export interface IrcMessageEvent {
     tags?: { key: string, value?: string }[];
-    source?: string;
+    source?: Source;
     command: string;
     params: string[];
     timestamp: Date;

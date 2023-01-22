@@ -1,0 +1,17 @@
+<script lang="ts">
+	import type { Message } from '$lib/Storage/messages';
+	import BasicMessage from '../BasicMessage.svelte';
+
+	export let msg: Message;
+</script>
+
+<BasicMessage class="text-red-700">
+	<span slot="sender">⚠️</span>
+	<span slot="content">{JSON.stringify(msg)}</span>
+</BasicMessage>
+
+<style>
+    b {
+        @apply font-semibold
+    }
+</style>

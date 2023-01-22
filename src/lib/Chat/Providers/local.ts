@@ -6,8 +6,9 @@ import {
     type IrcMessageEvent
 } from "../provider+connection";
 import { handle_raw_irc_msg } from "./common";
-import { db, type Network } from "$lib/Storage/db";
+import { db } from "$lib/Storage/db";
 import { Capability } from "../caps";
+import { saveMessage } from "$lib/Storage/messages";
 
 enum LocalProviderError {
     NoWebsocket = "No websocket in this thing"
@@ -72,16 +73,14 @@ class LocalIrcConnection implements iIrcConnection {
 
     websocket?: WebSocket;
 
-    on_msg?: (event: IrcMessageEvent) => void = async (e) => {
-        await db.messages.add({ origin: e });
-    };
+    on_msg?: (event: IrcMessageEvent) => void = saveMessage;
 
     constructor(ci: ConnectionInfo) {
         this.isConnected = false;
         this.connection_info = ci;
     }
-    writer?: ReadableStream<any> | undefined;
-    sender?: WritableStream<any> | undefined;
+    writer?= undefined;
+    sender?= undefined;
     on_connect?: (() => void) | undefined;
 
     connect() {
@@ -112,10 +111,15 @@ class LocalIrcConnection implements iIrcConnection {
     }
 
     async join_channel(chan: string): Promise<void> {
-        throw new Error("Method not implemented.");
+        this.send_raw(`JOIN ${chan}`);
     }
+    
     async privmsg(target: string, msg: string): Promise<void> {
         throw new Error("Method not implemented.");
+    }
+
+    async send_raw(msg: string) {
+        this.websocket?.send(msg);
     }
 
     private _establish_connection() {

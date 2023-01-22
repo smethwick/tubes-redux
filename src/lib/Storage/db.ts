@@ -1,5 +1,6 @@
-import type { ConnectionInfo, IrcMessageEvent } from '$lib/Chat/provider+connection';
+import type { ConnectionInfo } from '$lib/Chat/provider+connection';
 import Dexie, { type Table } from 'dexie';
+import type { Message } from './messages';
 
 export interface Network {
   id?: number;
@@ -7,11 +8,6 @@ export interface Network {
   provider_id: string;
   /** Used to generate a new `Connection` when the app starts up */
   conn_blueprint: ConnectionInfo;
-}
-
-export interface Message {
-  id?: number;
-  origin: IrcMessageEvent;
 }
 
 export class TubesDatabase extends Dexie {

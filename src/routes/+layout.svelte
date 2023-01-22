@@ -10,17 +10,17 @@
 
 <svelte:head>
 	<link rel="manifest" href={Manifest} />
-	<meta name="theme-color" content="#f5f5f4" />
+	<meta name="theme-color" content="#fafafa" />
 </svelte:head>
 
 {#await $provider.up()}
 	hold on
 {:then}
-	<div class="font-serif bg-stone-100 text-stone-900 h-screen flex flex-col">
+	<div class="font-serif bg-neutral-50 text-neutral-900 h-screen flex flex-col">
 		<TopBar />
 		<div class="inner flex h-full w-screen">
 			<Sidebar />
-			<main class="bg-stone-50 border-t w-full border-l rounded-tl-md p-4 overflow-y-auto">
+			<main class="bg-white border-t w-full border-l rounded-tl-md p-4 overflow-y-auto">
 				<slot />
 			</main>
 		</div>

@@ -6,10 +6,11 @@
 
 <li
 	class="
-		flex w-10 h-10 aspect-square bg-neutral-700/5 rounded-2xl
-		text-sm 
-		place-items-center justify-center border border-neutral-300"
+		flex w-10 h-10 aspect-square bg-neutral-600/5 rounded-2xl
+		overflow-hidden
+		place-items-center justify-center"
 	aria-label={network.name}
 >
-	{network.icon}
+	<span>{network.name.substring(0, 2)}</span>
+	<!-- <span class="opacity-25 rotate-12 select-none relative -bottom-2 -right-1 text-3xl">{network.icon}</span> -->
 </li>
