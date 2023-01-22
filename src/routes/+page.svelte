@@ -8,7 +8,7 @@
 		type ConnectionInfo
 	} from '$lib/Chat/provider+connection';
 	import { db } from '$lib/Storage/db';
-	import { saveMessage, type Message } from "$lib/Storage/messages";
+	import { saveMessage, type Message } from '$lib/Storage/messages';
 	import { browser } from '$app/environment';
 	import { provider } from '$lib/Chat';
 	import MessageView from '$lib/Display/Chat/MessageView.svelte';
@@ -33,16 +33,14 @@
 
 <button on:click={() => $provider.connections[0].connect()}>connect to the thing</button>
 <button on:click={() => addProvider()}>new thing</button>
-<button on:click={() => $provider.connections[0].join_channel("#tubes")}>join #tubes</button>
-
-{#each $provider.connections as conn}
-	{conn.connection_info.name}
-{/each}
+<button on:click={() => $provider.connections[0].join_channel('#tubes')}>join #tubes</button>
 
 {#if msgs}
-<button on:click={() => db.messages.bulkDelete(msgs.map((v) => v.id ?? 0))}>clear all</button>
+	<button on:click={() => db.messages.bulkDelete(msgs.map((v) => v.id ?? 0))}>clear all</button>
 
-	{#each msgs as msg (msg.id)}
-		<MessageView {msg} />
-	{/each}
+	<div class="flex flex-col gap-1 min-w-full max-w-full">
+		{#each msgs as msg (msg.id)}
+			<MessageView {msg} />
+		{/each}
+	</div>
 {/if}

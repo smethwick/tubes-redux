@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ChannelItem from './ChannelItem.svelte';
+	import SidebarItem from './SidebarItem.svelte';
 	type channel = [channel: string, unread: number, active: boolean, color: [string, string]];
 	let channels: channel[] = [
 		['#tubes', 1, true, ['', '']],
@@ -8,6 +9,9 @@
 </script>
 
 <ul class="flex flex-col my-2 gap-1">
+	<SidebarItem>
+		🏠 Home
+		</SidebarItem>
 	{#each channels as [channel, unread, active]}
 		<ChannelItem {unread} {channel} {active} />
 	{/each}
