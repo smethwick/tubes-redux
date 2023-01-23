@@ -211,6 +211,9 @@ class LocalIrcConnection implements iIrcConnection {
             this.websocket.onopen = () => {
                 this._identify();
                 this.get_motd();
+                this.connection_info.channels.forEach((o) => {
+                    this.join_channel(o);
+                })
             }
             this.websocket.onmessage = (event) => {
                 const msg = handle_raw_irc_msg(event.data, (msg) => {
@@ -249,7 +252,10 @@ class LocalIrcConnection implements iIrcConnection {
     }
 
     async disconnect(quit_msg?: string) {
-        this.send_raw(`QUIT ${quit_msg ? (":" + quit_msg) : ":tubing out"}`)
+        this.send_raw(`QUIT ${quit_msg ? (":" + quit_msg) : ":tubing out"}`);
+        setTimeout(() => {
+            this.websocket?.close();
+        }, 150);
     }
 
     motd: Writable<string> = writable("");
@@ -260,14 +266,19 @@ class LocalIrcConnection implements iIrcConnection {
         this.task_queue.subscribe(
             console.log,
             {
+                // RPL_MOTD
                 only: "372",
+                // RPL_ENDOFMOTD
                 until: "376",
                 handle_errors: {
                     callback: (data) => {
+                        // TODO: embetter this
                         throw new Error(data.params[0]);
                     },
+                    // ERR_NOSUCHSERVER and ERR_NOMOTD respectively
                     errors: ["402", "422"]
                 },
+                // update the store when everything's been recieved
                 unsub_callback: (collected) => {
                     console.log(collected);
 
