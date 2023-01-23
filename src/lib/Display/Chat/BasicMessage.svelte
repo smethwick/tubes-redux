@@ -3,7 +3,7 @@
 	export { klass as class };
 </script>
 
-<p class="flex gap-3 {klass}">
+<p class="flex gap-3 hover:bg-neutral-100 rounded {klass}">
 	<span class="w-24 min-w-[6rem] text-right font-semibold"><slot name="sender" /></span>
 	<slot name="content" />
 </p>

@@ -9,9 +9,7 @@
 </script>
 
 <ul class="flex flex-col my-2 gap-1">
-	<SidebarItem>
-		🏠 Home
-		</SidebarItem>
+	<SidebarItem href="./home">🛋️ Home</SidebarItem>
 	{#each channels as [channel, unread, active]}
 		<ChannelItem {unread} {channel} {active} />
 	{/each}

@@ -4,7 +4,7 @@
 </script>
 
 <ul class="flex gap-2">
-	{#each $provider.connections as { connection_info: network }}
+	{#each $provider.connections as [_, { connection_info: network }]}
 		<NetworkItem {network} />
 	{/each}
 </ul>

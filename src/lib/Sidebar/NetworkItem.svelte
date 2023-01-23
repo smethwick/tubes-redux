@@ -11,6 +11,8 @@
 		place-items-center justify-center"
 	aria-label={network.name}
 >
-	<span>{network.name.substring(0, 2)}</span>
+	<span>
+		{network.display_name ? network.display_name.substring(0, 2) : network.name.substring(0, 2)}
+	</span>
 	<!-- <span class="opacity-25 rotate-12 select-none relative -bottom-2 -right-1 text-3xl">{network.icon}</span> -->
 </li>

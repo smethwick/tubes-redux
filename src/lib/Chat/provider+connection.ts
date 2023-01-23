@@ -1,14 +1,19 @@
 import type { Network } from "$lib/Storage/db";
 import type { Capability } from "./caps";
 import type { Source } from "./Providers/common";
+import type {Writable } from "svelte/store"
+import AsyncLock from "async-lock";
 
 export interface ConnectionInfo {
     name: string;
+    display_name?: string;
     icon: string;
 
     url: string;
     secure: boolean;
     server_password?: string;
+
+    channels: string[];
 
     nick: string;
     realname: string;
@@ -24,7 +29,8 @@ export const default_config: ConnectionInfo = {
     icon: default_icons[Math.floor(Math.random() * default_icons.length)],
     nick: "tubes_user",
     realname: "https://leahc.gay/tubes",
-    username: "tubes"
+    username: "tubes",
+    channels: []
 }
 
 
@@ -55,7 +61,7 @@ export abstract class IrcProvider {
     /**
      * Every connection in this provider. Use `connect_all()` to connect to em.
      */
-    connections: iIrcConnection[] = [];
+    connections: [string, iIrcConnection][] = [];
 
     /**
      * The place to check if the provider can use the current environment.
@@ -71,6 +77,8 @@ export abstract class IrcProvider {
         return this.capabilities.includes(cap);
     }
 
+    active = false;
+    up_lock = new AsyncLock();
     abstract up(): void;
     abstract down?(): void;
 
@@ -81,7 +89,7 @@ export abstract class IrcProvider {
         let result = true;
         if (this.connections) {
             for (const connection of this.connections) {
-                const connection_result = connection.connect();
+                const connection_result = connection[1].connect();
 
                 // return false if any connection fails.
                 if (result == true) {
@@ -96,7 +104,7 @@ export abstract class IrcProvider {
 
     abstract add_connection?(ci: ConnectionInfo): iIrcConnection
     abstract add_persistent_connection?(ci: ConnectionInfo): iIrcConnection
-    abstract fetch_persistent_connections?(): Promise<Network[]>
+    static fetch_persistent_connections?(provider_id: string): Promise<Network[]>
 }
 
 /**
@@ -109,9 +117,9 @@ export interface iIrcConnection {
      * Establish a connection to the server.
      */
     connect(): boolean;
-    isConnected: boolean;
+    isConnected: Writable<boolean | "connecting">;
 
-    channels: (string | "server_msgs")[];
+    channels: string[];
 
     writer?: ReadableStream;
     sender?: WritableStream;

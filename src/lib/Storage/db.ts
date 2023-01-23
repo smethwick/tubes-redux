@@ -18,7 +18,7 @@ export class TubesDatabase extends Dexie {
     super('TubesDB');
     this.version(1).stores({
       networks: '++id, name, conn_blueprint, provider_id',
-      messages: "++id, origin",
+      messages: "++id, origin, target, source, type, timestamp, command",
     });
   }
 }
