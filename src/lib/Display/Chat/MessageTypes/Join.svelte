@@ -7,7 +7,7 @@
 	const source = full_source ? full_source[0] : "Unknown";
 </script>
 
-<BasicMessage class="text-emerald-700">
+<BasicMessage class="text-cyan-700 hover:bg-cyan-50">
 	<span slot="sender">→</span>
 	<span slot="content"><b>{source}</b> has joined <b>{target}</b></span>
 </BasicMessage>

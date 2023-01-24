@@ -7,7 +7,7 @@
 	const source = full_source ? full_source[0] : 'Unknown';
 </script>
 
-<BasicMessage class="text-rose-700">
+<BasicMessage class="text-pink-700 hover:bg-pink-50">
 	<span slot="sender">←</span>
 	<span slot="content">
 		<b>{source}</b> has left <b>{target}</b>

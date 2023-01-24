@@ -1,19 +1,22 @@
 <script lang="ts">
 	import { liveQuery } from 'dexie';
-
-	import {
-		default_config,
-		default_icons,
-		type ConnectionInfo
-	} from '$lib/Chat/provider+connection';
 	import { db } from '$lib/Storage/db';
-	import { saveMessage, type Message } from '$lib/Storage/messages';
 	import { browser } from '$app/environment';
 	import { provider } from '$lib/Chat';
 	import MessageView from '$lib/Display/Chat/MessageView.svelte';
 	import type { PageData } from './$types';
+	import type { Message } from '$lib/Storage/messages';
+	import { error } from '@sveltejs/kit';
+	import { onMount } from 'svelte';
 
 	export let data: PageData;
+	let input = '';
+
+	const { network: network_name } = data;
+	const potential_connection = $provider.connections.find((o) => o[0] === network_name);
+	if (!potential_connection) throw error(404);
+	const [_, conn] = potential_connection;
+	const { isConnected } = conn;
 
 	$: channel = decodeURIComponent(data.channel);
 
@@ -23,30 +26,55 @@
 	);
 	$: msgs = $msgs_store as Message[];
 
-	const addProvider = async () => {
-		let ci: ConnectionInfo = {
-			...default_config,
-			name: 'ergo-testnet',
-			display_name: 'Ergo Testnet',
-			icon: default_icons[Math.floor(Math.random() * default_icons.length)],
-			url: 'wss://testnet.ergo.chat/webirc'
-		};
+	const scrollToBottom = (node: HTMLDivElement, list: Array<unknown>) => {
+		console.log("here");
+		const scroll = (list: Array<unknown>) =>
+			node.scroll({
+				top: node.scrollHeight,
+				behavior: 'smooth'
+			});
+		scroll(list);
 
-		let conn = $provider.add_persistent_connection(ci);
-		conn.on_msg = saveMessage;
+		return { update: scroll };
 	};
 </script>
 
-<button on:click={() => $provider.connections[0][1].connect()}>connect to the thing</button>
+<!-- <button on:click={() => $provider.connections[0][1].connect()}>connect to the thing</button>
 <button on:click={() => addProvider()}>new thing</button>
-<button on:click={() => $provider.connections[0][1].join_channel('#tubes')}>join #tubes</button>
+<button on:click={() => $provider.connections[0][1].join_channel('#tubes')}>join #tubes</button> -->
 
-{#if msgs}
-	<button on:click={() => db.messages.bulkDelete(msgs.map((v) => v.id ?? 0))}>clear all</button>
-	{channel}
-	<div class="flex flex-col gap-1 min-w-full max-w-full">
-		{#each msgs as msg (msg.id)}
-			<MessageView {msg} />
-		{/each}
+{#key channel}
+	<div class="flex flex-col h-full">
+		<button on:click={() => db.messages.bulkDelete(msgs.map((v) => v.id ?? 0))}>clear all</button>
+		{channel}
+		{#if msgs}
+			<div
+				use:scrollToBottom={msgs}
+				class="flex flex-col gap-1 min-w-full max-w-full overflow-y-auto h-full max-h-screen py-4"
+			>
+				{#each msgs as msg (msg.id)}
+					<MessageView {msg} />
+				{/each}
+			</div>
+			<input
+				class="w-full border-t px-4 pt-3 focus-visible:outline-none"
+				placeholder={$isConnected ? `say something to ${channel}` : 'not connected to this network'}
+				bind:value={input}
+				disabled={!$isConnected}
+				class:disabled={!$isConnected}
+				on:keydown={(e) => {
+					if (e.key == 'Enter') {
+						conn.privmsg(channel, input);
+						input = '';
+					}
+				}}
+			/>
+		{/if}
 	</div>
-{/if}
+{/key}
+
+<style>
+	.disabled {
+		@apply italic;
+	}
+</style>

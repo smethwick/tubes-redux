@@ -3,20 +3,21 @@
 </script>
 
 <article
-	class="w-full flex flex-col gap-2 place-items-center bg-neutral-200 border border-neutral-300 rounded-lg p-4"
+	class="w-full flex gap-2 place-items-center 
+	bg-pink-200 rounded-lg px-4 py-2"
 >
-	<h1 class="text-xl">You're not connected to this network</h1>
+	<h1 class="text-lg">you aren't connected to this network</h1>
 	<PrimaryButton
-		colors={['bg-neutral-700', 'border-neutral-900', 'text-white']}
-		class="text-sm"
+		colors={['bg-pink-400', 'text-black']}
+		class="text-sm ml-auto"
 		on:click
 	>
-		⚡ Connect
+		Connect!
 	</PrimaryButton>
 </article>
 
 <style>
 	h1 {
-		font-stretch: condensed;
+		font-stretch: expanded;
 	}
 </style>

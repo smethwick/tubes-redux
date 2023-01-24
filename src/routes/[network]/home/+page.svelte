@@ -7,6 +7,8 @@
 	import DisconnectedBanner from '$lib/Display/Network/DisconnectedBanner.svelte';
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import { navigating } from '$app/stores';
+	import GoodAdvice from '$lib/Display/Setup/GoodAdvice.svelte';
 
 	export let data: LayoutData;
 
@@ -15,6 +17,9 @@
 
 	let [_, conn] = connection;
 	const { isConnected, connection_info, motd } = conn;
+
+	const transision = (n: Element) =>
+		slide(n, { duration: $navigating ? 0 : 250, easing: quintOut });
 </script>
 
 <section class="max-w-3xl mx-auto lg:pt-4 xl:pt-8">
@@ -35,16 +40,27 @@
 	</header>
 
 	{#if $isConnected === false}
-		<div transition:slide={{duration: 250, easing: quintOut}} class="mb-8">
-			<DisconnectedBanner on:click={() => conn.connect()} />
-		</div>
+		{#if $navigating}
+			<div class="mb-6">
+				<DisconnectedBanner on:click={() => conn.connect()} />
+			</div>
+		{:else}
+			<div transition:transision class="mb-6">
+				<DisconnectedBanner on:click={() => conn.connect()} />
+			</div>
+		{/if}
 	{/if}
 
-	<section class="grid grid-cols-3 gap-6" class:disconnected={!$isConnected}>
-		<article class="col-span-2">
-			<YellingThing />
-		</article>
-		<article>
+	<section
+		class="grid grid-cols-3 gap-6 fade"
+		class:disconnected={!$isConnected}
+		aria-hidden={!$isConnected}
+	>
+		<section class="col-span-2">
+			<GoodAdvice {connection_info} />
+			<!-- <YellingThing /> -->
+		</section>
+		<section>
 			<h2>Actions</h2>
 			<ul class="flex flex-col place-content-start">
 				<HomeAction on:click={() => ($isConnected ? conn.disconnect() : conn.connect())}>
@@ -56,10 +72,10 @@
 				<HomeAction>✏️ Configure</HomeAction>
 				<HomeAction>♻️ Archive</HomeAction>
 			</ul>
-		</article>
+		</section>
 	</section>
 
-	<section class:disconnected={!$isConnected}>
+	<section class="fade" class:disconnected={!$isConnected} aria-hidden={!$isConnected}>
 		{#if $motd}
 			<h2>Message of the Day</h2>
 			<pre style="white-space: pre-wrap;">{$motd}</pre>
@@ -77,8 +93,11 @@
 		font-stretch: condensed;
 	}
 
+	.fade {
+		transition: opacity 100ms ease-in;
+	}
 	.disconnected {
-		opacity: 0.25;
+		opacity: 0.15;
 		user-select: none;
 		pointer-events: none;
 	}

@@ -10,7 +10,7 @@ import { db } from "$lib/Storage/db";
 import { Capability } from "../caps";
 import { saveMessage } from "$lib/Storage/messages";
 import { writable, type Writable } from "svelte/store";
-import { v4 as uuidv4 } from 'uuid';
+import { TaskQueue } from "../task";
 
 enum LocalProviderError {
     NoWebsocket = "No websocket in this thing"
@@ -84,107 +84,6 @@ export class LocalProvider extends IrcProvider {
     }
 }
 
-type task = {
-    id: string,
-    reply: string,
-    complete: boolean,
-    callback: (data: IrcMessageEvent) => void
-};
-type subscription = {
-    id: string,
-    until?: string,
-    only?: string | string[],
-    errors?: string[],
-    complete: boolean,
-    error_callback?: (data: IrcMessageEvent) => void,
-    unsub_callback?: (collected?: IrcMessageEvent[]) => void,
-    _collected?: IrcMessageEvent[],
-    callback: (data: IrcMessageEvent) => void
-}
-
-class TaskQueue {
-    tasks: task[] = [];
-    subscriptions: subscription[] = []
-
-    new_task(reply: string, callback: (data: IrcMessageEvent) => void): string {
-        const id = uuidv4();
-        const task: task = {
-            id,
-            reply,
-            complete: false,
-            callback
-        }
-        this.tasks.push(task);
-        return id;
-    }
-
-    subscribe(
-        callback: (data: IrcMessageEvent) => void,
-        options?: {
-            until?: string,
-            only?: string | string[],
-            handle_errors?: {
-                errors: string[],
-                callback: (data: IrcMessageEvent) => void
-            },
-            unsub_callback: (collected?: IrcMessageEvent[]) => void
-        }
-    ) {
-        const id = uuidv4();
-        const subscription: subscription = {
-            id,
-            until: options?.until,
-            only: options?.only,
-            complete: false,
-            errors: options?.handle_errors?.errors,
-
-            callback,
-            error_callback: options?.handle_errors?.callback,
-            unsub_callback: options?.unsub_callback,
-        }
-        this.subscriptions.push(subscription);
-        return id;
-    }
-
-    unsubscribe(id: string) {
-        this.subscriptions = this.subscriptions.filter((o) => o.id != id);
-        console.log("unsubscrumbled ", id);
-    }
-
-    async resolve_tasks(event: IrcMessageEvent) {
-        this.tasks = this.tasks.filter((o) => {
-            if (o.reply == event.command) { o.callback(event); return false; }
-            else return true;
-        });
-
-        this.subscriptions.forEach((o) => {
-            if (o.until == event.command) {
-                this.unsubscribe(o.id);
-                if (o.unsub_callback) o.unsub_callback(o._collected);
-            }
-
-            if (o.only) {
-                if (typeof o.only === typeof []) {
-                    if (!(o.only.includes(event.command))) return;
-                }
-                if (typeof o.only === "string") {
-                    if (o.only != event.command) return;
-                }
-            }
-
-            if (o.unsub_callback) {
-                o._collected = o._collected ? [...o._collected, event] : [event];
-            }
-
-            o.callback(event);
-        })
-    }
-
-    wait_for(reply: string, callback: (data: IrcMessageEvent) => void) {
-        this.new_task(reply, callback);
-    }
-}
-
 class LocalIrcConnection implements iIrcConnection {
     connection_info: ConnectionInfo;
     isConnected: Writable<boolean | "connecting">;
@@ -241,10 +140,20 @@ class LocalIrcConnection implements iIrcConnection {
             this.channels = [...this.channels, chan];
             console.log(this.channels);
         })
+
     }
 
     async privmsg(target: string, msg: string): Promise<void> {
+        const connected = this.check_connection();
+        if (!connected) throw new Error("not connected");
+
         this.send_raw(`PRIVMSG ${target} :${msg}`);
+        saveMessage({
+            command: "PRIVMSG",
+            params: [target, msg],
+            timestamp: new Date(Date.now()),
+            source: [this.connection_info.nick, this.connection_info.username, "localhost"],
+        })
     }
 
     async send_raw(msg: string) {
@@ -256,6 +165,18 @@ class LocalIrcConnection implements iIrcConnection {
         setTimeout(() => {
             this.websocket?.close();
         }, 150);
+    }
+
+    check_connection(): boolean {
+        let connected;
+        const unsub = this.isConnected.subscribe((value) => {
+            connected = value;
+        })
+        unsub();
+
+        console.log(connected);
+
+        return connected == true
     }
 
     motd: Writable<string> = writable("");
@@ -287,7 +208,7 @@ class LocalIrcConnection implements iIrcConnection {
                             .map((o) => o.params[o.params.length - 1])
                             .join("\n")
                         : "something went wrong");
-                    
+
                     this.motd_gotten = true;
                 }
             }

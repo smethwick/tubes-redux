@@ -1,11 +1,7 @@
 <script lang="ts">
 	import ButtonBase from './ButtonBase.svelte';
 
-	export let colors: [string, string, string] = [
-		'bg-purple-700',
-		'border-purple-900',
-		'text-white'
-	];
+	export let colors: [string, string] = ['bg-purple-400', 'text-black'];
 
 	let klass: string = '';
 	export { klass as class };
