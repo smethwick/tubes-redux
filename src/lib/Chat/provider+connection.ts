@@ -1,8 +1,10 @@
 import type { Network } from "$lib/Storage/db";
 import type { Capability } from "./caps";
 import type { Source } from "./Providers/common";
-import type {Writable } from "svelte/store"
+import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
+import { saveMessage } from "$lib/Storage/messages";
+import { TaskQueue } from "./task";
 
 export interface ConnectionInfo {
     name: string;
@@ -61,7 +63,7 @@ export abstract class IrcProvider {
     /**
      * Every connection in this provider. Use `connect_all()` to connect to em.
      */
-    connections: [string, iIrcConnection][] = [];
+    connections: [string, IrcConnection][] = [];
 
     /**
      * The place to check if the provider can use the current environment.
@@ -102,34 +104,103 @@ export abstract class IrcProvider {
         return result;
     }
 
-    abstract add_connection?(ci: ConnectionInfo): iIrcConnection
-    abstract add_persistent_connection?(ci: ConnectionInfo): iIrcConnection
+    abstract add_connection?(ci: ConnectionInfo): IrcConnection
+    abstract add_persistent_connection?(ci: ConnectionInfo): IrcConnection
     static fetch_persistent_connections?(provider_id: string): Promise<Network[]>
 }
+
 
 /**
  * A single connection to an IRC network.
  */
-export interface iIrcConnection {
+export abstract class IrcConnection {
     connection_info: ConnectionInfo;
-
-    /**
-     * Establish a connection to the server.
-     */
-    connect(): boolean;
     isConnected: Writable<boolean | "connecting">;
+    channels: (string | "server_msgs")[] = [];
+    task_queue: TaskQueue = new TaskQueue();
 
-    channels: string[];
+    on_msg?: (event: IrcMessageEvent) => void = saveMessage;
 
-    writer?: ReadableStream;
-    sender?: WritableStream;
+    constructor(ci: ConnectionInfo) {
+        this.isConnected = writable(false);
+        this.connection_info = ci;
+    }
 
-    join_channel(chan: string): Promise<void>;
-    privmsg(target: string, msg: string): Promise<void>;
-    send_raw(msg: string): Promise<void>;
+    abstract connect(): boolean;
+    abstract send_raw(msg: string): void;
+    abstract disconnect(): void;
 
-    on_connect?: () => void;
-    on_msg?: (event: IrcMessageEvent) => void;
+    async join_channel(chan: string): Promise<void> {
+        this.send_raw(`JOIN ${chan}`);
+        this.task_queue.wait_for("JOIN", () => {
+            this.channels = [...this.channels, chan];
+            console.log(this.channels);
+        })
+    }
+
+    async privmsg(target: string, msg: string): Promise<void> {
+        const connected = this.check_connection();
+        if (!connected) throw new Error("not connected");
+
+        this.send_raw(`PRIVMSG ${target} :${msg}`);
+        saveMessage({
+            command: "PRIVMSG",
+            params: [target, msg],
+            timestamp: new Date(Date.now()),
+            source: [this.connection_info.nick, this.connection_info.username, "localhost"],
+        })
+    }
+
+    check_connection(): boolean {
+        let connected;
+        const unsub = this.isConnected.subscribe((value) => {
+            connected = value;
+        })
+        unsub();
+
+        console.log(connected);
+
+        return connected == true
+    }
+
+    motd: Writable<string> = writable("");
+    motd_gotten = false;
+    async get_motd() {
+        if (this.motd_gotten) return;
+        this.send_raw("MOTD");
+        this.task_queue.subscribe(
+            console.log,
+            {
+                // RPL_MOTD
+                only: "372",
+                // RPL_ENDOFMOTD
+                until: "376",
+                handle_errors: {
+                    callback: (data) => {
+                        // TODO: embetter this
+                        throw new Error(data.params[0]);
+                    },
+                    // ERR_NOSUCHSERVER and ERR_NOMOTD respectively
+                    errors: ["402", "422"]
+                },
+                // update the store when everything's been recieved
+                unsub_callback: (collected) => {
+                    console.log(collected);
+
+                    this.motd.set(collected
+                        ? collected
+                            .map((o) => o.params[o.params.length - 1])
+                            .join("\n")
+                        : "something went wrong");
+
+                    this.motd_gotten = true;
+                }
+            }
+        );
+
+    }
+
+    abstract on_connect?: (() => void) | undefined;
 }
 
 export interface IrcMessageEvent {

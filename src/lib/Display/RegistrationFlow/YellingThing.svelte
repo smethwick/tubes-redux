@@ -17,11 +17,11 @@
 	</ul>
     
 	<div class="mt-6 flex">
-        <SecondaryButton colors={['bg-black/75', 'text-white']}>
+        <SecondaryButton colors={['bg-black/75', 'text-white', 'outline-black/75']}>
 			get outta here. nerd
 		</SecondaryButton>
 
-        <PrimaryButton class="ml-auto" colors={['bg-white', 'text-black']}>
+        <PrimaryButton class="ml-auto" colors={['bg-white', 'text-black', 'outline-white']}>
             Log in or Register
         </PrimaryButton>
 	</div>

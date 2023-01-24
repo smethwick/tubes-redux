@@ -1,9 +1,9 @@
 import {
     IrcProvider,
-    type iIrcConnection,
     type ConnectionInfo,
     ProviderError,
-    type IrcMessageEvent
+    type IrcMessageEvent,
+    IrcConnection
 } from "../provider+connection";
 import { handle_raw_irc_msg } from "./common";
 import { db } from "$lib/Storage/db";
@@ -84,22 +84,11 @@ export class LocalProvider extends IrcProvider {
     }
 }
 
-class LocalIrcConnection implements iIrcConnection {
-    connection_info: ConnectionInfo;
-    isConnected: Writable<boolean | "connecting">;
-    channels: (string | "server_msgs")[] = [];
-    task_queue: TaskQueue = new TaskQueue();
-
+class LocalIrcConnection extends IrcConnection {
     websocket?: WebSocket;
 
     on_msg?: (event: IrcMessageEvent) => void = saveMessage;
 
-    constructor(ci: ConnectionInfo) {
-        this.isConnected = writable(false);
-        this.connection_info = ci;
-    }
-    writer?= undefined;
-    sender?= undefined;
     on_connect?: (() => void) | undefined;
 
     connect() {
@@ -134,28 +123,6 @@ class LocalIrcConnection implements iIrcConnection {
         return true;
     }
 
-    async join_channel(chan: string): Promise<void> {
-        this.send_raw(`JOIN ${chan}`);
-        this.task_queue.wait_for("JOIN", () => {
-            this.channels = [...this.channels, chan];
-            console.log(this.channels);
-        })
-
-    }
-
-    async privmsg(target: string, msg: string): Promise<void> {
-        const connected = this.check_connection();
-        if (!connected) throw new Error("not connected");
-
-        this.send_raw(`PRIVMSG ${target} :${msg}`);
-        saveMessage({
-            command: "PRIVMSG",
-            params: [target, msg],
-            timestamp: new Date(Date.now()),
-            source: [this.connection_info.nick, this.connection_info.username, "localhost"],
-        })
-    }
-
     async send_raw(msg: string) {
         this.websocket?.send(msg);
     }
@@ -165,55 +132,6 @@ class LocalIrcConnection implements iIrcConnection {
         setTimeout(() => {
             this.websocket?.close();
         }, 150);
-    }
-
-    check_connection(): boolean {
-        let connected;
-        const unsub = this.isConnected.subscribe((value) => {
-            connected = value;
-        })
-        unsub();
-
-        console.log(connected);
-
-        return connected == true
-    }
-
-    motd: Writable<string> = writable("");
-    motd_gotten = false;
-    async get_motd() {
-        if (this.motd_gotten) return;
-        this.send_raw("MOTD");
-        this.task_queue.subscribe(
-            console.log,
-            {
-                // RPL_MOTD
-                only: "372",
-                // RPL_ENDOFMOTD
-                until: "376",
-                handle_errors: {
-                    callback: (data) => {
-                        // TODO: embetter this
-                        throw new Error(data.params[0]);
-                    },
-                    // ERR_NOSUCHSERVER and ERR_NOMOTD respectively
-                    errors: ["402", "422"]
-                },
-                // update the store when everything's been recieved
-                unsub_callback: (collected) => {
-                    console.log(collected);
-
-                    this.motd.set(collected
-                        ? collected
-                            .map((o) => o.params[o.params.length - 1])
-                            .join("\n")
-                        : "something went wrong");
-
-                    this.motd_gotten = true;
-                }
-            }
-        );
-
     }
 
     private _establish_connection() {

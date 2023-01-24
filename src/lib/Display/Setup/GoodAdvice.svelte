@@ -34,7 +34,7 @@
 				</ul>
 			</li>
 			<li>
-				used to another platform? IRC might be a little different to what you know. check out
+				used to another platform? IRC might be a little different to what you know, check out
 				<a href="/manual/discord-slack">IRC for Discord and Slack users</a>.
 			</li>
 			<li>make sure to <a href="/manual/etiquette">respect the space and your peers</a>.</li>
@@ -48,7 +48,6 @@
 		<div class="mt-6 flex">
 			<PrimaryButton
 				class="ml-auto"
-				colors={['bg-purple-400', 'text-black']}
 				on:click={dismiss}
 			>
 				Dismiss
