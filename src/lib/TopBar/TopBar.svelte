@@ -1,9 +1,13 @@
+<script>
+	import TubesMenu from "$lib/Display/Menus/TubesMenu.svelte";
+
+</script>
 <div
 	class="outer fixed flex place-items-center
-    text-sm px-4"
+    text-sm px-2.5"
 >
 	<div class="inner flex place-items-center">
-		⛺ tubes!
+		<TubesMenu />
 	</div>
 </div>
 

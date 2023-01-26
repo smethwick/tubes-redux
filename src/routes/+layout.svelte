@@ -10,6 +10,6 @@
 	<meta name="theme-color" content="#fafafa" />
 </svelte:head>
 
-<div class="font-serif bg-neutral-50 text-neutral-900 h-screen flex">
+<div class="font-serif bg-white text-neutral-900 h-screen flex -z-50">
 	<slot />
 </div>
