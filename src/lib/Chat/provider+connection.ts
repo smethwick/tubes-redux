@@ -107,6 +107,7 @@ export abstract class IrcProvider {
     abstract add_connection?(ci: ConnectionInfo): IrcConnection
     abstract add_persistent_connection?(ci: ConnectionInfo): IrcConnection
     static fetch_persistent_connections?(provider_id: string): Promise<Network[]>
+    abstract get_connections(): [string, IrcConnection][];
 }
 
 

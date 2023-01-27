@@ -14,10 +14,10 @@
 		opacity = 0.1;
 </script>
 
-<details bind:open={isopen} class="z-50">
+<details bind:open={isopen} class="z-50 text-base">
 	<summary
 		class="list-none select-none hover:bg-neutral-200 active:bg-neutral-300
-		cursor-pointer py-0.5 rounded px-1.5"
+		cursor-pointer py-0.5 rounded px-1.5 text-sm"
 	>
 		⛺ tubes! <span class="text-xs">{isopen ? '▲' : '▼'}</span>
 	</summary>
@@ -25,7 +25,7 @@
 		<div transition:fly={{ duration, easing, opacity, y: -5, x: -5 }}>
 			<div
 				transition:scale={{ duration, opacity, easing, start: 0.95 }}
-				class="absolute mt-2 bg-purple-50 border border-neutral-200 rounded-lg shadow-xl w-48"
+				class="absolute mt-2 bg-purple-50 border border-neutral-200 rounded-lg shadow-xl w-56"
 			>
 				<MenuItem on:click={() => goto('/config')} icon="🔧">Configure Tubes…</MenuItem>
 				<MenuItem on:click={() => donate = true} icon="💷">Donate…</MenuItem>

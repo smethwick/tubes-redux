@@ -9,6 +9,7 @@
 	import { quadOut, quintOut } from 'svelte/easing';
 	import { navigating } from '$app/stores';
 	import GoodAdvice from '$lib/Display/Setup/GoodAdvice.svelte';
+	import { goto } from '$app/navigation';
 
 	export let data: LayoutData;
 
@@ -55,7 +56,7 @@
 			</div>
 		{:else}
 		<div in:other_other_transision out:other_other_transision={{delay: 75}}>
-			<div in:transision={{delay: 100}} out:transision={{delay: 50}} class="mb-6">
+			<div in:transision={{delay: 150}} out:transision={{delay: 50}} class="mb-6">
 				<DisconnectedBanner on:click={() => conn.connect()} />
 			</div>
 		</div>
@@ -80,7 +81,7 @@
 					<HomeAction on:click={() => ($isConnected ? conn.disconnect() : conn.connect())}>
 						🔌 {$isConnected ? 'Disconnect' : 'Connect'}
 					</HomeAction>
-					<HomeAction>🔭 Browse Channels</HomeAction>
+					<HomeAction on:click={() => goto("./browse")}>🔭 Browse Channels</HomeAction>
 					<HomeAction>👋 Join/Create Channel</HomeAction>
 					<HomeAction>📜 Server Messages</HomeAction>
 					<HomeAction>✏️ Configure</HomeAction>

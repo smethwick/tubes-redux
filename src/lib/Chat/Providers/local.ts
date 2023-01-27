@@ -17,6 +17,8 @@ enum LocalProviderError {
 }
 
 export class LocalProvider extends IrcProvider {
+
+
     provider_id = "LocalProvider";
 
     connections: [string, LocalIrcConnection][] = [];
@@ -81,6 +83,10 @@ export class LocalProvider extends IrcProvider {
             .where("provider_id")
             .equals(provider_id)
             .toArray();
+    }
+
+    get_connections(): [string, LocalIrcConnection][] {
+        return this.connections;
     }
 }
 

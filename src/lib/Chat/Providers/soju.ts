@@ -14,6 +14,9 @@ export class SojuProvider extends IrcProvider {
     add_persistent_connection?(ci: ConnectionInfo): IrcConnection {
         throw new Error("Method not implemented.");
     }
+    get_connections(): [string, IrcConnection][] {
+        throw new Error("Method not implemented.");
+    }
 }
 
 export class SojuConnection extends IrcConnection {

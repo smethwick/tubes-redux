@@ -1,7 +1,6 @@
 import type { LayoutLoad } from "./$types";
 import { provider } from "$lib/Chat";
 import { error } from "@sveltejs/kit";
-import type { iIrcConnection } from "$lib/Chat/provider+connection";
 import { browser } from "$app/environment";
 
 export const load: LayoutLoad = async ({ params }) => {
