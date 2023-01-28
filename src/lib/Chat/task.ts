@@ -9,14 +9,18 @@ export type task = {
 };
 export type subscription = {
     id: string,
-    until?: string,
-    only?: string | string[],
+    until?: msg_description,
+    only?: msg_description | msg_description[],
     errors?: string[],
     complete: boolean,
     error_callback?: (data: IrcMessageEvent) => void,
     unsub_callback?: (collected?: IrcMessageEvent[]) => void,
     _collected?: IrcMessageEvent[],
-    callback: (data: IrcMessageEvent) => void
+    callback: ((data: IrcMessageEvent) => void) | null
+}
+export type msg_description = {
+    command: string,
+    params?: string[],
 }
 
 
@@ -37,15 +41,15 @@ export class TaskQueue {
     }
 
     subscribe(
-        callback: (data: IrcMessageEvent) => void,
+        callback: ((data: IrcMessageEvent) => void) | null,
         options?: {
-            until?: string;
-            only?: string | string[];
+            until?: msg_description;
+            only?: msg_description | msg_description[];
             handle_errors?: {
                 errors: string[];
                 callback: (data: IrcMessageEvent) => void;
             };
-            unsub_callback: (collected?: IrcMessageEvent[]) => void;
+            unsub_callback?: (collected?: IrcMessageEvent[]) => void;
         }
     ) {
         const id = uuidv4();
@@ -56,7 +60,7 @@ export class TaskQueue {
             complete: false,
             errors: options?.handle_errors?.errors,
 
-            callback,
+            callback: callback,
             error_callback: options?.handle_errors?.callback,
             unsub_callback: options?.unsub_callback,
         };
@@ -77,28 +81,19 @@ export class TaskQueue {
         });
 
         this.subscriptions.forEach((o) => {
-            if (o.until == event.command) {
+            if (o.until && do_we_care_about_it(o.until, event)) {
                 this.unsubscribe(o.id);
                 if (o.unsub_callback)
                     o.unsub_callback(o._collected);
             }
 
-            if (o.only) {
-                if (typeof o.only === typeof []) {
-                    if (!(o.only.includes(event.command)))
-                        return;
-                }
-                if (typeof o.only === "string") {
-                    if (o.only != event.command)
-                        return;
-                }
-            }
+            if (o.only && !do_we_care_about_it(o.only, event)) return;
 
             if (o.unsub_callback) {
                 o._collected = o._collected ? [...o._collected, event] : [event];
             }
 
-            o.callback(event);
+            if (o.callback) o.callback(event);
         });
     }
 
@@ -106,3 +101,41 @@ export class TaskQueue {
         this.new_task(reply, callback);
     }
 }
+
+function do_we_care_about_it(what_were_looking_for: msg_description | msg_description[], msg: IrcMessageEvent): boolean {
+    const isArray = (obj: unknown): obj is Array<unknown> => {
+        if (Object.prototype.toString.call(obj) === '[object Array]') return true;
+        else return false;
+    }
+    if (!what_were_looking_for) return true;
+
+    let result = false;
+    if (isArray(what_were_looking_for)) result = process_array(what_were_looking_for, msg);
+    else result = process_single(what_were_looking_for, msg);
+
+    return result;
+
+    function process_array(list: msg_description[], msg: IrcMessageEvent): boolean {
+        let result = false;
+        for (const only of list) {
+            if (!result) result = process_single(only, msg);
+        }
+        return result;
+    }
+
+    function process_single(only: msg_description, msg: IrcMessageEvent): boolean {
+        if (only.command != msg.command) return false;
+        if (only.params) {
+            for (const param of only.params) {
+                if (!msg.params.includes(param)) return false
+            }
+        }
+
+        return true;
+    }
+}
+
+
+// function are_we_done(sub: subscription, msg: IrcMessageEvent): boolean {
+
+// }

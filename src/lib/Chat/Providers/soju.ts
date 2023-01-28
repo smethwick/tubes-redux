@@ -1,9 +1,40 @@
 import { IrcConnection, IrcProvider, type ConnectionInfo } from "../provider+connection";
+import { TaskQueue } from "../task";
+import { LocalIrcConnection } from "./local";
 
 export class SojuProvider extends IrcProvider {
+    conn?: LocalIrcConnection;
+    url: string;
+    proto: 'ws' | 'tcp';
+
+    task_queue: TaskQueue;
+
+    constructor(url: string, opt: { protocol: 'ws' | 'tcp' }) {
+        super();
+        this.url = url;
+        if (opt.protocol == "tcp") throw new Error("TCP support is yet to be implemented");
+        this.proto = opt.protocol;
+        this.task_queue = new TaskQueue();
+    }
+
     supportsEnvironment?: (() => boolean) | undefined;
-    up(): void {
-        throw new Error("Method not implemented.");
+    async up() {
+        if (this.active) return;
+        await this.up_lock.acquire("up-lock", async () => {
+            if (this.active) return;
+            this.conn = new LocalIrcConnection({
+                channels: [],
+                icon: '⚡',
+                name: "soju",
+                nick: "leah",
+                realname: "leah",
+                username: "leah",
+                secure: true,
+                url: this.url,
+            });
+            this.active = true;
+        })
+
     }
     down?(): void {
         throw new Error("Method not implemented.");
@@ -20,6 +51,8 @@ export class SojuProvider extends IrcProvider {
 }
 
 export class SojuConnection extends IrcConnection {
+    request_caps: string[] = [];
+    
     connect(): boolean {
         throw new Error("Method not implemented.");
     }

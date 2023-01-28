@@ -170,12 +170,12 @@ export abstract class IrcConnection {
         if (this.motd_gotten) return;
         this.send_raw("MOTD");
         this.task_queue.subscribe(
-            console.log,
+            null,
             {
                 // RPL_MOTD
-                only: "372",
+                only: { command: "372" },
                 // RPL_ENDOFMOTD
-                until: "376",
+                until: { command: "376" },
                 handle_errors: {
                     callback: (data) => {
                         // TODO: embetter this
@@ -198,8 +198,38 @@ export abstract class IrcConnection {
                 }
             }
         );
-
     }
+
+    abstract request_caps: string[];
+
+    capabilities: { cap: string, values: string[] }[] = [];
+
+    async negotiate_capabilities(msg: IrcMessageEvent | undefined): Promise<{ cap: string; values: string[]; }[]> {
+        if (!msg) throw new Error("server didn't send caps");
+
+        // this is... not great!
+        if (!(msg.params[2] != '*' || msg.params[3])) throw new Error;
+        const caps = msg.params[3] || msg.params[2];
+        const split_caps = caps.split(" ");
+        const res = split_caps.map((o) => {
+            const [cap, values] = o.split("=");
+            let split_values: string[] = [];
+            if (values) split_values = values.split(",");
+            return { cap, values: split_values }
+        });
+
+        console.log(res)
+        for (const cap of this.request_caps) {
+            console.log(cap)
+            if (res.find((o) => o.cap == cap)) {
+                console.log("AAAAAAAA", cap)
+                this.send_raw(`CAP REQ :${cap}`);
+            }
+        }
+
+        return res
+    }
+
 
     abstract on_connect?: (() => void) | undefined;
 }

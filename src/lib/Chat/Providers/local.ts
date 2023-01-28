@@ -17,8 +17,6 @@ enum LocalProviderError {
 }
 
 export class LocalProvider extends IrcProvider {
-
-
     provider_id = "LocalProvider";
 
     connections: [string, LocalIrcConnection][] = [];
@@ -90,12 +88,12 @@ export class LocalProvider extends IrcProvider {
     }
 }
 
-class LocalIrcConnection extends IrcConnection {
+export class LocalIrcConnection extends IrcConnection {
     websocket?: WebSocket;
-
     on_msg?: (event: IrcMessageEvent) => void = saveMessage;
-
     on_connect?: (() => void) | undefined;
+
+    request_caps: string[] = ['sasl'];
 
     connect() {
         this.isConnected.set("connecting");
@@ -110,12 +108,12 @@ class LocalIrcConnection extends IrcConnection {
                 })
             }
             this.websocket.onmessage = (event) => {
+                console.log(event.data);
                 const msg = handle_raw_irc_msg(event.data, (msg) => {
                     console.log("sent", msg);
                     this.websocket?.send(msg)
                 });
                 this.task_queue.resolve_tasks(msg);
-
                 if (this.on_msg) {
                     this.on_msg(msg);
                 }
@@ -147,10 +145,6 @@ class LocalIrcConnection extends IrcConnection {
     }
 
     private async _identify() {
-        if (!this.websocket) {
-            throw new Error(LocalProviderError.NoWebsocket);
-        }
-
         const conninfo = this.connection_info;
 
         const to_send = [
@@ -159,8 +153,15 @@ class LocalIrcConnection extends IrcConnection {
             `NICK ${conninfo.nick}`,
             `USER ${conninfo.username} 0 * :${conninfo.realname}`,
             // do capability negotiation here at some point
-            "CAP END",
         ];
+
+        this.task_queue.subscribe(async (msg) =>
+            (this.capabilities = [...this.capabilities, ...(await this.negotiate_capabilities(msg))]),
+            {
+                only: { command: "CAP", params: ['LS']},
+                until: { command: "CAP", params: ['ACK'] } ,
+                unsub_callback: () => this.send_raw("CAP END")
+            });
 
         for (const msg of to_send) {
             console.log(msg);

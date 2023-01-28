@@ -12,12 +12,10 @@
 		overflow-hidden
 		place-items-center justify-center"
 	aria-label="Add Network"
-	on:click={() => conn_dialog = true}
+	on:click={() => (conn_dialog = true)}
 >
 	<span class="text-2xl">+</span>
 	<!-- <span class="opacity-25 rotate-12 select-none relative -bottom-2 -right-1 text-3xl">{network.icon}</span> -->
 </button>
 
-{#if conn_dialog}
-	<NewConnection on_cancel={() => {conn_dialog = false}} />
-{/if}
+<NewConnection bind:isopen={conn_dialog} />

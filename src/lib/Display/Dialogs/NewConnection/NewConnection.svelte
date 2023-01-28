@@ -10,18 +10,17 @@
 	import { slide } from 'svelte/transition';
 	import DialogBase from '../Base/Base.svelte';
 
-	export let on_cancel: () => void;
-	export let on_finish: undefined | (() => void) = undefined;
+	export let isopen = false;
 
 	let url: string, nick: string, realname: string, username: string, password: string, ssl: boolean;
 
-	async function add_network() {
-		extract_bits_from_url(url);
-		if (on_finish) on_finish();
-	}
+	// async function add_network() {
+	// 	extract_bits_from_url(url);
+	// 	if (on_finish) on_finish();
+	// }
 </script>
 
-<DialogBase width="max-w-2xl" class="h-[95vh]">
+<DialogBase bind:isopen let:close width="max-w-2xl" class="h-[95vh]">
 	<Heading1 class="text-center">Add a Network</Heading1>
 
 	<form class="flex flex-col my-4">
@@ -82,8 +81,8 @@
 	</form>
 	<div class="mt-auto">
 		<div class="flex mt-4">
-			<SecondaryButton on:click={on_cancel}>nevermind</SecondaryButton>
-			<PrimaryButton class="ml-auto" on:click={add_network}>
+			<SecondaryButton on:click={close}>nevermind</SecondaryButton>
+			<PrimaryButton class="ml-auto" on:click={close}>
 				get silly with it
 				<span class="text-sm">(this is a confirm button, to be clear)</span>
 			</PrimaryButton>

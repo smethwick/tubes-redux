@@ -3,10 +3,10 @@
 	import SecondaryButton from '../Buttons/SecondaryButton.svelte';
 	import DialogBase from './Base/Base.svelte';
 
-	export let close: () => void;
+	export let isopen = false;
 </script>
 
-<DialogBase width="max-w-2xl" class="h-[95vh] ">
+<DialogBase bind:isopen width="max-w-2xl" class="h-[95vh] " let:close>
 	<Heading1 class="text-center">give me money :)</Heading1>
 
 	<article class="prose mt-6">

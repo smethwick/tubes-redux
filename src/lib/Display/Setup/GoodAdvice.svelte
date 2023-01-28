@@ -1,25 +1,12 @@
 <script lang="ts">
 	import type { ConnectionInfo } from '$lib/Chat/provider+connection';
 	import PrimaryButton from '../Buttons/PrimaryButton.svelte';
-	import SecondaryButton from '../Buttons/SecondaryButton.svelte';
+	import Dismissable from '../Etc/Dismissable.svelte';
 
 	export let connection_info: ConnectionInfo;
-
-	const json = JSON.parse(localStorage.getItem('dismissed') ?? '{}');
-	let { welcome: dismissed } = json;
-
-	if (typeof dismissed !== 'boolean') {
-		dismissed = false;
-		localStorage.setItem('dismissed', JSON.stringify({ ...json, welcome: false }));
-	}
-
-	const dismiss = () => {
-		localStorage.setItem('dismissed', JSON.stringify({ ...json, welcome: true }));
-		dismissed = true;
-	};
 </script>
 
-{#if !dismissed}
+<Dismissable key="welcome" let:dismiss>
 	<article class="bg-purple-200 text-black px-5 py-6 rounded-lg mb-8">
 		<h1 class="text-3xl mb-4">Welcome to your first network!</h1>
 		<p class="text-lg mb-3">
@@ -34,7 +21,8 @@
 				</ul>
 			</li>
 			<li>
-				used to another platform? IRC might be a little different to what you know, check out
+				coming from another platform? Due to Old™, IRC might be a little different to what you're used to: check
+				out
 				<a href="/manual/discord-slack">IRC for Discord and Slack users</a>.
 			</li>
 			<li>make sure to <a href="/manual/etiquette">respect the space and your peers</a>.</li>
@@ -46,15 +34,10 @@
 		<p class="mt-4">take care!</p>
 
 		<div class="mt-6 flex">
-			<PrimaryButton
-				class="ml-auto"
-				on:click={dismiss}
-			>
-				Dismiss
-			</PrimaryButton>
+			<PrimaryButton class="ml-auto" on:click={dismiss}>Dismiss</PrimaryButton>
 		</div>
 	</article>
-{/if}
+</Dismissable>
 
 <style>
 	h1 {

@@ -33,8 +33,5 @@
 			</div>
 		</div>
 	{/if}
-	{#if donate}
-		<Donate close={() => donate = false} />
-	{/if}
-	{#if about}{/if}
+	<Donate bind:isopen={donate} />
 </details>
