@@ -1,6 +1,6 @@
 import { assert, expect, expectTypeOf, test } from 'vitest'
 import type { IrcMessageEvent } from '../provider+connection';
-import { handle_raw_irc_msg, transform_raw_tags } from './common';
+import { handle_raw_irc_msg, transform_raw_tags, transform_user_line } from './common';
 
 test("transform_raw_tags()", () => {
     const input = "@id=123AB;rose";
@@ -61,4 +61,18 @@ test("parse join", () => {
 
     expectTypeOf(output).toMatchTypeOf<IrcMessageEvent>();
     expect(output).toEqual(expected);
+})
+
+test("parse userline", () => {
+    const input_only_source = "testnet.leahc.gay";
+    const input_full = "thatcher!~u@qvb4ppdq8b9tk.oragono";
+
+    const expected_1 = ["testnet.leahc.gay"];
+    const expected_2 = ["thatcher", "~u", "qvb4ppdq8b9tk.oragono"];
+
+    const output_1 = transform_user_line(input_only_source);
+    const output_2 = transform_user_line(input_full);
+
+    expect(output_1).toEqual(expected_1);
+    expect(output_2).toEqual(expected_2);
 })

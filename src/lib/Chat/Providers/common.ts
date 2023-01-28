@@ -88,15 +88,6 @@ export function transform_user_line(source: string): Source {
     }
 }
 
-function parseCommandName(commandString: string): CommandList {
-    let command: CommandList;
-    if (Object.values(CommandList).some((o) => o == commandString))
-        command = <CommandList>commandString;
-    else
-        command = CommandList.UNKNOWN;
-
-    return command;
-}
 
 export enum CommandList {
     UNKNOWN = "???",
