@@ -9,12 +9,6 @@ import { handle_raw_irc_msg } from "./common";
 import { db } from "$lib/Storage/db";
 import { Capability } from "../caps";
 import { saveMessage } from "$lib/Storage/messages";
-import { writable, type Writable } from "svelte/store";
-import { TaskQueue } from "../task";
-
-enum LocalProviderError {
-    NoWebsocket = "No websocket in this thing"
-}
 
 export class LocalProvider extends IrcProvider {
     provider_id = "LocalProvider";
@@ -102,15 +96,16 @@ export class LocalIrcConnection extends IrcConnection {
         if (this.websocket) {
             this.websocket.onopen = () => {
                 this._identify();
-                this.get_motd();
-                this.connection_info.channels.forEach((o) => {
-                    this.join_channel(o);
-                })
+                this.task_queue.on('001', () => {
+                    this.get_motd();
+                    this.connection_info.channels.forEach((o) => {
+                        this.join_channel(o);
+                    })
+                });
             }
             this.websocket.onmessage = (event) => {
-                console.log(event.data);
+                console.debug("→", event.data);
                 const msg = handle_raw_irc_msg(event.data, (msg) => {
-                    console.log("sent", msg);
                     this.websocket?.send(msg)
                 });
                 this.task_queue.resolve_tasks(msg);
@@ -128,6 +123,7 @@ export class LocalIrcConnection extends IrcConnection {
     }
 
     async send_raw(msg: string) {
+        console.debug("←", msg)
         this.websocket?.send(msg);
     }
 
@@ -152,21 +148,26 @@ export class LocalIrcConnection extends IrcConnection {
             conninfo.server_password ? `PASS ${conninfo.server_password}` : ``,
             `NICK ${conninfo.nick}`,
             `USER ${conninfo.username} 0 * :${conninfo.realname}`,
-            // do capability negotiation here at some point
         ];
+
+        // let prereg_finished = false;
 
         this.task_queue.subscribe(async (msg) =>
             (this.capabilities = [...this.capabilities, ...(await this.negotiate_capabilities(msg))]),
             {
-                only: { command: "CAP", params: ['LS']},
-                until: { command: "CAP", params: ['ACK'] } ,
+                only: { command: "CAP", params: ['*', 'LS'] },
+                until: { command: "CAP", params: ['*', 'ACK']},
                 unsub_callback: () => this.send_raw("CAP END")
             });
+        // this.task_queue.on({command: "CAP", params: ["*", "ACK"]}, () => {
+        //     this.send_raw("AUTHENTICATE PLAIN");
+        //     this.send_raw(`AUTHENTICATE ${btoa("leah\0leah\0testtesttest")}`);
+        //     prereg_finished = true;
+        // })
 
         for (const msg of to_send) {
-            console.log(msg);
-            this.send_raw(msg);
+            if (msg) this.send_raw(msg);
         }
-        this.task_queue.wait_for("001", () => this.isConnected.set(true));
+        this.task_queue.on("001", () => this.isConnected.set(true));
     }
 }

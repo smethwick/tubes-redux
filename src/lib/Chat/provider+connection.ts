@@ -133,7 +133,7 @@ export abstract class IrcConnection {
 
     async join_channel(chan: string): Promise<void> {
         this.send_raw(`JOIN ${chan}`);
-        this.task_queue.wait_for("JOIN", () => {
+        this.task_queue.on("JOIN", () => {
             this.channels = [...this.channels, chan];
             console.log(this.channels);
         })
@@ -222,7 +222,6 @@ export abstract class IrcConnection {
         for (const cap of this.request_caps) {
             console.log(cap)
             if (res.find((o) => o.cap == cap)) {
-                console.log("AAAAAAAA", cap)
                 this.send_raw(`CAP REQ :${cap}`);
             }
         }

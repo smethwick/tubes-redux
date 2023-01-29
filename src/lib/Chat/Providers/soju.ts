@@ -32,6 +32,8 @@ export class SojuProvider extends IrcProvider {
                 secure: true,
                 url: this.url,
             });
+            this.conn.request_caps.push("soju.im/bouncernetworks");
+            this.conn.connect();
             this.active = true;
         })
 
