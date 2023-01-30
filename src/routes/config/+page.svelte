@@ -3,7 +3,9 @@
 	import { base } from '$app/paths';
 	import Content from '$lib/Display/Type/Content.svelte';
 	import Header from '$lib/Display/Type/Header.svelte';
-	import TopBar from '$lib/TopBar/TopBar.svelte';
+	import TopBar from '$lib/Display/TopBar/TopBar.svelte';
+	import { fly } from 'svelte/transition';
+	import { circIn, circOut } from 'svelte/easing';
 
 	let previousPage: string = base;
 
@@ -11,14 +13,17 @@
 		previousPage = from?.url.pathname || previousPage;
 	});
 </script>
-<TopBar />
-<Content>
-	<Header>
-		<svelte:fragment slot="above">
-			<button class="underline" on:click={() => goto(previousPage)}> ← return to the app </button>
-		</svelte:fragment>
-		Configuration
-	</Header>
 
-
-</Content>
+<div class="w-full h-full"
+	in:fly={{ duration: 200, easing: circOut, opacity: 0, y: 5 }}
+	out:fly={{ duration: 200, easing: circIn, opacity: 0, y: 5 }}
+>
+	<Content>
+		<Header>
+			<svelte:fragment slot="above">
+				<button class="underline" on:click={() => goto(previousPage)}> ← return to the app </button>
+			</svelte:fragment>
+			Configuration
+		</Header>
+	</Content>
+</div>

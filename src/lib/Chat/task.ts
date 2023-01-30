@@ -6,7 +6,17 @@ export type task = {
     reply: string | msg_description,
     complete: boolean,
     callback: (data: IrcMessageEvent) => void
-};
+}
+
+/**
+ * similar to a {@link task}, but with promises, y'know?
+ */
+export type async_task<T> = {
+    id: string,
+    reply: string | msg_description,
+    task: Deferred<T>,
+}
+
 export type subscription = {
     id: string,
     until?: msg_description | (() => boolean),
@@ -18,14 +28,27 @@ export type subscription = {
     _collected?: IrcMessageEvent[],
     callback: ((data: IrcMessageEvent) => void) | null
 }
+
 export type msg_description = {
     command: string,
     params?: string[],
 }
 
+export class Deferred<T> {
+    promise: Promise<T>;
+    reject: ((reason?: string) => void) | undefined;
+    resolve: ((value: T | PromiseLike<T>) => void) | undefined;
+
+    constructor() {
+        this.promise = new Promise((resolve, reject) => {
+            this.reject = reject
+            this.resolve = resolve
+        })
+    }
+}
 
 export class TaskQueue {
-    tasks: task[] = [];
+    tasks: (task | async_task<IrcMessageEvent>)[] = [];
     subscriptions: subscription[] = [];
 
     new_task(reply: string | msg_description, callback: (data: IrcMessageEvent) => void): string {
@@ -36,8 +59,23 @@ export class TaskQueue {
             complete: false,
             callback
         };
+
         this.tasks.push(task);
         return id;
+    }
+
+    new_async_task(reply: string | msg_description) {
+        const id = uuidv4();
+        const d = new Deferred<IrcMessageEvent>();
+
+        const task: async_task<IrcMessageEvent> = {
+            id,
+            reply,
+            task: d,
+        }
+        this.tasks.push(task);
+
+        return d.promise;
     }
 
     subscribe(
@@ -74,13 +112,29 @@ export class TaskQueue {
     }
 
     async resolve_tasks(event: IrcMessageEvent) {
+        // don't worry about this. it's fine. probably
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const isAsync = (obj: any): obj is async_task<IrcMessageEvent> => {
+            if (obj.task) return true;
+            else return false;
+        }
+
+
         this.tasks = this.tasks.filter((o) => {
             if (typeof o.reply == "string") {
-                if (o.reply == event.command) { o.callback(event); return false; }
+                if (o.reply == event.command) {
+                    if (!isAsync(o)) o.callback(event);
+                    else if (o.task.resolve) resolve_async_task(o, event);
+                    else return false;
+                }
                 return true;
             }
 
-            if (do_we_care_about_it(o.reply, event)) { o.callback(event); return false; }
+            if (do_we_care_about_it(o.reply, event)) {
+                if (!isAsync(o)) o.callback(event);
+                else if (o.task.resolve) resolve_async_task(o, event);
+                else return false;
+            }
             else
                 return true;
         });
@@ -110,6 +164,17 @@ export class TaskQueue {
     on(reply: string | msg_description, callback: (data: IrcMessageEvent) => void) {
         this.new_task(reply, callback);
     }
+
+    async wait_for(reply: string | msg_description): Promise<IrcMessageEvent> {
+        return this.new_async_task(reply);
+    }
+}
+
+function resolve_async_task(task: async_task<IrcMessageEvent>, msg: IrcMessageEvent): boolean {
+    if (!task.task.resolve || !task.task.reject) throw new Error("task not yet initialised");
+
+    task.task.resolve(msg);
+    return true;
 }
 
 function do_we_care_about_it(what_were_looking_for: msg_description | msg_description[], msg: IrcMessageEvent): boolean {
@@ -128,7 +193,8 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
     function process_array(list: msg_description[], msg: IrcMessageEvent): boolean {
         let result = false;
         for (const only of list) {
-            if (!result) result = process_single(only, msg);
+            if (result) break;
+            result = process_single(only, msg);
         }
         return result;
     }

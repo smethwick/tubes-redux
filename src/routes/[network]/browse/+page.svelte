@@ -5,7 +5,7 @@
 
 	let value: string = 'bumpscosity';
 
-	let channels: [string, string, number][] = [['#tubes', 'the tube zone', 15]];
+	let channels: [string, string, number][] = [['#tubes', 'the tube zone', 3]];
 </script>
 
 <Content>

@@ -1,5 +1,5 @@
 import type { Network } from "$lib/Storage/db";
-import type { Capability } from "./caps";
+import type { ProviderFlags } from "./flags";
 import type { Source } from "./Providers/common";
 import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
@@ -61,7 +61,7 @@ export enum ProviderError {
  */
 export abstract class IrcProvider {
     /**
-     * Every connection in this provider. Use `connect_all()` to connect to em.
+     * Every connection in this provider. use `connect_all()` to connect to em
      */
     connections: [string, IrcConnection][] = [];
 
@@ -71,17 +71,38 @@ export abstract class IrcProvider {
      * Useful if your provider needs to interact with system apis or
      * browser-specific stuff. If this fails, Tubes will refuse to do anything
      * with this provider.
+     * 
+     * @returns true if the environment is acceptable.
      */
     abstract supportsEnvironment?: (() => boolean);
 
-    capabilities: Capability[] = [];
-    supports(cap: Capability): boolean {
-        return this.capabilities.includes(cap);
+    /**
+     * a list of flags for this provider. check {@link ProviderFlags} for a list.
+     */
+    flags: ProviderFlags[] = [];
+    /**
+     * check if a flag is set on this provider.
+     * 
+     * @param flag The flag in question
+     * @returns true if the flag is set
+     */
+    has_flag(flag: ProviderFlags): boolean {
+        return this.flags.includes(flag);
     }
 
+    /**
+     * true if the network is active
+     */
     active = false;
     up_lock = new AsyncLock();
+
+    /**
+     * bring the provider up. this is where you should grab stuff 
+     * from databases, connect to backend services, that sorta thing.
+     */
     abstract up(): void;
+
+
     abstract down?(): void;
 
     /**
@@ -104,6 +125,7 @@ export abstract class IrcProvider {
         return result;
     }
 
+    
     abstract add_connection?(ci: ConnectionInfo): IrcConnection
     abstract add_persistent_connection?(ci: ConnectionInfo): IrcConnection
     static fetch_persistent_connections?(provider_id: string): Promise<Network[]>

@@ -7,7 +7,7 @@ import {
 } from "../provider+connection";
 import { handle_raw_irc_msg } from "./common";
 import { db } from "$lib/Storage/db";
-import { Capability } from "../caps";
+import { ProviderFlags } from "../flags";
 import { saveMessage } from "$lib/Storage/messages";
 
 export class LocalProvider extends IrcProvider {
@@ -15,7 +15,7 @@ export class LocalProvider extends IrcProvider {
 
     connections: [string, LocalIrcConnection][] = [];
 
-    capabilities: Capability[] = [Capability.MultipleConnections];
+    flags: ProviderFlags[] = [ProviderFlags.MultipleConnections];
 
     async up() {
         if (this.active) return;
@@ -156,7 +156,7 @@ export class LocalIrcConnection extends IrcConnection {
             (this.capabilities = [...this.capabilities, ...(await this.negotiate_capabilities(msg))]),
             {
                 only: { command: "CAP", params: ['*', 'LS'] },
-                until: { command: "CAP", params: ['*', 'ACK']},
+                until: { command: "CAP", params: ['*', 'ACK'] },
                 unsub_callback: () => this.send_raw("CAP END")
             });
         // this.task_queue.on({command: "CAP", params: ["*", "ACK"]}, () => {
@@ -168,6 +168,7 @@ export class LocalIrcConnection extends IrcConnection {
         for (const msg of to_send) {
             if (msg) this.send_raw(msg);
         }
-        this.task_queue.on("001", () => this.isConnected.set(true));
+
+        this.task_queue.wait_for("001").then(() => this.isConnected.set(true));
     }
 }

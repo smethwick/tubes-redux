@@ -10,6 +10,7 @@
 	import { navigating } from '$app/stores';
 	import GoodAdvice from '$lib/Display/Setup/GoodAdvice.svelte';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	export let data: LayoutData;
 
@@ -19,17 +20,18 @@
 	let [_, conn] = connection;
 	const { isConnected, connection_info, motd } = conn;
 
-	$: notconnected = ($isConnected == false) || ($isConnected == "connecting");
+	$: notconnected = $isConnected == false || $isConnected == 'connecting';
 
-	const transision = (n: Element, opt?: {delay: number}) =>
-		scale(n, { duration: $navigating ? 0 : 500, start: 0.75, easing: quintOut, delay: opt?.delay });
+	const duration = 500;
 
-	const other_transition = (n: Element, opt?: {delay: number}) =>
-		fade(n, { duration: $navigating ? 0 : 250, easing: quintOut, delay: opt?.delay });
+	const transision = (n: Element, opt?: { delay: number }) =>
+		scale(n, { duration, start: 0.75, easing: quintOut, delay: duration ? opt?.delay : 0 });
 
-	const other_other_transision = (n: Element, opt?: {delay: number}) =>
-		slide(n, { duration: $navigating ? 0 : 500, easing: quintOut, delay: opt?.delay });
+	const other_transition = (n: Element, opt?: { delay: number }) =>
+		fade(n, { duration, easing: quintOut, delay: duration ? opt?.delay : 0 });
 
+	const other_other_transision = (n: Element, opt?: { delay: number }) =>
+		slide(n, { duration, easing: quintOut, delay: duration ? opt?.delay : 0 });
 </script>
 
 <section class="max-w-3xl mx-auto lg:pt-4 xl:pt-8">
@@ -50,17 +52,11 @@
 	</header>
 
 	{#if notconnected}
-		{#if $navigating}
-			<div class="mb-6">
-				<DisconnectedBanner on:click={() => conn.connect()} />
-			</div>
-		{:else}
-		<div in:other_other_transision out:other_other_transision={{delay: 75}}>
-			<div in:transision={{delay: 150}} out:transision={{delay: 50}} class="mb-6">
+		<div in:other_other_transision|local out:other_other_transision|local={{ delay: 75 }}>
+			<div in:transision|local={{ delay: 150 }} out:transision|local={{ delay: 50 }} class="mb-6">
 				<DisconnectedBanner on:click={() => conn.connect()} />
 			</div>
 		</div>
-		{/if}
 	{/if}
 
 	{#if !notconnected}
@@ -68,8 +64,8 @@
 			class="grid grid-cols-3 gap-6"
 			class:disconnected={notconnected}
 			aria-hidden={notconnected}
-			in:other_transition={{delay: 100}}
-			out:other_transition
+			in:other_transition|local={{ delay: 100 }}
+			out:other_transition|local
 		>
 			<section class="col-span-2">
 				<GoodAdvice {connection_info} />
@@ -81,7 +77,7 @@
 					<HomeAction on:click={() => ($isConnected ? conn.disconnect() : conn.connect())}>
 						🔌 {$isConnected ? 'Disconnect' : 'Connect'}
 					</HomeAction>
-					<HomeAction on:click={() => goto("./browse")}>🔭 Browse Channels</HomeAction>
+					<HomeAction on:click={() => goto('./browse')}>🔭 Browse Channels</HomeAction>
 					<HomeAction>👋 Join/Create Channel</HomeAction>
 					<HomeAction>📜 Server Messages</HomeAction>
 					<HomeAction>✏️ Configure</HomeAction>
@@ -92,8 +88,8 @@
 
 		<section
 			class="fade"
-			in:other_transition={{delay: 100}}
-			out:other_transition
+			in:other_transition|local={{ delay: 100 }}
+			out:other_transition|local
 			class:disconnected={notconnected}
 			aria-hidden={notconnected}
 		>
