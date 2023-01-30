@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { ConnectionInfo } from '$lib/Chat/provider+connection';
+	import { v4 as uuidv4 } from 'uuid';
 	import { extract_bits_from_url } from '$lib/Chat/url';
 	import PrimaryButton from '$lib/Display/Buttons/PrimaryButton.svelte';
 	import SecondaryButton from '$lib/Display/Buttons/SecondaryButton.svelte';
@@ -9,22 +11,36 @@
 	import { quadOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
 	import DialogBase from '../Base/Base.svelte';
+	import { provider } from '$lib/Chat';
 
 	export let isopen = false;
 
-	let url: string, nick: string, realname: string, username: string, password: string, ssl: boolean;
+	let name: string, url: string, nick: string, realname: string, username: string, password: string, ssl: boolean;
 
-	// async function add_network() {
-	// 	extract_bits_from_url(url);
-	// 	if (on_finish) on_finish();
-	// }
+	async function add_network() {
+		let uuid = uuidv4();
+		let new_network: ConnectionInfo = {
+			name: uuid,
+			display_name: name,
+			icon: '',
+			url,
+			secure: true,
+			channels: [],
+			nick,
+			realname,
+			username,
+		}
+		$provider.add_persistent_connection(new_network);
+		close();
+	}
 </script>
 
 <DialogBase bind:isopen let:close width="max-w-2xl" class="h-[95vh]">
 	<Heading1 class="text-center">Add a Network</Heading1>
 
 	<form class="flex flex-col my-4">
-		<TextInput bind:value={url} placeholder="ircs://irc.example.com:[port]/">
+		
+		<TextInput bind:value={url} placeholder="ircs://irc.example.com:[port]/" class="mb-6">
 			<h2 class="mb-0">Network URL</h2>
 			<p>
 				if you aren't sure what this is, you can
@@ -32,6 +48,13 @@
 			</p>
 		</TextInput>
 
+		<TextInput bind:value={name} placeholder="my cool network :)">
+			<h2 class="mb-0">Label</h2>
+			<p>
+				This is what the network will be called inside Tubes.
+			</p>
+		</TextInput>
+		
 		<div class="grid grid-cols-2 gap-3 mt-6 mb-2">
 			<TextInput bind:value={nick} placeholder="gerald">
 				<h2 class="mb-0">Nickname</h2>
@@ -82,7 +105,7 @@
 	<div class="mt-auto">
 		<div class="flex mt-4">
 			<SecondaryButton on:click={close}>nevermind</SecondaryButton>
-			<PrimaryButton class="ml-auto" on:click={close}>
+			<PrimaryButton class="ml-auto" on:click={add_network}>
 				get silly with it
 				<span class="text-sm">(this is a confirm button, to be clear)</span>
 			</PrimaryButton>

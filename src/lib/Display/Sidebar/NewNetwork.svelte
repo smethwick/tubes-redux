@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import type { ConnectionInfo } from '$lib/Chat/provider+connection';
 	import NewConnection from '$lib/Display/Dialogs/NewConnection/NewConnection.svelte';
+	import Plus from 'phosphor-svelte/lib/Plus';
 
 	let conn_dialog = false;
 </script>
@@ -14,7 +15,7 @@
 	aria-label="Add Network"
 	on:click={() => (conn_dialog = true)}
 >
-	<span class="text-2xl">+</span>
+	<Plus size={17} />
 	<!-- <span class="opacity-25 rotate-12 select-none relative -bottom-2 -right-1 text-3xl">{network.icon}</span> -->
 </button>
 

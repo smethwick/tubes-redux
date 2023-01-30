@@ -1,4 +1,6 @@
 <script lang="ts">
+	import MessageInput from './MessageInput.svelte';
+
 	import { liveQuery } from 'dexie';
 	import { db } from '$lib/Storage/db';
 	import { browser } from '$app/environment';
@@ -8,6 +10,7 @@
 	import type { Message } from '$lib/Storage/messages';
 	import { error } from '@sveltejs/kit';
 	import { onMount } from 'svelte';
+	import TopBit from './TopBit.svelte';
 
 	export let data: PageData;
 	let input = '';
@@ -22,12 +25,11 @@
 
 	let msgs: Message[];
 	$: msgs_store = liveQuery(() =>
-		browser ? db.messages.where('target').equals(channel).toArray() : []
+		browser ? db.messages.where('target').equals(channel).and((item) => item.network == network_name).toArray() : []
 	);
 	$: msgs = $msgs_store as Message[];
 
 	const scrollToBottom = (node: HTMLDivElement, list: Array<unknown>) => {
-		console.log("here");
 		const scroll = (list: Array<unknown>) =>
 			node.scroll({
 				top: node.scrollHeight,
@@ -45,30 +47,17 @@
 
 {#key channel}
 	<div class="flex flex-col h-full">
-		<button on:click={() => db.messages.bulkDelete(msgs.map((v) => v.id ?? 0))}>clear all</button>
-		{channel}
+		<TopBit {channel} />
 		{#if msgs}
 			<div
 				use:scrollToBottom={msgs}
-				class="flex flex-col gap-1 min-w-full max-w-full overflow-y-auto h-full max-h-screen py-4"
+				class="flex flex-col gap-1 min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4"
 			>
 				{#each msgs as msg (msg.id)}
 					<MessageView {msg} />
 				{/each}
 			</div>
-			<input
-				class="w-full border-t px-4 pt-3 focus-visible:outline-none"
-				placeholder={$isConnected ? `say something to ${channel}` : 'not connected to this network'}
-				bind:value={input}
-				disabled={!$isConnected}
-				class:disabled={!$isConnected}
-				on:keydown={(e) => {
-					if (e.key == 'Enter') {
-						conn.privmsg(channel, input);
-						input = '';
-					}
-				}}
-			/>
+			<MessageInput {isConnected} {channel} {conn} />
 		{/if}
 	</div>
 {/key}

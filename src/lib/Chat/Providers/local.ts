@@ -84,7 +84,7 @@ export class LocalProvider extends IrcProvider {
 
 export class LocalIrcConnection extends IrcConnection {
     websocket?: WebSocket;
-    on_msg?: (event: IrcMessageEvent) => void = saveMessage;
+    on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
     on_connect?: (() => void) | undefined;
 
     request_caps: string[] = ['sasl'];

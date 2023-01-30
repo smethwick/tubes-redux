@@ -142,7 +142,7 @@ export abstract class IrcConnection {
     channels: (string | "server_msgs")[] = [];
     task_queue: TaskQueue = new TaskQueue();
 
-    on_msg?: (event: IrcMessageEvent) => void = saveMessage;
+    on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
 
     constructor(ci: ConnectionInfo) {
         this.isConnected = writable(false);
@@ -166,7 +166,7 @@ export abstract class IrcConnection {
         if (!connected) throw new Error("not connected");
 
         this.send_raw(`PRIVMSG ${target} :${msg}`);
-        saveMessage({
+        saveMessage(this.connection_info.name, {
             command: "PRIVMSG",
             params: [target, msg],
             timestamp: new Date(Date.now()),
@@ -212,7 +212,7 @@ export abstract class IrcConnection {
 
                     this.motd.set(collected
                         ? collected
-                            .map((o) => o.params[o.params.length - 1])
+                            .map((o) => o.params[o.params.length - 1].substring(2))
                             .join("\n")
                         : "something went wrong");
 

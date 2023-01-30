@@ -7,20 +7,20 @@ export const load: LayoutLoad = async ({ params }) => {
     if (!browser) return;
     
     const { network } = params;
-    let connection;
+    // let connection;
 
-    const unsubscribe = provider.subscribe(async (value) => {
-        await value.up();
+    // const unsubscribe = provider.subscribe(async (value) => {
+    //     await value.up();
 
-        connection = value.connections.find((o) => o[0] == network);
+    //     connection = value.connections.find((o) => o[0] == network);
 
-        if (!connection) {
-            throw error(404)
-        }
+    //     if (!connection) {
+    //         throw error(404)
+    //     }
     
-    });
+    // });
 
-    unsubscribe();
+    // unsubscribe();
 
     return {network}
 };

@@ -34,7 +34,7 @@
 		slide(n, { duration, easing: quintOut, delay: duration ? opt?.delay : 0 });
 </script>
 
-<section class="max-w-3xl mx-auto lg:pt-4 xl:pt-8">
+<section class="max-w-3xl mx-auto lg:pt-12 xl:pt-16 p-5">
 	<header class="mb-6">
 		<p>
 			{(() => {

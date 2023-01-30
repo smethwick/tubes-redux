@@ -8,7 +8,7 @@
 
 <a {href}>
 	<li
-		class="flex px-2.5 py-1 hover:bg-neutral-600/5 text-neutral-600 
+		class="flex px-2.5 py-1 hover:bg-pink-500/10 text-neutral-600 
             rounded-md duration-[25ms] ease-out transition-colors"
 		class:active
 	>
@@ -18,6 +18,6 @@
 
 <style>
 	.active {
-		@apply bg-neutral-200 hover:bg-neutral-200 text-black;
+		@apply bg-pink-300 hover:bg-pink-300 text-black;
 	}
 </style>

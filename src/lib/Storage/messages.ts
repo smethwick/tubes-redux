@@ -12,6 +12,7 @@ export enum MessageTypes {
 
 export interface Message {
   id?: number;
+  network: string;
   command: string;
   type: MessageTypes;
 
@@ -24,13 +25,13 @@ export interface Message {
   origin: IrcMessageEvent;
 }
 
-export async function saveMessage(e: IrcMessageEvent) {
+export async function saveMessage(net: string, e: IrcMessageEvent) {
   if (e.command.toLowerCase() == "ping") return
 
-  let m = await turnIntoSomethingUseful(e);
+  let m = await turnIntoSomethingUseful(net, e);
 
   if (!m) m = {
-    ...sensible_defaults(e),
+    ...sensible_defaults(net, e),
     target: e.params[0] ?? "Server",
     type: MessageTypes.Invalid,
   }
@@ -38,19 +39,20 @@ export async function saveMessage(e: IrcMessageEvent) {
   await db.messages.add(m);
 }
 
-export const sensible_defaults = (e: IrcMessageEvent) => ({
+export const sensible_defaults = (net: string, e: IrcMessageEvent) => ({
   timestamp: e.timestamp,
   command: e.command,
   source: e.source,
+  network: net,
   origin: e,
 })
 
-async function turnIntoSomethingUseful(e: IrcMessageEvent): Promise<Message | undefined> {
+async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise<Message | undefined> {
   switch (e.command.toLowerCase()) {
     case 'privmsg':
       if (!e.source || !e.params[0] || !e.params[1]) return
       return {
-        ...sensible_defaults(e),
+        ...sensible_defaults(net, e),
         type: MessageTypes.PrivMsg,
         target: e.params[0],
         content: e.params[1],
@@ -58,14 +60,14 @@ async function turnIntoSomethingUseful(e: IrcMessageEvent): Promise<Message | un
     case 'join':
       if (!e.source || !e.params[0]) return
       return {
-        ...sensible_defaults(e),
+        ...sensible_defaults(net, e),
         type: MessageTypes.Join,
         target: e.params[0],
       }
     case 'part':
       if (!e.source) return
       return {
-        ...sensible_defaults(e),
+        ...sensible_defaults(net, e),
         type: MessageTypes.Part,
         content: e.params[e.params.length - 1],
         target: e.params[0],
@@ -73,7 +75,7 @@ async function turnIntoSomethingUseful(e: IrcMessageEvent): Promise<Message | un
     case 'quit':
       if (!e.source || !e.params[0]) return
       return {
-        ...sensible_defaults(e),
+        ...sensible_defaults(net, e),
         type: MessageTypes.Quit,
         content: e.params[e.params.length - 1],
         target: e.params[0],

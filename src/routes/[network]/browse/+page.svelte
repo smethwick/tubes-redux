@@ -13,8 +13,10 @@
 
 	<input
 		type="text"
-		placeholder="🔎 find a thing"
-		class="mt-8 mb-4 px-4 w-full rounded border-neutral-300 bg-neutral-100 shadow py-3 text-xl"
+		placeholder="🔎 find the thing"
+		class="mt-8 mb-4 px-4 w-full rounded 
+		border-neutral-300 bg-neutral-100 focus-visible:border-purple-500 
+		py-3 text-xl"
 	/>
 
 	<div class="flex">

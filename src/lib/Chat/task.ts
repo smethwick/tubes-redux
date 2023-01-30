@@ -202,9 +202,12 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
     function process_single(only: msg_description, msg: IrcMessageEvent): boolean {
         if (only.command != msg.command) return false;
         if (only.params) {
-            for (const [i, param] of only.params.entries()) {
-                if (msg.params[i] != param) return false
-            }
+            let aaa = only.params.filter((o, i) => {
+                if (o == "*") return true;
+                if (msg.params[i] == o) return true;
+                return false;
+            });
+            if (aaa == only.params) return true;
         }
 
         return true;

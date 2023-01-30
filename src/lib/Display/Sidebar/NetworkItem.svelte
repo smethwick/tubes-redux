@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import type { ConnectionInfo } from '$lib/Chat/provider+connection';
 
@@ -16,7 +17,7 @@
 		overflow-hidden
 		place-items-center justify-center"
 	aria-label={network.name}
-	on:click
+	on:click={() => goto(`/${network.name}`)}
 >
 	<span>
 		{active ? text : abbr}

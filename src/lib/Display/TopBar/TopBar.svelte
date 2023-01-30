@@ -1,5 +1,6 @@
 <script>
 	import TubesMenu from "$lib/Display/Menus/TubesMenu.svelte";
+	import HelpMenu from "../Menus/HelpMenu.svelte";
 
 </script>
 <div
@@ -8,6 +9,7 @@
 >
 	<div class="inner flex place-items-center">
 		<TubesMenu />
+		<span class="ml-auto"><HelpMenu /></span>
 	</div>
 </div>
 
