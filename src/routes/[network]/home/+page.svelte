@@ -6,11 +6,9 @@
 	import YellingThing from '$lib/Display/RegistrationFlow/YellingThing.svelte';
 	import DisconnectedBanner from '$lib/Display/Network/DisconnectedBanner.svelte';
 	import { fade, scale, slide } from 'svelte/transition';
-	import { quadOut, quintOut } from 'svelte/easing';
-	import { navigating } from '$app/stores';
+	import { quintOut } from 'svelte/easing';
 	import GoodAdvice from '$lib/Display/Setup/GoodAdvice.svelte';
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
 
 	export let data: LayoutData;
 

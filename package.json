@@ -49,6 +49,7 @@
 		"async-lock": "^1.4.0",
 		"dexie": "^3.2.2",
 		"uuid": "^9.0.0",
-		"uwuifier": "^4.0.5"
+		"uwuifier": "^4.0.5",
+		"validator": "^13.7.0"
 	}
 }
