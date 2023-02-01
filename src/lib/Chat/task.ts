@@ -1,3 +1,8 @@
+/**
+ * this is not a place of honor
+ * no highly esteemed deed is commemorated here
+ */
+
 import type { IrcMessageEvent } from "./provider+connection";
 import { v4 as uuidv4 } from 'uuid';
 

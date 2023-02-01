@@ -9,6 +9,7 @@ import { handle_raw_irc_msg } from "./common";
 import { db } from "$lib/Storage/db";
 import { ProviderFlags } from "../flags";
 import { saveMessage } from "$lib/Storage/messages";
+import { provider } from "..";
 
 export class LocalProvider extends IrcProvider {
     provider_id = "LocalProvider";
@@ -101,6 +102,7 @@ export class LocalIrcConnection extends IrcConnection {
                     this.connection_info.channels.forEach((o) => {
                         this.join_channel(o);
                     })
+                    console.log("fotnite", provider);
                 });
             }
             this.websocket.onmessage = (event) => {

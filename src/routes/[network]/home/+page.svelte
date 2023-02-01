@@ -14,8 +14,8 @@
 
 	export let data: LayoutData;
 
-	let connection = $provider.connections.find((o) => o[0] == data.network);
-	if (!connection) throw error(404);
+	const connection = data.connection;
+	if (!connection) throw new Error
 
 	let [_, conn] = connection;
 	const { isConnected, connection_info, motd } = conn;

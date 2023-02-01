@@ -61,7 +61,7 @@ if i've done it properly, chrome should flash up a thing in your address bar ask
 if you want to install it as a pwa. if not, go to the 3-dot menu in the top right,
 then go to more tools > create shortcut (or apps > install this site as an app on edge). 
 
-i think firefox is planning on supporting these at some point, but knowing mozilla,
+i think firefox is planning on supporting these at some point but – knowing mozilla –
 firefox will probably stop existing before that happens.
 
 ## help out

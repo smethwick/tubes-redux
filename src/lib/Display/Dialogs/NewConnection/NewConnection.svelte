@@ -17,7 +17,7 @@
 
 	let name: string, url: string, nick: string, realname: string, username: string, password: string, ssl: boolean;
 
-	async function add_network() {
+	async function add_network(close: () => void) {
 		let uuid = uuidv4();
 		let new_network: ConnectionInfo = {
 			name: uuid,
@@ -30,7 +30,7 @@
 			realname,
 			username,
 		}
-		$provider.add_persistent_connection(new_network);
+		provider.add_persistent_connection(new_network);
 		close();
 	}
 </script>
@@ -105,7 +105,7 @@
 	<div class="mt-auto">
 		<div class="flex mt-4">
 			<SecondaryButton on:click={close}>nevermind</SecondaryButton>
-			<PrimaryButton class="ml-auto" on:click={add_network}>
+			<PrimaryButton class="ml-auto" on:click={() => add_network(close)}>
 				get silly with it
 				<span class="text-sm">(this is a confirm button, to be clear)</span>
 			</PrimaryButton>

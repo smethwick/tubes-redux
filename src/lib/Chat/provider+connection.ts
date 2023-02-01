@@ -251,6 +251,9 @@ export abstract class IrcConnection {
         return res
     }
 
+    get_channels(): string[] {
+        return this.channels;
+    }
 
     abstract on_connect?: (() => void) | undefined;
 }

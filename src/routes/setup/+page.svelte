@@ -17,7 +17,7 @@
 			channels: ['#tubes', '#tubes/test', '#testaaaa']
 		};
 
-		let conn = $provider.add_persistent_connection(ci);
+		let conn = provider.add_persistent_connection(ci);
 		conn.on_msg = e => saveMessage(ci.name, e);
 	};
 </script>

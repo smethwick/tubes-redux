@@ -4,6 +4,6 @@ import { TaskQueue } from './task';
 test("make a task queue", () => {
     const output = new TaskQueue();
 
-    expect(output);
+    expect(output).toBeTruthy();
 })
 

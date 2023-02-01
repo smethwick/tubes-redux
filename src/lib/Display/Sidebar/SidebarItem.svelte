@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	export let active = false;
 	export let href = '';
 
 	$: active = $page.url.toString().endsWith(href.replace(".", ""));

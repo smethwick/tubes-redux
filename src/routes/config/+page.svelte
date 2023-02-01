@@ -14,10 +14,7 @@
 	});
 </script>
 
-<div class="w-full h-full"
-	in:fly={{ duration: 200, easing: circOut, opacity: 0, y: 5 }}
-	out:fly={{ duration: 200, easing: circIn, opacity: 0, y: 5 }}
->
+<div class="w-full h-full">
 	<Content>
 		<Header>
 			<svelte:fragment slot="above">

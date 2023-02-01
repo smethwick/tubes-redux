@@ -9,11 +9,11 @@
 	let data: LayoutData;
 </script>
 
-{#key data}
-	<div class="font-serif bg-neutral-50 text-neutral-900 h-screen flex flex-col">
-		{#await $provider.up()}
-			hold on
-		{:then}
+<div class="font-serif bg-neutral-50 text-neutral-900 h-screen flex flex-col">
+	{#await provider.up()}
+		hold on
+	{:then}
+		{#key data}
 			<TopBar />
 			<div
 				class="inner flex h-full w-screen"
@@ -25,9 +25,9 @@
 					<slot />
 				</main>
 			</div>
-		{/await}
-	</div>
-{/key}
+		{/key}
+	{/await}
+</div>
 
 <!-- this is one hell of a hack. sorry about that -->
 <style>

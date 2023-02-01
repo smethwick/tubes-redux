@@ -16,7 +16,7 @@
 	let input = '';
 
 	const { network: network_name } = data;
-	const potential_connection = $provider.connections.find((o) => o[0] === network_name);
+	const potential_connection = provider.connections.find((o) => o[0] === network_name);
 	if (!potential_connection) throw error(404);
 	const [_, conn] = potential_connection;
 	const { isConnected } = conn;
@@ -41,9 +41,9 @@
 	};
 </script>
 
-<!-- <button on:click={() => $provider.connections[0][1].connect()}>connect to the thing</button>
+<!-- <button on:click={() => provider.connections[0][1].connect()}>connect to the thing</button>
 <button on:click={() => addProvider()}>new thing</button>
-<button on:click={() => $provider.connections[0][1].join_channel('#tubes')}>join #tubes</button> -->
+<button on:click={() => provider.connections[0][1].join_channel('#tubes')}>join #tubes</button> -->
 
 {#key channel}
 	<div class="flex flex-col h-full">
