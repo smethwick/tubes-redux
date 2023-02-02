@@ -1,11 +1,20 @@
 <script lang="ts">
+	import { ChannelList } from '$lib/Chat/chan_list';
 	import Content from '$lib/Display/Type/Content.svelte';
 	import Header from '$lib/Display/Type/Header.svelte';
+	import type { PageData } from './$types';
+	import BrowseChannelList from './BrowseChannelList.svelte';
 	import SortingMenu from './SortingMenu.svelte';
+
+	export let data: PageData;
+	const { connection } = data;
 
 	let value: string = 'bumpscosity';
 
 	let channels: [string, string, number][] = [['#tubes', 'the tube zone', 3]];
+
+	let list = new ChannelList(connection);
+	let promise = list.get_channels();
 </script>
 
 <Content>
@@ -19,18 +28,12 @@
 		py-3 text-xl"
 	/>
 
-	<div class="flex">
-		<span class="mr-auto">{channels.length} {channels.length == 1 ? 'result' : 'results'}</span>
-		<span class="flex place-items-center gap-1">sorting by <SortingMenu bind:value /></span>
-	</div>
-
-	<ul class="flex flex-col gap-4 my-4 list-none px-0">
-		{#each channels as [name, desc, members]}
-			<li>
-				<p class="float-right my-0">{members} {members == 1 ? 'member' : 'members'}</p>
-				<h3 class="mt-0 mb-2">{name}</h3>
-				<p class="mb-0">{desc}</p>
-			</li>
-		{/each}
-	</ul>
+	{#await promise}
+	<div class="mx-auto">
+		<p class="text-center italic text-xl mb-2">getting channels…</p>
+		<p class="text-center text-sm mt-0">(this could take a second on big networks...)</p>
+		</div>
+	{:then list}
+		<BrowseChannelList {list} />
+	{/await}
 </Content>

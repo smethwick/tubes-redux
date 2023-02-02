@@ -2,7 +2,7 @@
 	import type { Channel } from '$lib/Chat/channel';
 	import type { IrcConnection } from '$lib/Chat/provider+connection';
 
-	export let isConnected, channel: Channel | undefined, channel_name: string, conn: IrcConnection;
+	export let isConnected, channel: Channel | undefined, channel_name: string;
 	let input = '';
 </script>
 
@@ -14,7 +14,6 @@
 	class:disabled={!$isConnected}
 	on:keydown={(e) => {
 		if (e.key == 'Enter' && channel) {
-			console.log(channel)
 			channel.privmsg(input);
 			input = '';
 		}

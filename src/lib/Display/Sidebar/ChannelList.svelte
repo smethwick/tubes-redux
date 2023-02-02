@@ -7,8 +7,6 @@
 	export let conn: IrcConnection;
 
 	$: channels = conn.get_channels_store_edition();
-
-
 </script>
 
 <ul class="flex flex-col my-2 gap-1">

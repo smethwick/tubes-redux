@@ -181,7 +181,7 @@ export abstract class IrcConnection {
         this.send_raw(`PRIVMSG ${target} :${msg}`);
         saveMessage(this.connection_info.name, {
             command: "PRIVMSG",
-            params: [target, msg],
+            params: new Params(target, msg),
             timestamp: new Date(Date.now()),
             source: [this.connection_info.nick, this.connection_info.username, "localhost"],
         })
@@ -358,6 +358,16 @@ export interface IrcMessageEvent {
     tags?: { key: string, value?: string }[];
     source?: Source;
     command: string;
-    params: string[];
+    params: Params;
     timestamp: Date;
+}
+
+export class Params extends Array<string> {
+    last(): string {
+        return this[this.length - 1];
+    }
+
+    static get [Symbol.species]() {
+        return Array;
+      }
 }

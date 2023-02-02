@@ -1,4 +1,4 @@
-import type { IrcMessageEvent } from "../provider+connection";
+import { Params, type IrcMessageEvent } from "../provider+connection";
 
 export function handle_raw_irc_msg(
     raw: string,
@@ -28,19 +28,15 @@ export function handle_raw_irc_msg(
 
     state = state.replace(command, "").trimStart();
 
-    let params: string[] = [];
+    const params: Params = new Params();
     const raw_params = state.split(" ");
     for (const param of raw_params) {
         if (param.startsWith(":")) {
-            params = [
-                ...params,
-                // this will always be the last param, so we don't need to do any more
-                // work
-                state.substring(state.search(" :"), state.length).replace(" :", "")
-            ]; break;
+            params.push(state.substring(state.search(" :"), state.length).replace(" :", "")
+            ); break;
         }
 
-        params = [...params, param];
+        params.push(param);
         state.replace(param, "");
     }
 
