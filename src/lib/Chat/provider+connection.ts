@@ -131,6 +131,11 @@ export abstract class IrcProvider {
     abstract add_persistent_connection?(ci: ConnectionInfo): IrcConnection
     static fetch_persistent_connections?(provider_id: string): Promise<Network[]>
     abstract get_connections(): [string, IrcConnection][];
+
+    get_connection(name: string): IrcConnection | undefined {
+        const connections = this.get_connections();
+        return connections.find(o => o[0] == name)?.[1];
+    }
 }
 
 

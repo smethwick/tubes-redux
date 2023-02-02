@@ -15,10 +15,7 @@
 	export let data: PageData;
 	let input = '';
 
-	const { network: network_name } = data;
-	const potential_connection = provider.connections.find((o) => o[0] === network_name);
-	if (!potential_connection) throw error(404);
-	const [_, conn] = potential_connection;
+	const { network: network_name, connection: conn } = data;
 	const { isConnected } = conn;
 
 	$: channel_name = decodeURIComponent(data.channel);

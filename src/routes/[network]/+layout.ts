@@ -13,7 +13,7 @@ export const load: LayoutLoad = async ({ params }) => {
     console.log(network);
     // let connection;
 
-    const connection = provider.connections.find((o) => o[0] == network);
+    const connection = provider.get_connection(network);
 
     if (!connection) {
         throw error(404)

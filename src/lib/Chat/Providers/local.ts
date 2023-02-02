@@ -40,7 +40,7 @@ export class LocalProvider extends IrcProvider {
     }
 
     add_connection(ci: ConnectionInfo): LocalIrcConnection {
-        if (this.connections.find((o) => o[0] == ci.name))
+        if (this.get_connection(ci.name))
             throw new Error("a connection with this name already exists");
 
         this.connections = [...this.connections, [ci.name, new LocalIrcConnection(ci)]];

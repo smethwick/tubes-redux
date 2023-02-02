@@ -17,7 +17,7 @@
 		overflow-hidden
 		place-items-center justify-center"
 	aria-label={network.name}
-	on:click={() => goto(`/${network.name}`)}
+	on:click={() => goto(`/${network.name}/home`)}
 >
 	<span>
 		{active ? text : abbr}

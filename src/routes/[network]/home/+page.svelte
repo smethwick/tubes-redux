@@ -1,7 +1,5 @@
 <script lang="ts">
 	import HomeAction from './HomeAction.svelte';
-	import { provider } from '$lib/Chat';
-	import { error } from '@sveltejs/kit';
 	import type { LayoutData } from './$types';
 	import YellingThing from '$lib/Display/RegistrationFlow/YellingThing.svelte';
 	import DisconnectedBanner from '$lib/Display/Network/DisconnectedBanner.svelte';
@@ -12,11 +10,13 @@
 
 	export let data: LayoutData;
 
-	const connection = data.connection;
-	if (!connection) throw new Error
+	$: connection = data.connection;
 
-	let [_, conn] = connection;
-	const { isConnected, connection_info, motd } = conn;
+	// idk if $'ing all these is really needed but it errors if i don't. so. y'know.
+	$: conn = connection;
+	$: isConnected = conn.isConnected;
+	$: connection_info = conn.connection_info;
+	$: motd = conn.motd;
 
 	$: notconnected = $isConnected == false || $isConnected == 'connecting';
 
