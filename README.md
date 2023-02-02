@@ -47,8 +47,9 @@ npm run tests
 
 ## use it
 
-there's a manual in the app (LEAH NOTE: no there isn't. add one at some point) situated
-in "help!" > manual, check it out for cool guides and tips.
+there's a manual in the app (LEAH NOTE: no there isn't. add one at some point 
+(FUTURE LEAH NOTE: yes there is. fuck you.)) situated in "help!" > manual, 
+check it out for cool guides and tips.
 
 ### bonus tip: put it on your taskbar
 
@@ -62,7 +63,7 @@ if you want to install it as a pwa. if not, go to the 3-dot menu in the top righ
 then go to more tools > create shortcut (or apps > install this site as an app on edge). 
 
 i think firefox is planning on supporting these at some point but – knowing mozilla –
-firefox will probably stop existing before that happens.
+firefox will probably stop existing before that happens (JOKE THAT WAS A JOKE).
 
 ## help out
 

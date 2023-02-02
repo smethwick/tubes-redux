@@ -136,6 +136,16 @@ export abstract class IrcProvider {
         const connections = this.get_connections();
         return connections.find(o => o[0] == name)?.[1];
     }
+
+    connection_info_store_for_the_sidebar: Writable<ConnectionInfo[]> = writable();
+    get_connections_for_the_sidebar_and_nothing_else(): Writable<ConnectionInfo[]> {
+        this.update_sidebar_conns();
+        return this.connection_info_store_for_the_sidebar;
+    }
+
+    update_sidebar_conns() {
+        this.connection_info_store_for_the_sidebar.set(this.connections.map(o => o[1].connection_info));
+    }
 }
 
 

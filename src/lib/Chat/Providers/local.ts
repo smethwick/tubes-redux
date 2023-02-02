@@ -44,6 +44,7 @@ export class LocalProvider extends IrcProvider {
             throw new Error("a connection with this name already exists");
 
         this.connections = [...this.connections, [ci.name, new LocalIrcConnection(ci)]];
+        this.update_sidebar_conns();
         const conn = this.connections.filter((o) => o[1].connection_info.name == ci.name)[0];
 
         if (conn) {

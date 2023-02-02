@@ -12,6 +12,7 @@
 	import { slide } from 'svelte/transition';
 	import DialogBase from '../Base/Base.svelte';
 	import { provider } from '$lib/Chat';
+	import { goto } from '$app/navigation';
 
 	export let isopen = false;
 
@@ -31,6 +32,7 @@
 			username,
 		}
 		provider.add_persistent_connection(new_network);
+		goto(`/${uuid}/home`);
 		close();
 	}
 </script>
