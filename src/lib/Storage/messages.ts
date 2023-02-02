@@ -26,7 +26,11 @@ export interface Message {
 }
 
 export async function saveMessage(net: string, e: IrcMessageEvent) {
-  if (e.command.toLowerCase() == "ping") return
+  const acceptable_commands = [
+    'privmsg', 'join', 'part', 'quit', 'notice'
+  ]
+
+  if (!acceptable_commands.includes(e.command.toLowerCase())) return
 
   let m = await turnIntoSomethingUseful(net, e);
 

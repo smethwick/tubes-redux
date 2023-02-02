@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ChannelList } from '$lib/Chat/chan_list';
+	import DisconnectedBanner from '$lib/Display/Network/DisconnectedBanner.svelte';
 	import Content from '$lib/Display/Type/Content.svelte';
 	import Header from '$lib/Display/Type/Header.svelte';
 	import type { PageData } from './$types';
@@ -9,12 +10,8 @@
 	export let data: PageData;
 	const { connection } = data;
 
-	let value: string = 'bumpscosity';
-
-	let channels: [string, string, number][] = [['#tubes', 'the tube zone', 3]];
-
 	let list = new ChannelList(connection);
-	let promise = list.get_channels();
+	let promise: Promise<ChannelList> = list.get_channels();
 </script>
 
 <Content>
@@ -29,9 +26,9 @@
 	/>
 
 	{#await promise}
-	<div class="mx-auto">
-		<p class="text-center italic text-xl mb-2">getting channels…</p>
-		<p class="text-center text-sm mt-0">(this could take a second on big networks...)</p>
+		<div class="mx-auto">
+			<p class="text-center italic text-xl mb-2">getting channels…</p>
+			<p class="text-center text-sm mt-0">(this could take a second on big networks...)</p>
 		</div>
 	{:then list}
 		<BrowseChannelList {list} />

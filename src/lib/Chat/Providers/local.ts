@@ -114,5 +114,4 @@ export class LocalIrcConnection extends IrcConnection {
 
         this.websocket = new WebSocket(url);
     }
-
 }

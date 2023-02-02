@@ -1,16 +1,18 @@
 import type { LayoutLoad } from "./$types";
-import { active_connection, provider } from "$lib/Chat";
+import { provider } from "$lib/Chat";
 import { error } from "@sveltejs/kit";
-import { browser } from "$app/environment";
-import { writable } from "svelte/store";
 
-export const load: LayoutLoad = async ({ params }) => {
+export const load: LayoutLoad = async ({ params, url }) => {
     await provider.up();
 
     const { network } = params;
-    
+
     const connection = provider.get_connection(network);
     if (!connection) throw error(404);
+
+    connection.last_url = url.toString();
+    // this is probably not the best idea oops oh well
+    provider.get_connections_for_the_sidebar_and_nothing_else();
 
     return { network, connection }
 };

@@ -137,14 +137,17 @@ export abstract class IrcProvider {
         return connections.find(o => o[0] == name)?.[1];
     }
 
-    connection_info_store_for_the_sidebar: Writable<ConnectionInfo[]> = writable();
-    get_connections_for_the_sidebar_and_nothing_else(): Writable<ConnectionInfo[]> {
+    connection_info_store_for_the_sidebar: Writable<(ConnectionInfo & { last_url: string })[]> = writable();
+    get_connections_for_the_sidebar_and_nothing_else(): Writable<(ConnectionInfo & { last_url: string })[]> {
         this.update_sidebar_conns();
         return this.connection_info_store_for_the_sidebar;
     }
 
     update_sidebar_conns() {
-        this.connection_info_store_for_the_sidebar.set(this.connections.map(o => o[1].connection_info));
+        this.connection_info_store_for_the_sidebar.set(this.connections.map(o => { 
+            const ci = o[1].connection_info; 
+            return { ...ci, last_url: o[1].last_url }; 
+        }));
     }
 }
 
@@ -153,16 +156,17 @@ export abstract class IrcProvider {
  * A single connection to an IRC network.
  */
 export abstract class IrcConnection {
-    connection_info: ConnectionInfo;
     isConnected: Writable<boolean | "connecting">;
     channels: Channel[] = [];
     task_queue: TaskQueue = new TaskQueue();
 
+    last_url: string;
+
     on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
 
-    constructor(ci: ConnectionInfo) {
+    constructor(public connection_info: ConnectionInfo) {
         this.isConnected = writable(false);
-        this.connection_info = ci;
+        this.last_url = `/${this.connection_info.name}`;
     }
 
     abstract connect(): boolean;
@@ -170,8 +174,11 @@ export abstract class IrcConnection {
     abstract disconnect(): void;
 
     async join_channel(chan: string): Promise<void> {
-        this.send_raw(`JOIN ${chan}`);
-        await this.task_queue.wait_for("JOIN");
+        const channel = new Channel(this, chan);
+        this.channels.push(channel);
+        this.channel_store.set(this.channels);
+        channel.join();
+        await this.task_queue.wait_for({ command: "JOIN" });
     }
 
     async privmsg(target: string, msg: string): Promise<void> {
@@ -292,13 +299,14 @@ export abstract class IrcConnection {
         })
     }
 
-    handle_open() {
-        this.identify();
-        this.task_queue.on('001', () => {
-            this.get_motd();
-            this.join_all_channels();
-        });
+    pinger = new Pinger(this);
 
+    async handle_open() {
+        this.identify();
+        await this.task_queue.wait_for({ command: '001' });
+        this.get_motd();
+        this.join_all_channels();
+        this.pinger.start();
     }
 
     handle_incoming(line: string) {
@@ -314,8 +322,10 @@ export abstract class IrcConnection {
 
     handle_close(reason?: string) {
         console.info(`Closed connection${reason ? " because " + reason : ""}`, this.connection_info.name)
+        this.pinger.stop()
+        this.channels = [];
+        this.channel_store.set([]);
         this.isConnected.set(false);
-
     }
 
     async identify() {
@@ -369,5 +379,34 @@ export class Params extends Array<string> {
 
     static get [Symbol.species]() {
         return Array;
-      }
+    }
+}
+
+export class Pinger {
+    constructor(private conn: IrcConnection) { }
+
+    pinging = false;
+
+    async start() {
+        this.pinging = true;
+        this.ping();
+    }
+
+    async stop() {
+        this.pinging = false;
+    }
+
+    async ping() {
+        setTimeout(async () => {
+            this.conn.send_raw("PING tubes");
+            const msg = await this.conn.task_queue.wait_for({ command: "PONG", params: ['tubes'] });
+
+            // if we don't get a response after 30 seconds, assume the connection is dead.
+            setTimeout(() => {
+                if (!msg) this.conn.disconnect();
+            }, 30000);
+
+            if (this.pinging) this.ping()
+        }, 30000);
+    }
 }

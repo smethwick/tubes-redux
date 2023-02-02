@@ -14,7 +14,7 @@ export class Channel {
     }
 
     join() {
-        this.conn.join_channel(this.name);
+        this.conn.send_raw("JOIN " + this.name);
         this.nicks_subscription = this.conn.task_queue.subscribe(
             this.process_names,
             {

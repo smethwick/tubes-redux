@@ -7,6 +7,7 @@
 	import { quintOut } from 'svelte/easing';
 	import GoodAdvice from '$lib/Display/Setup/GoodAdvice.svelte';
 	import { goto } from '$app/navigation';
+	import JoinChannel from '$lib/Display/Dialogs/JoinChannel/JoinChannel.svelte';
 
 	export let data: LayoutData;
 
@@ -30,6 +31,8 @@
 
 	const other_other_transision = (n: Element, opt?: { delay: number }) =>
 		slide(n, { duration, easing: quintOut, delay: duration ? opt?.delay : 0 });
+
+	let join_diag_open = false;
 </script>
 
 <section class="max-w-3xl mx-auto lg:pt-12 xl:pt-16 p-5">
@@ -76,13 +79,15 @@
 						🔌 {$isConnected ? 'Disconnect' : 'Connect'}
 					</HomeAction>
 					<HomeAction on:click={() => goto('./browse')}>🔭 Browse Channels</HomeAction>
-					<HomeAction>👋 Join/Create Channel</HomeAction>
+					<HomeAction on:click={() => join_diag_open = true}>👋 Join/Create Channel</HomeAction>
 					<HomeAction>📜 Server Messages</HomeAction>
 					<HomeAction>✏️ Configure</HomeAction>
 					<HomeAction>♻️ Archive</HomeAction>
 				</ul>
 			</section>
 		</section>
+
+		<JoinChannel {conn} bind:isopen={join_diag_open} />
 
 		<section
 			class="fade"

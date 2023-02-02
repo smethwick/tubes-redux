@@ -7,6 +7,7 @@
 
 	let klass = '';
 	let isopen = false;
+	const close_menu = () => isopen = false;
 
 	const duration = 150,
 		easing = quintOut,
@@ -15,7 +16,7 @@
 	export { klass as class };
 </script>
 
-<details bind:open={isopen} class="z-50">
+<details bind:open={isopen} class="z-50 relative">
 	<summary
 		class="list-none select-none hover:bg-neutral-200 active:bg-neutral-300
 		cursor-pointer py-0.5 rounded px-1.5 flex place-items-center gap-1"
@@ -31,7 +32,7 @@
 				transition:scale={{ duration, opacity, easing, start: 0.9 }}
 				class="absolute mt-2 bg-purple-50 border border-neutral-200 rounded-lg text-base shadow-xl w-56 {klass}"
 			>
-				<slot />
+				<slot {close_menu} />
 			</div>
 		</div>
 	{/if}

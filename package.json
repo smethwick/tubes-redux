@@ -43,6 +43,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@emoji-mart/data": "^1.1.2",
 		"@tailwindcss/forms": "^0.5.3",
 		"@tailwindcss/typography": "^0.5.9",
 		"@types/uuid": "^9.0.0",

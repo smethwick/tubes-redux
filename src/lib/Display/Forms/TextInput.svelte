@@ -19,7 +19,10 @@
 	<input
 		bind:value
 		use:typeAction
-		class="w-full rounded mt-auto border-neutral-500 bg-neutral-100 focus-visible:border-purple-500 {klass}"
+		class="w-full rounded mt-auto 
+		border-neutral-500 bg-neutral-100 
+		focus-visible:border-purple-500
+		{klass}"
 		{placeholder}
 	/>
 </label>
