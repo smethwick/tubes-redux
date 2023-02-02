@@ -5,11 +5,9 @@ import {
     type IrcMessageEvent,
     IrcConnection
 } from "../provider+connection";
-import { handle_raw_irc_msg } from "./common";
 import { db } from "$lib/Storage/db";
 import { ProviderFlags } from "../flags";
 import { saveMessage } from "$lib/Storage/messages";
-import { provider } from "..";
 
 export class LocalProvider extends IrcProvider {
     provider_id = "LocalProvider";
@@ -24,16 +22,10 @@ export class LocalProvider extends IrcProvider {
             if (this.active) return;
             const conns = await LocalProvider.fetch_persistent_connections(this.provider_id)
             conns.forEach(
-                (o) => {
-                    this.connections =
-                        [
-                            ...this.connections,
-                            [
-                                o.conn_blueprint.name,
-                                new LocalIrcConnection(o.conn_blueprint)
-                            ]
-                        ];
-                }
+                (o) => this.connections.push([
+                    o.conn_blueprint.name,
+                    new LocalIrcConnection(o.conn_blueprint)
+                ])
             );
             this.active = true;
         })
@@ -93,32 +85,12 @@ export class LocalIrcConnection extends IrcConnection {
     connect() {
         this.isConnected.set("connecting");
         this._establish_connection();
+        this.setup_channels();
 
         if (this.websocket) {
-            this.websocket.onopen = () => {
-                this._identify();
-                this.task_queue.on('001', () => {
-                    this.get_motd();
-                    this.connection_info.channels.forEach((o) => {
-                        this.join_channel(o);
-                    })
-                    console.log("fotnite", provider);
-                });
-            }
-            this.websocket.onmessage = (event) => {
-                console.debug("→", event.data);
-                const msg = handle_raw_irc_msg(event.data, (msg) => {
-                    this.websocket?.send(msg)
-                });
-                this.task_queue.resolve_tasks(msg);
-                if (this.on_msg) {
-                    this.on_msg(msg);
-                }
-            }
-            this.websocket.onclose = () => {
-                console.info("Closed connection", this.connection_info.name)
-                this.isConnected.set(false);
-            }
+            this.websocket.onopen = () => this.handle_open();
+            this.websocket.onmessage = (event) => this.handle_incoming(event.data);
+            this.websocket.onclose = () => this.handle_close();
         }
 
         return true;
@@ -142,35 +114,4 @@ export class LocalIrcConnection extends IrcConnection {
         this.websocket = new WebSocket(url);
     }
 
-    private async _identify() {
-        const conninfo = this.connection_info;
-
-        const to_send = [
-            "CAP LS 302",
-            conninfo.server_password ? `PASS ${conninfo.server_password}` : ``,
-            `NICK ${conninfo.nick}`,
-            `USER ${conninfo.username} 0 * :${conninfo.realname}`,
-        ];
-
-        // let prereg_finished = false;
-
-        this.task_queue.subscribe(async (msg) =>
-            (this.capabilities = [...this.capabilities, ...(await this.negotiate_capabilities(msg))]),
-            {
-                only: { command: "CAP", params: ['*', 'LS'] },
-                until: { command: "CAP", params: ['*', 'ACK'] },
-                unsub_callback: () => this.send_raw("CAP END")
-            });
-        // this.task_queue.on({command: "CAP", params: ["*", "ACK"]}, () => {
-        //     this.send_raw("AUTHENTICATE PLAIN");
-        //     this.send_raw(`AUTHENTICATE ${btoa("leah\0leah\0testtesttest")}`);
-        //     prereg_finished = true;
-        // })
-
-        for (const msg of to_send) {
-            if (msg) this.send_raw(msg);
-        }
-
-        this.task_queue.wait_for("001").then(() => this.isConnected.set(true));
-    }
 }

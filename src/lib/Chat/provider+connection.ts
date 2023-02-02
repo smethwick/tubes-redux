@@ -1,10 +1,11 @@
 import type { Network } from "$lib/Storage/db";
 import type { ProviderFlags } from "./flags";
-import type { Source } from "./Providers/common";
+import { handle_raw_irc_msg, type Source } from "./Providers/common";
 import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
 import { saveMessage } from "$lib/Storage/messages";
 import { TaskQueue } from "./task";
+import { Channel } from "./channel";
 
 export interface ConnectionInfo {
     name: string;
@@ -125,7 +126,7 @@ export abstract class IrcProvider {
         return result;
     }
 
-    
+
     abstract add_connection?(ci: ConnectionInfo): IrcConnection
     abstract add_persistent_connection?(ci: ConnectionInfo): IrcConnection
     static fetch_persistent_connections?(provider_id: string): Promise<Network[]>
@@ -139,7 +140,7 @@ export abstract class IrcProvider {
 export abstract class IrcConnection {
     connection_info: ConnectionInfo;
     isConnected: Writable<boolean | "connecting">;
-    channels: (string | "server_msgs")[] = [];
+    channels: Channel[] = [];
     task_queue: TaskQueue = new TaskQueue();
 
     on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
@@ -155,10 +156,7 @@ export abstract class IrcConnection {
 
     async join_channel(chan: string): Promise<void> {
         this.send_raw(`JOIN ${chan}`);
-        this.task_queue.on("JOIN", () => {
-            this.channels = [...this.channels, chan];
-            console.log(this.channels);
-        })
+        await this.task_queue.wait_for("JOIN");
     }
 
     async privmsg(target: string, msg: string): Promise<void> {
@@ -251,9 +249,85 @@ export abstract class IrcConnection {
         return res
     }
 
-    get_channels(): string[] {
+    get_channels(): Channel[] {
         return this.channels;
     }
+
+    get_channel(name: string): Channel | undefined {
+        return this.channels.find((o) => o.name == name);
+    }
+
+    setup_channels() {
+        this.connection_info.channels.forEach((o) => {
+            const channel = new Channel(this, o);
+            this.channels.push(channel);
+        })
+    }
+
+    join_all_channels() {
+        this.channels.forEach((o) => {
+            o.join();
+        })
+    }
+
+    handle_open() {
+        this.identify();
+        this.task_queue.on('001', () => {
+            this.get_motd();
+            this.join_all_channels();
+        });
+
+    }
+
+    handle_incoming(line: string) {
+        console.debug("→", line);
+        const msg = handle_raw_irc_msg(line, (msg) => {
+            this.send_raw(msg)
+        });
+        this.task_queue.resolve_tasks(msg);
+        if (this.on_msg) {
+            this.on_msg(msg);
+        }
+    }
+
+    handle_close(reason?: string) {
+        console.info(`Closed connection${reason ? " because " + reason : ""}`, this.connection_info.name)
+        this.isConnected.set(false);
+
+    }
+
+    async identify() {
+        const conninfo = this.connection_info;
+
+        const to_send = [
+            "CAP LS 302",
+            conninfo.server_password ? `PASS ${conninfo.server_password}` : ``,
+            `NICK ${conninfo.nick}`,
+            `USER ${conninfo.username} 0 * :${conninfo.realname}`,
+        ];
+
+        // let prereg_finished = false;
+
+        this.task_queue.subscribe(async (msg) =>
+            (this.capabilities = [...this.capabilities, ...(await this.negotiate_capabilities(msg))]),
+            {
+                only: { command: "CAP", params: ['*', 'LS'] },
+                until: { command: "CAP", params: ['*', 'ACK'] },
+                unsub_callback: () => this.send_raw("CAP END")
+            });
+        // this.task_queue.on({command: "CAP", params: ["*", "ACK"]}, () => {
+        //     this.send_raw("AUTHENTICATE PLAIN");
+        //     this.send_raw(`AUTHENTICATE ${btoa("leah\0leah\0testtesttest")}`);
+        //     prereg_finished = true;
+        // })
+
+        for (const msg of to_send) {
+            if (msg) this.send_raw(msg);
+        }
+
+        this.task_queue.wait_for("001").then(() => this.isConnected.set(true));
+    }
+
 
     abstract on_connect?: (() => void) | undefined;
 }

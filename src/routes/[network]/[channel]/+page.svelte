@@ -21,11 +21,18 @@
 	const [_, conn] = potential_connection;
 	const { isConnected } = conn;
 
-	$: channel = decodeURIComponent(data.channel);
+	$: channel_name = decodeURIComponent(data.channel);
+	$: channel = conn.get_channel(channel_name);
 
 	let msgs: Message[];
 	$: msgs_store = liveQuery(() =>
-		browser ? db.messages.where('target').equals(channel).and((item) => item.network == network_name).toArray() : []
+		browser
+			? db.messages
+					.where('target')
+					.equals(channel_name)
+					.and((item) => item.network == network_name)
+					.toArray()
+			: []
 	);
 	$: msgs = $msgs_store as Message[];
 
@@ -47,7 +54,7 @@
 
 {#key channel}
 	<div class="flex flex-col h-full">
-		<TopBit {channel} />
+		<TopBit channel={channel_name} />
 		{#if msgs}
 			<div
 				use:scrollToBottom={msgs}
@@ -57,7 +64,7 @@
 					<MessageView {msg} />
 				{/each}
 			</div>
-			<MessageInput {isConnected} {channel} {conn} />
+			<MessageInput {isConnected} {channel} {channel_name} {conn} />
 		{/if}
 	</div>
 {/key}
