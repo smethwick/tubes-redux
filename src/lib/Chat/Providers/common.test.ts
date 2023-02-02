@@ -1,4 +1,4 @@
-import { assert, expect, expectTypeOf, test } from 'vitest'
+import { expect, expectTypeOf, test } from 'vitest'
 import type { IrcMessageEvent } from '../provider+connection';
 import { handle_raw_irc_msg, transform_raw_tags, transform_user_line } from './common';
 

@@ -16,7 +16,13 @@
 
 	export let isopen = false;
 
-	let name: string, url: string, nick: string, realname: string, username: string, password: string, ssl: boolean;
+	let name: string,
+		url: string,
+		nick: string,
+		realname: string,
+		username: string,
+		password: string,
+		insecure: boolean;
 
 	async function add_network(close: () => void) {
 		let uuid = uuidv4();
@@ -29,8 +35,8 @@
 			autojoin: [],
 			nick,
 			realname,
-			username,
-		}
+			username
+		};
 		provider.add_persistent_connection(new_network);
 		goto(`/${uuid}/home`);
 		close();
@@ -41,7 +47,6 @@
 	<Heading1 class="text-center">Add a Network</Heading1>
 
 	<form class="flex flex-col my-4">
-		
 		<TextInput bind:value={url} placeholder="ircs://irc.example.com:[port]/" class="mb-6">
 			<h2 class="mb-0">Network URL</h2>
 			<p>
@@ -52,11 +57,9 @@
 
 		<TextInput bind:value={name} placeholder="my cool network :)">
 			<h2 class="mb-0">Label</h2>
-			<p>
-				This is what the network will be called inside Tubes.
-			</p>
+			<p>This is what the network will be called inside Tubes.</p>
 		</TextInput>
-		
+
 		<div class="grid grid-cols-2 gap-3 mt-6 mb-2">
 			<TextInput bind:value={nick} placeholder="gerald">
 				<h2 class="mb-0">Nickname</h2>
@@ -87,21 +90,10 @@
 				<h2 class="mb-0 italic">Advanced</h2>
 				<p>bonus toggles for irc nerds.</p>
 			</svelte:fragment>
-			<Toggle bind:value={ssl}>
+			<Toggle bind:value={insecure}>
 				<h3 class="mb-0">Accept invalid SSL certificates</h3>
 				<p>this is probably a bad idea. don't check this one</p>
 			</Toggle>
-			<TextInput bind:value={password} placeholder="piss" type="password">
-				<h3 class="mb-0">Run commands on connection</h3>
-				<p>these will run when after the network's connected. as the name implies.</p>
-			</TextInput>
-			<TextInput bind:value={username} placeholder="piss">
-				<h3 class="mb-0">Username</h3>
-			</TextInput>
-			<TextInput bind:value={password} placeholder="piss" type="password">
-				<h3 class="mb-0">Password</h3>
-				<p />
-			</TextInput>
 		</Collapsible>
 	</form>
 	<div class="mt-auto">
