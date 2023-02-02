@@ -14,7 +14,7 @@
 			display_name: 'Ergo Testnet',
 			icon: default_icons[Math.floor(Math.random() * default_icons.length)],
 			url: 'wss://testnet.ergo.chat/webirc',
-			channels: ['#tubes', '#tubes/test', '#testaaaa']
+			autojoin: ['#tubes', '#tubes/test', '#testaaaa']
 		};
 
 		let conn = provider.add_persistent_connection(ci);

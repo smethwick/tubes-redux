@@ -16,7 +16,7 @@ export interface ConnectionInfo {
     secure: boolean;
     server_password?: string;
 
-    channels: string[];
+    autojoin: string[];
 
     nick: string;
     realname: string;
@@ -33,7 +33,7 @@ export const default_config: ConnectionInfo = {
     nick: "tubes_user",
     realname: "https://leahc.gay/tubes",
     username: "tubes",
-    channels: []
+    autojoin: []
 }
 
 
@@ -258,15 +258,22 @@ export abstract class IrcConnection {
         return this.channels;
     }
 
+    channel_store: Writable<Channel[]> = writable();
+    get_channels_store_edition(): Writable<Channel[]> {
+        this.channel_store.set(this.channels);
+        return this.channel_store;
+    }
+
     get_channel(name: string): Channel | undefined {
         return this.channels.find((o) => o.name == name);
     }
 
     setup_channels() {
-        this.connection_info.channels.forEach((o) => {
+        this.connection_info.autojoin.forEach((o) => {
             const channel = new Channel(this, o);
             this.channels.push(channel);
         })
+        this.channel_store.set(this.channels);
     }
 
     join_all_channels() {

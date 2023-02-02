@@ -21,7 +21,7 @@ export class SojuProvider extends IrcProvider {
         await this.up_lock.acquire("up-lock", async () => {
             if (this.active) return;
             this.conn = new LocalIrcConnection({
-                channels: [],
+                autojoin: [],
                 icon: '⚡',
                 name: "soju",
                 nick: "leah",

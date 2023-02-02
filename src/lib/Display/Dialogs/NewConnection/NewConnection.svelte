@@ -25,7 +25,7 @@
 			icon: '',
 			url,
 			secure: true,
-			channels: [],
+			autojoin: [],
 			nick,
 			realname,
 			username,

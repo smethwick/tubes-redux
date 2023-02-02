@@ -6,26 +6,24 @@
 	import { circIn, circOut } from 'svelte/easing';
 	import type { LayoutData } from './$types';
 
-	let data: LayoutData;
+	export let data: LayoutData;
+	$: conn = data.connection;
 </script>
 
 <div class="font-serif bg-neutral-50 text-neutral-900 h-screen flex flex-col">
 	{#await provider.up()}
 		hold on
 	{:then}
-		{#key data}
-			<TopBar />
-			<div
-				class="inner flex h-full w-screen"
-				in:fly={{ duration: 300, easing: circOut, opacity: 0, y: 8 }}
-				out:fly={{ duration: 300, easing: circIn, opacity: 0, y: 8 }}
-			>
-				<Sidebar />
-				<main class="bg-white border-t w-full border-l rounded-tl-md overflow-y-auto">
-					<slot />
-				</main>
-			</div>
-		{/key}
+		<TopBar />
+		<div
+			class="inner flex h-full w-screen"
+			in:fly={{ duration: 300, easing: circOut, opacity: 0, y: 8 }}
+		>
+			<Sidebar {conn} />
+			<main class="bg-white border-t w-full border-l rounded-tl-md overflow-y-auto">
+				<slot />
+			</main>
+		</div>
 	{/await}
 </div>
 
