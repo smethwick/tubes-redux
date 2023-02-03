@@ -17,7 +17,7 @@
 	>
 	<MenuItem
 		on:click={() => {
-			update('az');
+			update('a-z');
 			close_menu();
 		}}
 		icon="🔤">A-Z</MenuItem

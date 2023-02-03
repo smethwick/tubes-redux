@@ -16,9 +16,9 @@
 	export { klass as class };
 </script>
 
-<details bind:open={isopen} class="z-50 relative">
+<details bind:open={isopen} class="z-50 relative w-max">
 	<summary
-		class="list-none select-none hover:bg-neutral-200 active:bg-neutral-300
+		class="list-none w-max select-none hover:bg-neutral-200 active:bg-neutral-300
 		cursor-pointer py-0.5 rounded px-1.5 flex place-items-center gap-1"
 	>
 		<slot name="text" />

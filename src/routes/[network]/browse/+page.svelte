@@ -1,17 +1,33 @@
 <script lang="ts">
-	import { ChannelList } from '$lib/Chat/chan_list';
-	import DisconnectedBanner from '$lib/Display/Network/DisconnectedBanner.svelte';
+	import { ChannelList, type ListEntry } from '$lib/Chat/chan_list';
 	import Content from '$lib/Display/Type/Content.svelte';
 	import Header from '$lib/Display/Type/Header.svelte';
 	import type { PageData } from './$types';
 	import BrowseChannelList from './BrowseChannelList.svelte';
-	import SortingMenu from './SortingMenu.svelte';
+	import * as lscache from 'lscache';
 
 	export let data: PageData;
 	const { connection } = data;
 
 	let list = new ChannelList(connection);
-	let promise: Promise<ChannelList> = list.get_channels();
+
+	const key = `channels:${connection.connection_info.name}`;
+	async function refresh() {
+		lscache.remove(key);
+		promise = get_chans();
+	}
+
+	$: promise = get_chans();
+
+	async function get_chans(): Promise<Array<ListEntry>> {
+		let cached: Array<ListEntry> = lscache.get(key);
+		console.log(cached);
+		if (cached != null && cached.length != 0) return cached;
+
+		let channels = await list.get_channels();
+		lscache.set(key, channels, 1);
+		return channels;
+	}
 </script>
 
 <Content>
@@ -31,6 +47,6 @@
 			<p class="text-center text-sm mt-0">(this could take a second on big networks...)</p>
 		</div>
 	{:then list}
-		<BrowseChannelList {list} />
+		<BrowseChannelList {refresh} {list} />
 	{/await}
 </Content>

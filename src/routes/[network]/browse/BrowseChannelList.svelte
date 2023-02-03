@@ -1,11 +1,14 @@
 <script lang="ts">
 	import type { ListEntry } from '$lib/Chat/chan_list';
+	import MiniButton from '$lib/Display/Buttons/MiniButton.svelte';
+	import ArrowsClockwise from 'phosphor-svelte/lib/ArrowsClockwise';
 	import { writable } from 'svelte/store';
 	import SortingMenu from './SortingMenu.svelte';
 
 	export let list: ListEntry[];
 	let sorted = writable(list);
-	let sorting_mode = writable('members');
+	let sorting_mode = writable('a-z');
+	export let refresh: () => void;
 
     update($sorting_mode);
 
@@ -13,12 +16,13 @@
 		sorting_mode.set(new_value);
 		if (new_value == 'bumpscosity') sorted.set(list.sort(() => 0.5 - Math.random()));
 		if (new_value == 'members') sorted.set(list.sort((a, b) => (a[1] > b[1] ? -1 : 1)));
-		if (new_value == 'az') sorted.set(list.sort((a, b) => a[0].localeCompare(b[0])));
+		if (new_value == 'a-z') sorted.set(list.sort((a, b) => a[0].localeCompare(b[0])));
 	}
 </script>
 
 <div class="flex">
 	<span class="mr-auto">{list.length} {list.length == 1 ? 'result' : 'results'}</span>
+	<MiniButton on:click={() => refresh()}><ArrowsClockwise size={14} /> refresh…</MiniButton>
 	<span class="flex place-items-center gap-1">
 		sorting by
 		<SortingMenu update={(new_value) => update(new_value)} bind:value={$sorting_mode} />

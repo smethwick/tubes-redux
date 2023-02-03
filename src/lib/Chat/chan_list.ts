@@ -3,7 +3,7 @@ import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
 export type ListEntry = [channel: string, client_count: number, topic: string]
 
 export class ChannelList extends Array<ListEntry> {
-    constructor(private conn: IrcConnection) { super() }
+    constructor(private conn: IrcConnection, array?: Array<ListEntry>) { array ? super(...array) : super() }
 
     async get_channels(): Promise<this> {
         this.conn.send_raw("LIST");

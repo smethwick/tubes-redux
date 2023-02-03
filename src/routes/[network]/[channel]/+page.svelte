@@ -45,7 +45,7 @@
 	{#if msgs}
 		<div
 			use:scrollToBottom={msgs}
-			class="flex flex-col gap-1 min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4"
+			class="flex flex-col gap-0.5 min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4"
 		>
 			{#each msgs as msg (msg.id)}
 				<MessageView {msg} />
