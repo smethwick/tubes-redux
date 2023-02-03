@@ -35,9 +35,9 @@
 
 <ul class="flex flex-col gap-1 my-4 mx-0 list-none px-0">
 	{#each $sorted as [name, members, topic]}
-		<li>
+		<li class="w-full pl-0">
 			<button
-				class="hover:bg-neutral-100 active:bg-neutral-200 px-2.5 py-2 rounded text-left m-0"
+				class="hover:bg-neutral-100 active:bg-neutral-200 px-2.5 py-2 rounded text-left m-0 w-full overflow-clip"
 				on:click={async () => {
 					await conn.join_persistent_channel(name);
 					goto(`./${encodeURIComponent(name.replaceAll('/', '%2F'))}/`);

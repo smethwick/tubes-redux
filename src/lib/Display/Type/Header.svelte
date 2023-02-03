@@ -1,6 +1,31 @@
+<script lang="ts">
+	import { goto, afterNavigate } from '$app/navigation';
+	import { base } from '$app/paths';
+	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
+
+	export let back: boolean = false;
+
+	let previousPage: string = base;
+
+	afterNavigate(({ from }) => {
+		previousPage = from?.url.pathname || previousPage;
+	});
+</script>
+
 <header class="not-prose text-neutral-900">
-    <p><slot name="above" /></p>
-    <h1><slot /></h1>
+	{#if back}
+		<a
+			class="flex px-3 py-1 bg-indigo-300 w-max 
+			place-items-center gap-2 rounded-full text-sm
+			mb-2 -ml-1.5"
+			href={previousPage}
+		>
+			<ArrowLeft />
+			Go back
+		</a>
+	{/if}
+	<p><slot name="above" /></p>
+	<h1><slot /></h1>
 </header>
 
 <style>

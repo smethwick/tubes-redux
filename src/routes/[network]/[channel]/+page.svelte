@@ -9,10 +9,12 @@
 	import type { PageData } from './$types';
 	import type { Message } from '$lib/Storage/messages';
 	import TopBit from './TopBit.svelte';
+	import { onMount } from 'svelte';
 
 	export let data: PageData;
 
-	const { network: network_name, connection: conn } = data;
+	const { connection: conn } = data;
+	$: network_name = data.network
 	$: channel = data.channel;
 	const { isConnected } = conn;
 

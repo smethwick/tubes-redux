@@ -2,6 +2,7 @@
 	import { Nick } from '$lib/Chat/nick';
 	import type { Message } from '$lib/Storage/messages';
 	import BasicMessage from '../BasicMessage.svelte';
+	import ArrowElbowLeft from 'phosphor-svelte/lib/ArrowElbowLeft';
 
 	export let msg: Message;
 	const { source: full_source, content } = msg;
@@ -10,8 +11,14 @@
 	const nick = new Nick(source);
 </script>
 
-<BasicMessage class="text-rose-700">
-	<span slot="sender">←</span>
+<BasicMessage class="text-sm">
+	<span
+		class="text-pink-700 font-bold flex justify-end place-items-center"
+		aria-hidden
+		slot="sender"
+	>
+		<ArrowElbowLeft weight="bold" />
+	</span>
 	<span slot="content">
 		<b style="color: {nick.color}">{nick.name}</b> has quit {content ? `(${content})` : null}
 	</span>

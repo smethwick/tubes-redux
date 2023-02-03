@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Nick } from '$lib/Chat/nick';
 	import type { Message } from '$lib/Storage/messages';
+	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
+
 	import BasicMessage from '../BasicMessage.svelte';
 
 	export let msg: Message;
@@ -10,8 +12,14 @@
 	const nick = new Nick(source);
 </script>
 
-<BasicMessage class="text-cyan-700 hover:bg-cyan-50 text-sm">
-	<span slot="sender">→</span>
+<BasicMessage class="text-sm">
+	<span
+		class="text-cyan-700 font-bold flex justify-end place-items-center"
+		aria-hidden
+		slot="sender"
+	>
+		<ArrowRight weight="bold" />
+	</span>
 	<span slot="content">
 		<b style="color: {nick.color}">{nick.name}</b> has joined <b>{target}</b>
 	</span>

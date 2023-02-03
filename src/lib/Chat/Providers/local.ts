@@ -3,7 +3,8 @@ import {
     type ConnectionInfo,
     ProviderError,
     type IrcMessageEvent,
-    IrcConnection
+    IrcConnection,
+    Params
 } from "../provider+connection";
 import { db } from "$lib/Storage/db";
 import { ProviderFlags } from "../flags";
@@ -13,6 +14,8 @@ export class LocalProvider extends IrcProvider {
     provider_id = "LocalProvider";
 
     connections: [string, LocalIrcConnection][] = [];
+
+    supported_protos: ("ws" | "wss" | "ircs")[] = ["ws", "wss"];
 
     flags: ProviderFlags[] = [ProviderFlags.MultipleConnections];
 
@@ -104,6 +107,15 @@ export class LocalIrcConnection extends IrcConnection {
 
     async disconnect(quit_msg?: string) {
         this.send_raw(`QUIT ${quit_msg ? (":" + quit_msg) : ":tubing out"}`);
+        this.channels.forEach(o =>
+            saveMessage(this.connection_info.name, {
+                command: "QUIT",
+                params: quit_msg
+                    ? new Params(o.name, quit_msg)
+                    : new Params(o.name, "tubing out"),
+                timestamp: new Date(Date.now()),
+                source: [this.connection_info.nick, "", ""],
+            }));
         setTimeout(() => {
             this.websocket?.close();
         }, 150);

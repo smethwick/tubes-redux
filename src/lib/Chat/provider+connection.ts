@@ -91,6 +91,8 @@ export abstract class IrcProvider {
         return this.flags.includes(flag);
     }
 
+    abstract supported_protos: ("ws" | "wss" | "ircs")[];
+
     /**
      * true if the network is active
      */
@@ -185,16 +187,26 @@ export abstract class IrcConnection {
         await this.join_channel(chan);
         const entry = await db.networks.where("name").equals(this.connection_info.name).first();
         if (!entry || !entry.id) throw new Error("no such network");
-        db.networks.update(entry.id, { 
+        db.networks.update(entry.id, {
             ...entry, conn_blueprint: {
                 // lmao
-                ...entry.conn_blueprint, autojoin: [...entry.conn_blueprint.autojoin, chan] 
-            } 
+                ...entry.conn_blueprint, autojoin: [...entry.conn_blueprint.autojoin, chan]
+            }
         });
-        await this.update_connection_info(entry.name);
+        await this.save_connection_info(entry.name);
     }
 
-    async update_connection_info(name: string) {
+    async update_connection_info(ci: ConnectionInfo) {
+        const entry = await db.networks.where("name").equals(this.connection_info.name).first();
+        if (!entry || !entry.id) throw new Error("no such network");
+        db.networks.update(entry.id, {
+            ...entry, name: ci.name, conn_blueprint: ci
+        });
+
+        await this.save_connection_info(entry.name);
+    }
+
+    async save_connection_info(name: string) {
         const entry = await db.networks.where("name").equals(name).first();
         if (!entry || !entry.conn_blueprint) throw new Error("no such network");
         this.connection_info = entry.conn_blueprint;
