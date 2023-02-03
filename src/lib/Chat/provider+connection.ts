@@ -10,7 +10,7 @@ import { Channel } from "./channel";
 export interface ConnectionInfo {
     name: string;
     display_name?: string;
-    icon: string;
+    icon?: string;
 
     url: string;
     secure: boolean;
@@ -91,7 +91,7 @@ export abstract class IrcProvider {
         return this.flags.includes(flag);
     }
 
-    abstract supported_protos: ("ws" | "wss" | "ircs")[];
+    abstract supported_protos: ("ws" | "wss" | "ircs" | "irc")[];
 
     /**
      * true if the network is active
@@ -232,8 +232,6 @@ export abstract class IrcConnection {
         })
         unsub();
 
-        console.log(connected);
-
         return connected == true
     }
 
@@ -259,8 +257,6 @@ export abstract class IrcConnection {
                 },
                 // update the store when everything's been recieved
                 unsub_callback: (collected) => {
-                    console.log(collected);
-
                     this.motd.set(collected
                         ? collected
                             .map((o) => o.params[o.params.length - 1].substring(2))
@@ -291,9 +287,7 @@ export abstract class IrcConnection {
             return { cap, values: split_values }
         });
 
-        console.log(res)
         for (const cap of this.request_caps) {
-            console.log(cap)
             if (res.find((o) => o.cap == cap)) {
                 this.send_raw(`CAP REQ :${cap}`);
             }
@@ -353,6 +347,7 @@ export abstract class IrcConnection {
 
     handle_close(reason?: string) {
         console.info(`Closed connection${reason ? " because " + reason : ""}`, this.connection_info.name)
+        this.channels.forEach(o => o.cleanup());
         this.pinger.stop()
         this.channels = [];
         this.channel_store.set([]);
@@ -430,7 +425,7 @@ export class Pinger {
     async ping() {
         setTimeout(async () => {
             this.conn.send_raw("PING tubes");
-            const msg = await this.conn.task_queue.wait_for({ command: "PONG", params: ['tubes'] });
+            const msg = await this.conn.task_queue.wait_for({ command: "PONG", params: ['*', 'tubes'] });
 
             // if we don't get a response after 30 seconds, assume the connection is dead.
             setTimeout(() => {

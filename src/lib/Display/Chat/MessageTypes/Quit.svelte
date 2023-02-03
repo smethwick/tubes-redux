@@ -20,7 +20,7 @@
 		<ArrowElbowLeft weight="bold" />
 	</span>
 	<span slot="content">
-		<b style="color: {nick.color}">{nick.name}</b> has quit {content ? `(${content})` : null}
+		<b class={nick.color[0]}>{nick.name}</b> has quit {content ? `(${content})` : null}
 	</span>
 </BasicMessage>
 

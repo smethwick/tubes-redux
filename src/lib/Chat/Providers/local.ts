@@ -15,7 +15,7 @@ export class LocalProvider extends IrcProvider {
 
     connections: [string, LocalIrcConnection][] = [];
 
-    supported_protos: ("ws" | "wss" | "ircs")[] = ["ws", "wss"];
+    supported_protos: ("ws" | "wss" | "ircs" | "irc")[] = ["ws", "wss"];
 
     flags: ProviderFlags[] = [ProviderFlags.MultipleConnections];
 

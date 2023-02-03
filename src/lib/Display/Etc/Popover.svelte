@@ -37,7 +37,6 @@
 	on:keydown={(e) => {
 		if (open && e.key == 'Escape') {
 			e.preventDefault();
-			console.log('here');
 			open = false;
 		}
 	}}

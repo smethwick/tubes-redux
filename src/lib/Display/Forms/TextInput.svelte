@@ -19,8 +19,8 @@
 	<input
 		bind:value
 		use:typeAction
-		class="w-full rounded mt-auto 
-		border-neutral-500 bg-neutral-100 
+		class="w-full mt-auto 
+		border-neutral-500 border-0 border-b border-dotted bg-neutral-50 
 		focus-visible:border-purple-500
 		{klass}"
 		{placeholder}

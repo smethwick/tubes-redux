@@ -4,9 +4,12 @@
 	import PrimaryButton from '$lib/Display/Buttons/PrimaryButton.svelte';
 	import SecondaryButton from '$lib/Display/Buttons/SecondaryButton.svelte';
 	import TextInput from '$lib/Display/Forms/TextInput.svelte';
+	import List from '$lib/Display/Lists/List.svelte';
+	import Item from '$lib/Display/Lists/ListItem.svelte';
 	import Content from '$lib/Display/Type/Content.svelte';
 	import Header from '$lib/Display/Type/Header.svelte';
 	import Hash from 'phosphor-svelte/lib/Hash';
+	import Plus from 'phosphor-svelte/lib/Plus';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -64,34 +67,40 @@
 	<h2>Channels</h2>
 	These channels will be joined ✨ automatically when you connect to {display_name}.
 
-	<div class="not-prose">
-		<ul class="flex flex-col gap-2 my-4">
+	<form class="not-prose my-4">
+		<List bg="bg-neutral-50">
 			{#each autojoin as chan, i}
-				<li class="px-4 py-2 bg-yellow-200 rounded-xl flex place-items-center gap-2">
-					<Hash />{chan.replace('#', '')}
-
+				<Item icon={Hash}>
+					{chan.replace('#', '')}
 					<button
 						class="ml-auto underline"
+						type="button"
 						on:click={() => (autojoin = autojoin.filter((_, index) => i != index))}
 					>
 						Remove
 					</button>
-				</li>
+				</Item>
 			{/each}
-		</ul>
-	</div>
-	<form>
-		<TextInput class="mb-4" bind:value={thing_to_add} placeholder="#tubes">
-			<h3>Add a channel to the list</h3>
-		</TextInput>
-		<PrimaryButton
-			type="submit"
-			on:click={(e) => {
-				autojoin = [...autojoin, thing_to_add];
-				thing_to_add = '';
-			}}
-			colors={['bg-yellow-300', 'text-black', 'outline-yellow-300']}>Add it!</PrimaryButton
-		>
+			<Item icon={Plus}>
+				<input
+					bind:value={thing_to_add}
+					type="text"
+					class="bg-transparent border-0 p-0 w-full"
+					placeholder="type a channel and hit enter"
+				/>
+				<button
+					class="ml-auto underline"
+					type="submit"
+					on:click={(e) => {
+						if (!thing_to_add.startsWith("#")) thing_to_add = `#${thing_to_add}`
+						autojoin = [...autojoin, thing_to_add];
+						thing_to_add = '';
+					}}
+				>
+					Add
+				</button>
+			</Item>
+		</List>
 	</form>
 
 	<h2>Hellzone</h2>

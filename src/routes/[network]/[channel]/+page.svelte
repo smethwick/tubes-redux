@@ -9,10 +9,7 @@
 	import type { PageData } from './$types';
 	import type { Message } from '$lib/Storage/messages';
 	import TopBit from './TopBit.svelte';
-	import { onMount } from 'svelte';
-	import ChannelInfo from '$lib/Display/ChannelInfo.svelte/ChannelInfo.svelte';
-	import { slide } from 'svelte/transition';
-	import { quadOut } from 'svelte/easing';
+	import ChannelInfo from '$lib/Display/ChannelInfo/ChannelInfo.svelte';
 
 	export let data: PageData;
 
@@ -64,8 +61,6 @@
 	</div>
 
 	{#if open_sidebar}
-		<div>
 			<ChannelInfo {channel} />
-		</div>
 	{/if}
 </div>

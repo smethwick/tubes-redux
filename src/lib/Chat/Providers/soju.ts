@@ -5,6 +5,7 @@ import { LocalIrcConnection } from "./local";
 export class SojuProvider extends IrcProvider {
     conn?: LocalIrcConnection;
     proto: 'ws' | 'tcp';
+    supported_protos: ("ws" | "wss" | "ircs" | "irc")[] = ["ircs", "irc", "ws", "wss"];
 
     task_queue: TaskQueue;
 
@@ -22,7 +23,6 @@ export class SojuProvider extends IrcProvider {
             if (this.active) return;
             this.conn = new LocalIrcConnection({
                 autojoin: [],
-                icon: '⚡',
                 name: "soju",
                 nick: "leah",
                 realname: "leah",
@@ -52,7 +52,7 @@ export class SojuProvider extends IrcProvider {
 
 export class SojuConnection extends IrcConnection {
     request_caps: string[] = [];
-    
+
     connect(): boolean {
         throw new Error("Method not implemented.");
     }

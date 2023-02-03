@@ -20,7 +20,7 @@
 		<ArrowLeft weight="bold" />
 	</span>
 	<span slot="content">
-		<b style="color: {nick.color}">{nick.name}</b> has left <b>{target}</b>
+		<b class={nick.color[0]}>{nick.name}</b> has left <b>{target}</b>
 		{content && content != target ? `(${content})` : ''}
 	</span>
 </BasicMessage>

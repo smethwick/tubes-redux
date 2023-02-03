@@ -21,7 +21,7 @@
 		<ArrowRight weight="bold" />
 	</span>
 	<span slot="content">
-		<b style="color: {nick.color}">{nick.name}</b> has joined <b>{target}</b>
+		<b class={nick.color[0]}>{nick.name}</b> has joined <b>{target}</b>
 	</span>
 </BasicMessage>
 

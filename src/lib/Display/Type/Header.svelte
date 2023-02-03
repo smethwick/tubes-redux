@@ -15,13 +15,13 @@
 <header class="not-prose text-neutral-900">
 	{#if back}
 		<a
-			class="flex px-3 py-1 bg-indigo-300 w-max 
+			class="flex px-3 py-1 bg-indigo-200 w-max 
 			place-items-center gap-2 rounded-full text-sm
-			mb-2 -ml-1.5"
+			mb-3 -ml-0.5"
 			href={previousPage}
 		>
 			<ArrowLeft />
-			Go back
+			Back
 		</a>
 	{/if}
 	<p><slot name="above" /></p>

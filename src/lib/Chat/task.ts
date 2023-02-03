@@ -209,10 +209,16 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
         if (only.params) {
             const aaa = only.params.filter((o, i) => {
                 if (o == "*") return true;
-                if (msg.params[i] == o) return true;
+                if (msg.params.at(i) == o) return true;
                 return false;
             });
-            if (aaa == only.params) return true;
+
+            let res = true;
+            only.params.forEach((o, i) => {
+                if (aaa[i] != o && aaa[i] != "*") res = false;
+            })
+
+            if (!res) return false;
         }
 
         return true;

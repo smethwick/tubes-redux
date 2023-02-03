@@ -21,7 +21,6 @@
 
 	async function get_chans(): Promise<Array<ListEntry>> {
 		let cached: Array<ListEntry> = lscache.get(key);
-		console.log(cached);
 		if (cached != null && cached.length != 0) return cached;
 
 		let channels = await list.get_channels();
