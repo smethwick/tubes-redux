@@ -10,11 +10,14 @@
 	import type { Message } from '$lib/Storage/messages';
 	import TopBit from './TopBit.svelte';
 	import { onMount } from 'svelte';
+	import ChannelInfo from '$lib/Display/ChannelInfo.svelte/ChannelInfo.svelte';
+	import { slide } from 'svelte/transition';
+	import { quadOut } from 'svelte/easing';
 
 	export let data: PageData;
 
 	const { connection: conn } = data;
-	$: network_name = data.network
+	$: network_name = data.network;
 	$: channel = data.channel;
 	const { isConnected } = conn;
 
@@ -40,19 +43,29 @@
 
 		return { update: scroll };
 	};
+
+	let open_sidebar: boolean;
 </script>
 
-<div class="flex flex-col h-full">
-	<TopBit {channel} />
-	{#if msgs}
-		<div
-			use:scrollToBottom={msgs}
-			class="flex flex-col gap-0.5 min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4"
-		>
-			{#each msgs as msg (msg.id)}
-				<MessageView {msg} />
-			{/each}
+<div class="flex h-full">
+	<div class="flex flex-col h-full w-full">
+		<TopBit bind:open_sidebar {channel} />
+		{#if msgs}
+			<div
+				use:scrollToBottom={msgs}
+				class="flex flex-col gap-0.5 min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4"
+			>
+				{#each msgs as msg (msg.id)}
+					<MessageView {msg} />
+				{/each}
+			</div>
+			<MessageInput {isConnected} {channel} channel_name={channel.name} />
+		{/if}
+	</div>
+
+	{#if open_sidebar}
+		<div>
+			<ChannelInfo {channel} />
 		</div>
-		<MessageInput {isConnected} {channel} channel_name={channel.name} />
 	{/if}
 </div>

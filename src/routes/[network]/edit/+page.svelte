@@ -65,7 +65,7 @@
 	These channels will be joined ✨ automatically when you connect to {display_name}.
 
 	<div class="not-prose">
-		<ul class="flex flex-col gap-2 mt-4 mb-8">
+		<ul class="flex flex-col gap-2 my-4">
 			{#each autojoin as chan, i}
 				<li class="px-4 py-2 bg-yellow-200 rounded-xl flex place-items-center gap-2">
 					<Hash />{chan.replace('#', '')}
@@ -80,16 +80,19 @@
 			{/each}
 		</ul>
 	</div>
-	<TextInput class="mb-4" bind:value={thing_to_add} placeholder="#tubes">
-		<h3>Add a channel to the list</h3>
-	</TextInput>
-	<PrimaryButton
-		on:click={(e) => {
-			autojoin = [...autojoin, thing_to_add];
-			thing_to_add = '';
-		}}
-		colors={['bg-yellow-300', 'text-black', 'outline-yellow-300']}>Add it!</PrimaryButton
-	>
+	<form>
+		<TextInput class="mb-4" bind:value={thing_to_add} placeholder="#tubes">
+			<h3>Add a channel to the list</h3>
+		</TextInput>
+		<PrimaryButton
+			type="submit"
+			on:click={(e) => {
+				autojoin = [...autojoin, thing_to_add];
+				thing_to_add = '';
+			}}
+			colors={['bg-yellow-300', 'text-black', 'outline-yellow-300']}>Add it!</PrimaryButton
+		>
+	</form>
 
 	<h2>Hellzone</h2>
 

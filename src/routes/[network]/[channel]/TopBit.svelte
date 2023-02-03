@@ -8,12 +8,14 @@
 
 	const actions: [typeof SvelteComponent, string, Function?][] = [
 		[Users, 'member list'],
-		[Info, 'channel info']
+		[Info, 'channel info', () => (open_sidebar = !open_sidebar)]
 	];
 
 	const aaaaa = () => {
 		null;
 	};
+
+	export let open_sidebar = false;
 </script>
 
 <header class="border-b border-b-neutral-200 px-4 h-14 flex place-items-center">
