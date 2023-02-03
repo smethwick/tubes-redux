@@ -25,7 +25,7 @@
 		if (cached != null && cached.length != 0) return cached;
 
 		let channels = await list.get_channels();
-		lscache.set(key, channels, 1);
+		lscache.set(key, channels, 5);
 		return channels;
 	}
 </script>
@@ -47,6 +47,6 @@
 			<p class="text-center text-sm mt-0">(this could take a second on big networks...)</p>
 		</div>
 	{:then list}
-		<BrowseChannelList {refresh} {list} />
+		<BrowseChannelList {refresh} {list} conn={connection} />
 	{/await}
 </Content>

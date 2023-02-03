@@ -8,6 +8,7 @@ export enum MessageTypes {
   Part,
   Invalid,
   Quit,
+  Notice,
 }
 
 export interface Message {
@@ -73,7 +74,7 @@ async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise
       return {
         ...sensible_defaults(net, e),
         type: MessageTypes.Part,
-        content: e.params[e.params.length - 1],
+        content: e.params.last(),
         target: e.params[0],
       }
     case 'quit':
@@ -81,7 +82,15 @@ async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise
       return {
         ...sensible_defaults(net, e),
         type: MessageTypes.Quit,
-        content: e.params[e.params.length - 1],
+        content: e.params.last(),
+        target: e.params[0],
+      }
+    case 'notice':
+      if (!e.source) return
+      return {
+        ...sensible_defaults(net, e),
+        type: MessageTypes.Notice,
+        content: e.params.last(),
         target: e.params[0],
       }
   }

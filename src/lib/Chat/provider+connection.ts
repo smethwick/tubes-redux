@@ -1,4 +1,4 @@
-import type { Network } from "$lib/Storage/db";
+import { db, type Network } from "$lib/Storage/db";
 import type { ProviderFlags } from "./flags";
 import { handle_raw_irc_msg, type Source } from "./Providers/common";
 import { writable, type Writable } from "svelte/store"
@@ -144,9 +144,9 @@ export abstract class IrcProvider {
     }
 
     update_sidebar_conns() {
-        this.connection_info_store_for_the_sidebar.set(this.connections.map(o => { 
-            const ci = o[1].connection_info; 
-            return { ...ci, last_url: o[1].last_url }; 
+        this.connection_info_store_for_the_sidebar.set(this.connections.map(o => {
+            const ci = o[1].connection_info;
+            return { ...ci, last_url: o[1].last_url };
         }));
     }
 }
@@ -179,6 +179,25 @@ export abstract class IrcConnection {
         this.channel_store.set(this.channels);
         channel.join();
         await this.task_queue.wait_for({ command: "JOIN" });
+    }
+
+    async join_persistent_channel(chan: string): Promise<void> {
+        await this.join_channel(chan);
+        const entry = await db.networks.where("name").equals(this.connection_info.name).first();
+        if (!entry || !entry.id) throw new Error("no such network");
+        db.networks.update(entry.id, { 
+            ...entry, conn_blueprint: {
+                // lmao
+                ...entry.conn_blueprint, autojoin: [...entry.conn_blueprint.autojoin, chan] 
+            } 
+        });
+        await this.update_connection_info(entry.name);
+    }
+
+    async update_connection_info(name: string) {
+        const entry = await db.networks.where("name").equals(name).first();
+        if (!entry || !entry.conn_blueprint) throw new Error("no such network");
+        this.connection_info = entry.conn_blueprint;
     }
 
     async privmsg(target: string, msg: string): Promise<void> {
