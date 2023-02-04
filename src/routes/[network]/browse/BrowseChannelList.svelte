@@ -27,7 +27,7 @@
 <div class="flex">
 	<span class="mr-auto">{list.length} {list.length == 1 ? 'result' : 'results'}</span>
 	<MiniButton on:click={() => refresh()}><ArrowsClockwise size={14} /> refresh…</MiniButton>
-	<span class="flex place-items-center gap-1">
+	<span class="flex place-items-center gap-1 ml-2">
 		sorting by
 		<SortingMenu update={(new_value) => update(new_value)} bind:value={$sorting_mode} />
 	</span>

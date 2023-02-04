@@ -97,6 +97,13 @@ export class LocalIrcConnection extends IrcConnection {
             this.websocket.onclose = () => this.handle_close();
         }
 
+        setTimeout(() => {
+            if (this.check_connection() == false) {
+                this.disconnect();
+                throw new Error("failed to connect in a reasonable amount of time");
+            }
+        }, 60000);
+
         return true;
     }
 

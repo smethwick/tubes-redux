@@ -20,7 +20,7 @@
 		bind:value
 		use:typeAction
 		class="w-full mt-auto 
-		border-neutral-500 border-0 border-b border-dotted bg-neutral-50 
+		border-black border-0 border-b border-dashed 
 		focus-visible:border-purple-500
 		{klass}"
 		{placeholder}

@@ -10,6 +10,8 @@
 	import Header from '$lib/Display/Type/Header.svelte';
 	import Hash from 'phosphor-svelte/lib/Hash';
 	import Plus from 'phosphor-svelte/lib/Plus';
+	import { quadOut } from 'svelte/easing';
+	import { slide } from 'svelte/transition';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -44,15 +46,20 @@
 	<TextInput bind:value={url}>
 		<h3>Network URL</h3>
 		<p class="mb-0">
-			if you're not sure what this is, you can <button class="underline"
-				>key in the details manually</button
-			>
+			if you're not sure what this is, you can <button class="underline">
+				key in the details manually
+			</button>
 		</p>
 		<p class="mt-0">
 			(Your provider supports these protocols:
 			{@html protos.map((o) => `<code>${o}://</code>`).join(', ')})
 		</p>
 	</TextInput>
+	{#if url != ci.url}
+		<div class="mt-4 italic text-sm" transition:slide={{ duration: 100, easing: quadOut }}>
+			⚠️ These changes will be applied when you reconnect to this network.
+		</div>
+	{/if}
 	<h2>You</h2>
 	<div class="grid grid-cols-2 gap-4">
 		<TextInput bind:value={nick}>
@@ -92,7 +99,7 @@
 					class="ml-auto underline"
 					type="submit"
 					on:click={(e) => {
-						if (!thing_to_add.startsWith("#")) thing_to_add = `#${thing_to_add}`
+						if (!thing_to_add.startsWith('#')) thing_to_add = `#${thing_to_add}`;
 						autojoin = [...autojoin, thing_to_add];
 						thing_to_add = '';
 					}}

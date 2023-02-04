@@ -1,19 +1,20 @@
 <script lang="ts">
-	import { page } from '$app/stores'
+	import { page } from '$app/stores';
 	export let href = '';
 
-	$: active = $page.url.toString().endsWith(href.replace(".", ""));
+	$: active = $page.url.toString().endsWith(href.replace('.', ''));
 </script>
 
-<a {href}>
-	<li
+<li>
+	<a
 		class="flex px-2.5 py-1 hover:bg-pink-500/10 text-neutral-600 
-            rounded-md duration-[25ms] ease-out transition-colors"
+			rounded-md duration-[25ms] ease-out transition-colors select-none"
 		class:active
+		{href}
 	>
 		<slot />
-	</li>
-</a>
+	</a>
+</li>
 
 <style>
 	.active {
