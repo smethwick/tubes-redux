@@ -6,8 +6,8 @@
 
 <p
 	class="flex {$message_layout == 'comfy'
-		? 'flex-col justify-start place-items-start px-4 py-1'
-		: 'place-items-center gap-3 py-0.5'} rounded {klass}"
+		? 'flex-col justify-start place-items-start px-4 py-1 my-1'
+		: 'place-items-center gap-3 py-0.5 my-0.5'} rounded {klass}"
 >
 	<span
 		class="{$message_layout == 'comfy'

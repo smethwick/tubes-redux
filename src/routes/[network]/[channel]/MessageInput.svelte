@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Channel } from '$lib/Chat/channel';
 	import type { IrcConnection } from '$lib/Chat/provider+connection';
-	import EmojiPicker from '$lib/Display/Chat/EmojiPicker.svelte';
+	import EmojiPicker from '$lib/Display/Chat/EmojiPicker/EmojiPicker.svelte';
 
 	export let isConnected, channel: Channel | undefined, channel_name: string;
 	let input = '';

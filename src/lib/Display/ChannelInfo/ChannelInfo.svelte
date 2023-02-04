@@ -5,12 +5,14 @@
 	import Item from '../Lists/ListItem.svelte';
 	import ListList from '../Lists/ListList.svelte';
 
-	import SignOut from 'phosphor-svelte/lib/SignOut';
+	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
+	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
 	import Pencil from 'phosphor-svelte/lib/Pencil';
 	import Recycle from 'phosphor-svelte/lib/Recycle';
 
 	export let channel: Channel;
 	$: nicks = channel.nicks_live;
+	$: joined = channel.joined_live;
 </script>
 
 <aside class="sidebar min-w-[18rem] h-full p-4 border-l border-neutral-200">
@@ -31,7 +33,9 @@
 
 		<List title="Extra Gubbins" bg="bg-indigo-200">
 			<Item icon={Recycle}>Clear Logs</Item>
-			<Item icon={SignOut}>Leave Channel</Item>
+			<Item action={() => ($joined ? channel.part() : channel.join())} icon={$joined ? ArrowLeft : ArrowRight}>
+				{$joined ? 'Leave' : 'Join'} Channel
+			</Item>
 		</List>
 
 		<List title="Members" bg="bg-emerald-200">

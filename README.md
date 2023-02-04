@@ -7,9 +7,7 @@ to make the api good.
 
 you'll need: 
 - a computer
-- an operating system that can run node.js
-- a copy of [node.js](https://nodejs.org/) installed on your computer
-- an internet connection
+- [node.js](https://nodejs.org/)
 - git
 
 ```bash
@@ -47,9 +45,12 @@ npm run tests
 
 ## use it
 
-there's a manual in the app (LEAH NOTE: no there isn't. add one at some point 
-(FUTURE LEAH NOTE: yes there is. fuck you.)) situated in "help!" > manual, 
-check it out for cool guides and tips.
+tubes is regularly tested on firefox and google chrome. other browsers might
+work, but will probably be at least a little bit broken (please let me know about
+any bugs you come across!).
+
+there's a manual in the app situated in "help!" > manual, which you might want to 
+check out for cool guides and tips.
 
 ### bonus tip: put it on your taskbar
 
@@ -67,9 +68,5 @@ firefox will probably stop existing before that happens (JOKE THAT WAS A JOKE).
 
 ## help out
 
-i've set up a mailing list on [sourcehut](https://lists.sr.ht/~leah/tubes-redux).
-i don't like sourcehut *that* much but they do host a very respectable mailing list service.
-
-you can send things to it by throwing an email in the general direction of 
-[~leah/tubes-redux@lists.sr.ht](mailto:~leah/tubes-redux@lists.sr.ht). you can also use
-[git-send-email](https://git-send-email.io/) for sending code over
+file an issue or open a pull request!! i'll have more in depth information here
+"at some point"
