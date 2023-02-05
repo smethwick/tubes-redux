@@ -1,7 +1,12 @@
-# tubes redux - "an irc client"
+# "i sure hope someone asked for this!"
 
-tubes redux is a lot like tubes, the main difference being that this time i remembered
-to make the api good.
+tubes redux is the world's first good irc client, with a strong focus on not
+confusing the hell out of people who haven't used irc before.
+
+## you're gonna have to wait a little bit
+tubes is still pretty early on in development. i still have about 10000
+irc thing to implement, plus ircv3 support!! i would not recommend using tubes
+in its current state if you're not completely insane.
 
 ## build it
 
