@@ -28,7 +28,7 @@
 	);
 	$: msgs = $msgs_store as Message[];
 
-	let open_sidebar: boolean;
+	$: open_sidebar = false;
 </script>
 
 <div class="flex h-full">
@@ -44,7 +44,5 @@
 		<MessageInput {isConnected} {channel} channel_name={channel.name} styles={conn.styles} />
 	</div>
 
-	{#if open_sidebar}
-		<ChannelInfo styles={conn.styles} {channel} />
-	{/if}
+	<ChannelInfo bind:open={open_sidebar} styles={conn.styles} {channel} />
 </div>

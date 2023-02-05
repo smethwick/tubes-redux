@@ -20,6 +20,7 @@ export type async_task<T> = {
     id: string,
     reply: string | msg_description,
     task: Deferred<T>,
+    reject_on?: msg_description[],
 }
 
 export type subscription = {
@@ -69,14 +70,15 @@ export class TaskQueue {
         return id;
     }
 
-    new_async_task(reply: string | msg_description) {
+    new_async_task(reply: string | msg_description, reject_on?: msg_description[]) {
         const id = uuidv4();
         const d = new Deferred<IrcMessageEvent>();
-
+        
         const task: async_task<IrcMessageEvent> = {
             id,
             reply,
             task: d,
+            reject_on: reject_on
         }
         this.tasks.push(task);
 
@@ -126,22 +128,22 @@ export class TaskQueue {
 
 
         this.tasks = this.tasks.filter((o) => {
-            if (typeof o.reply == "string") {
-                if (o.reply == event.command) {
-                    if (!isAsync(o)) o.callback(event);
-                    else if (o.task.resolve) resolve_async_task(o, event);
-                    else return false;
+            if (isAsync(o)) {
+                if (!o.task.resolve || !o.task.reject) throw new Error("task not yet initialised");
+            
+                if (o.reject_on && o.reject_on.find(o => do_we_care_about_it(o, event))) {
+                    o.task.reject(`rejected: ${JSON.stringify(event)}`);
+                    return false;
                 }
-                return true;
+
+                if (typeof o.reply == "string" && o.reply == event.command) { resolve_async_task(o, event); return false; };
+                if (typeof o.reply != "string" && do_we_care_about_it(o.reply, event)) { resolve_async_task(o, event); return false; };
+            } else {
+                if (typeof o.reply == "string" && o.reply == event.command) { o.callback(event); return false; };
+                if (typeof o.reply != "string" && do_we_care_about_it(o.reply, event)) { o.callback(event); return false; };
             }
 
-            if (do_we_care_about_it(o.reply, event)) {
-                if (!isAsync(o)) o.callback(event);
-                else if (o.task.resolve) resolve_async_task(o, event);
-                else return false;
-            }
-            else
-                return true;
+            return true;
         });
 
         const unsub = (o: subscription) => {
@@ -170,8 +172,8 @@ export class TaskQueue {
         this.new_task(reply, callback);
     }
 
-    async wait_for(reply: string | msg_description): Promise<IrcMessageEvent> {
-        return this.new_async_task(reply);
+    async wait_for(reply: string | msg_description, opt?: { reject_on?: msg_description[] }): Promise<IrcMessageEvent> {
+        return this.new_async_task(reply, opt?.reject_on);
     }
 }
 

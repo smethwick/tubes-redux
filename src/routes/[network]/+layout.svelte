@@ -22,7 +22,7 @@
 				in:fly={{ duration: 300, easing: circOut, opacity: 0, y: 8 }}
 			>
 				<Sidebar {conn} />
-				<main class="bg-white border-t w-full border-l rounded-tl-md overflow-y-auto">
+				<main class="bg-white border-t w-full border-l rounded-tl-md overflow-x-hidden overflow-y-auto">
 					<slot />
 				</main>
 			</div>

@@ -1,9 +1,10 @@
-import type { Writable } from "svelte/store"
-import { default_config, default_icons, type IrcConnection } from "./provider+connection";
+import { writable, type Writable } from "svelte/store"
+import type { conn_styles } from "./provider+connection";
 import { LocalProvider } from "./Providers/local";
-import { SingleConnectionProvider } from "./Providers/single";
 
 export const provider = new LocalProvider();
+
+export const current_style: Writable<conn_styles> = writable();
 
 // export const provider = new SingleConnectionProvider({
 //     ...default_config,

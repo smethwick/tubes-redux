@@ -6,7 +6,6 @@
 	import EmojiHeader from './EmojiHeader.svelte';
 	import TabBar from './TabBar.svelte';
 	import Tab from './Tab.svelte';
-	import type { conn_styles } from '$lib/Chat/provider+connection';
 
 	export let value: string;
 	const emojis: { [key: string]: types.Emoji } = data.emojis;
@@ -19,9 +18,6 @@
 			})
 		};
 	});
-
-	export let styles: conn_styles;
-	const { color_name: color } = styles;
 </script>
 
 <Popover class="right-2 bottom-14">
@@ -29,9 +25,9 @@
 	<svelte:fragment slot="popover">
 		<div class="py-1 px-2.5">
 			<TabBar>
-				<Tab {styles} active>Emoji</Tab>
-				<Tab {styles}>Emoticons</Tab>
-				<Tab {styles}>Kaomoji</Tab>
+				<Tab active>Emoji</Tab>
+				<Tab>Emoticons</Tab>
+				<Tab>Kaomoji</Tab>
 			</TabBar>
 			<main class="max-h-[21rem] overflow-y-auto">
 				{#each categories as { id, emojis }}

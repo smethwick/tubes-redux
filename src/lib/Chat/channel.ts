@@ -28,7 +28,23 @@ export class Channel {
             }
         );
 
-        await this.conn.task_queue.wait_for({ command: "366", params: ["*", this.name] });
+        try {
+            await this.conn.task_queue.wait_for({ command: "366", params: ["*", this.name] }, {
+                reject_on: [
+                    { command: "461", params: ["*", this.name] },
+                    { command: "403", params: ["*", this.name] },
+                    { command: "405", params: ["*", this.name] },
+                    { command: "475", params: ["*", this.name] },
+                    { command: "474", params: ["*", this.name] },
+                    { command: "471", params: ["*", this.name] },
+                    { command: "473", params: ["*", this.name] },
+                    { command: "476", params: ["*", this.name] },
+                    { command: "477", params: ["*", this.name] },
+                ]
+            });
+        } catch (e) {
+            throw new Error(String(e));
+        }
 
         this.join_subscription = this.conn.task_queue.subscribe(
             d => this.process_join(d),

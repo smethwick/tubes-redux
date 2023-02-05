@@ -10,7 +10,7 @@
 
 <li>
 	{#if action}
-		<button class="{stylez}" on:click={action}>
+		<button class="{stylez} hover:bg-neutral-900/5" on:click={action}>
 			{#if icon}
 				<svelte:component this={icon} />
 			{/if}

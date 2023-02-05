@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { current_style } from '$lib/Chat';
 	import type { conn_styles } from '$lib/Chat/provider+connection';
 
 	export let active: boolean = false;
 
-	export let styles: conn_styles;
-	const { color_name: color } = styles;
+	const { color_name: color } = $current_style;
 </script>
 
 <button

@@ -9,6 +9,10 @@
 	export let group: MessageGroup;
 
 	$: opened = false;
+
+	const toggle = () => {
+		opened = !opened;
+	};
 </script>
 
 {#if group.messages.length == 1}
@@ -24,16 +28,18 @@
 		</span>
 		<svelte:fragment slot="content">
 			{group.summarise()}
-			<button class="underline" on:click={() => (opened = !opened)}>
+			<button class="underline" on:click={toggle}>
 				{opened ? 'ensmallen' : 'embiggen'}
 			</button>
 		</svelte:fragment>
 	</BasicMessage>
-	{#if opened}
-		<div transition:slide={{ duration: 150, easing: quadOut }}>
-			{#each group.messages as msg (msg.id)}
-				<div><MessageView {msg} /></div>
-			{/each}
-		</div>
-	{/if}
+	<div>
+		{#if opened}
+			<div transition:slide={{ duration: 150, easing: quadOut }}>
+				{#each group.messages as msg (msg.id)}
+					<div><MessageView {msg} /></div>
+				{/each}
+			</div>
+		{/if}
+	</div>
 {/if}

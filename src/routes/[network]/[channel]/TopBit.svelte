@@ -6,16 +6,16 @@
 	import type { Channel } from '$lib/Chat/channel';
 	export let channel: Channel;
 
+	export let open_sidebar: boolean = false;
+
 	const actions: [typeof SvelteComponent, string, Function?][] = [
-		[Users, 'member list'],
+		[Users, 'member list', () => null],
 		[Info, 'channel info', () => (open_sidebar = !open_sidebar)]
 	];
 
 	const aaaaa = () => {
 		null;
 	};
-
-	export let open_sidebar = false;
 </script>
 
 <header class="border-b border-b-neutral-200 px-4 h-14 flex place-items-center">
@@ -27,7 +27,12 @@
 	<div class="ml-auto flex gap-3">
 		{#each actions as [icon, label, action]}
 			<button aria-label={label} on:click={() => (action ?? aaaaa)()}>
-				<svelte:component this={icon} size={20} />
+				<svelte:component
+					this={icon}
+					weight={// epic swag
+					label == 'channel info' ? (open_sidebar ? 'fill' : 'regular') : 'regular'}
+					size={20}
+				/>
 			</button>
 		{/each}
 	</div>
