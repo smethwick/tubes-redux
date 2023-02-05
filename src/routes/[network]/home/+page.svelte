@@ -55,7 +55,7 @@
 	{#if notconnected}
 		<div in:other_other_transision|local out:other_other_transision|local={{ delay: 75 }}>
 			<div in:transision|local={{ delay: 150 }} out:transision|local={{ delay: 50 }} class="mb-6">
-				<DisconnectedBanner on:click={() => conn.connect()} />
+				<DisconnectedBanner color={conn.styles.color_name} on:click={() => conn.connect()} />
 				<div class="mt-2 flex flex-wrap gap-4">
 					<HomeAction on:click={() => goto("./edit")}>✏️ Configure</HomeAction>
 					<HomeAction>♻️ Archive</HomeAction>

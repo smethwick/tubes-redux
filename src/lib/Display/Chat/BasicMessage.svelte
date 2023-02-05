@@ -7,16 +7,16 @@
 <p
 	class="flex {$message_layout == 'comfy'
 		? 'flex-col justify-start place-items-start px-4 py-1 my-1'
-		: 'place-items-center gap-3 py-0.5 my-0.5'} rounded {klass}"
+		: 'place-items-start gap-3 py-0.5 my-0.5'} rounded {klass}"
 >
 	<span
 		class="{$message_layout == 'comfy'
 		? 'text-sm'
-		: 'w-28 min-w-[6rem] '} text-right font-semibold overflow-ellipsis overflow-hidden whitespace-nowrap"
+		: 'w-32 min-w-[8rem] '} text-right font-semibold overflow-ellipsis overflow-hidden whitespace-nowrap"
 	>
 		<slot name="sender" />
 	</span>
-	<slot name="content" />
+	<span class="w-full"><slot name="content" /></span>
 </p>
 
 <style>

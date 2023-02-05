@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { provider } from '$lib/Chat';
+	import type { ConnectionInfo, conn_styles } from '$lib/Chat/provider+connection';
+	import type { Writable } from 'svelte/store';
 	import NetworkItem from './NetworkItem.svelte';
 	import NewNetwork from './NewNetwork.svelte';
 
-	const nets = provider.get_connections_for_the_sidebar_and_nothing_else();
+	export let nets: Writable<(ConnectionInfo & { last_url: string, styles: conn_styles })[]>;
 </script>
 
 <ul class="flex gap-2">

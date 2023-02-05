@@ -6,6 +6,7 @@ import AsyncLock from "async-lock";
 import { saveMessage } from "$lib/Storage/messages";
 import { TaskQueue } from "./task";
 import { Channel } from "./channel";
+import { pick_deterministic } from ".";
 
 export interface ConnectionInfo {
     name: string;
@@ -139,8 +140,8 @@ export abstract class IrcProvider {
         return connections.find(o => o[0] == name)?.[1];
     }
 
-    connection_info_store_for_the_sidebar: Writable<(ConnectionInfo & { last_url: string })[]> = writable();
-    get_connections_for_the_sidebar_and_nothing_else(): Writable<(ConnectionInfo & { last_url: string })[]> {
+    connection_info_store_for_the_sidebar: Writable<(ConnectionInfo & { last_url: string, styles: conn_styles })[]> = writable();
+    get_connections_for_the_sidebar_and_nothing_else(): Writable<(ConnectionInfo & { last_url: string, styles: conn_styles })[]> {
         this.update_sidebar_conns();
         return this.connection_info_store_for_the_sidebar;
     }
@@ -148,11 +149,50 @@ export abstract class IrcProvider {
     update_sidebar_conns() {
         this.connection_info_store_for_the_sidebar.set(this.connections.map(o => {
             const ci = o[1].connection_info;
-            return { ...ci, last_url: o[1].last_url };
+            return { ...ci, last_url: o[1].last_url, styles: o[1].styles };
         }));
     }
 }
 
+export type conn_styles = {
+    color_name: string,
+    chan_selected: string,
+    chan_inactive: string,
+    net_selected: string,
+    net_inactive: string
+};
+
+const color_names = [
+    "red",
+    "orange",
+    "amber",
+    "yellow",
+    "lime",
+    "green",
+    "emerald",
+    "teal",
+    "cyan",
+    "sky",
+    "blue",
+    "indigo",
+    "violet",
+    "purple",
+    "fuchsia",
+    "pink",
+    "rose"
+];
+
+const colours = (): conn_styles[] => {
+    return color_names.map((o) =>
+    ({
+        color_name: o,
+        chan_selected: `bg-${o}-300 hover:bg-${o}-300`,
+        chan_inactive: `hover:bg-${o}-500/10`,
+        net_selected: `bg-${o}-300`,
+        net_inactive: `bg-${o}-100 hover:bg-${o}-200`
+    })
+    )
+}
 
 /**
  * A single connection to an IRC network.
@@ -164,11 +204,14 @@ export abstract class IrcConnection {
 
     last_url: string;
 
+    styles: conn_styles;
+
     on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
 
     constructor(public connection_info: ConnectionInfo) {
         this.isConnected = writable(false);
         this.last_url = `/${this.connection_info.name}`;
+        this.styles = pick_deterministic<conn_styles>(colours(), this.connection_info.name);
     }
 
     abstract connect(): boolean;

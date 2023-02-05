@@ -15,3 +15,14 @@ export const provider = new LocalProvider();
 // });
 
 // export let active_connection: Writable<IrcConnection>;
+
+// taken from https://stackoverflow.com/a/7493982
+// thank you
+export function pick_deterministic<T>(arr: Array<T>, seed: string) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore i'm so tired. i know this works.
+    const charCodes: number = seed.split('').reduce(function (a, b, i): number {
+        return (i == 1 ? a.charCodeAt(0) : +a) + b.charCodeAt(0);
+    });
+    return arr[charCodes % arr.length]
+}

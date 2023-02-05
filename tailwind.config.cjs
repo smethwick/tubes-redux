@@ -1,6 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./src/**/*.{html,js,svelte,ts}'],
+  safelist: [
+    {
+      pattern: /(bg|outline)-.+-(100|200|300|400|500)/,
+      variants: ['hover', 'focus'],
+    },
+  ],
   theme: {
     extend: {
       typography: (theme) => ({

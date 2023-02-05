@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import type { ConnectionInfo } from '$lib/Chat/provider+connection';
+	import type { ConnectionInfo, conn_styles } from '$lib/Chat/provider+connection';
 
-	export let network: ConnectionInfo & { last_url: string };
+	export let network: ConnectionInfo & { last_url: string, styles: conn_styles };
 
 	$: active = $page.params['network'] == network.name;
 
@@ -15,7 +15,7 @@
 
 <button
 	class="
-		flex {active ? 'w-max px-4 bg-purple-400' : 'w-10 bg-purple-200'} h-10  rounded-2xl
+		flex {active ? `w-max px-4 ${network.styles.net_selected}` : `w-10 ${network.styles.net_inactive}`} h-10  rounded-2xl
 		overflow-hidden
 		place-items-center justify-center"
 	aria-label={network.name}
