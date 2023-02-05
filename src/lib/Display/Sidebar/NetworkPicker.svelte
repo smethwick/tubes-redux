@@ -7,7 +7,7 @@
 	export let nets: Writable<(ConnectionInfo & { last_url: string, styles: conn_styles })[]>;
 </script>
 
-<ul class="flex gap-2">
+<ul class="flex gap-2 overflow-x-auto">
 	{#each $nets as network}
 		<NetworkItem {network} />
 	{/each}

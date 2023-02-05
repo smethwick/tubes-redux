@@ -1,3 +1,3 @@
-<nav class="flex my-3 gap-1 mx-2">
+<nav class="flex gap-1 mt-1 px-2.5 py-4">
     <slot/>
 </nav>

@@ -13,8 +13,8 @@
 		{active 
 		? styles?.chan_selected ?? "bg-pink-300 hover:bg-pink-300"
 		: styles?.chan_inactive ?? "hover:bg-pink-500/10"}
-		 text-neutral-600 
-			rounded-md duration-[25ms] ease-out transition-colors select-none"
+		 text-neutral-600
+			rounded-md duration-[150ms] ease-out transition-all select-none"
 		class:active
 		{href}
 	>

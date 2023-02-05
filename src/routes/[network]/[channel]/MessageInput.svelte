@@ -1,9 +1,13 @@
 <script lang="ts">
 	import type { Channel } from '$lib/Chat/channel';
-	import type { IrcConnection } from '$lib/Chat/provider+connection';
+	import type { conn_styles, IrcConnection } from '$lib/Chat/provider+connection';
 	import EmojiPicker from '$lib/Display/Chat/EmojiPicker/EmojiPicker.svelte';
 
 	export let isConnected, channel: Channel | undefined, channel_name: string;
+
+	export let styles: conn_styles;
+	const { color_name: color } = styles;
+
 	let input = '';
 </script>
 
@@ -23,7 +27,7 @@
 			}
 		}}
 	/>
-	<EmojiPicker bind:value={input} />
+	<EmojiPicker {styles} bind:value={input} />
 </div>
 
 <style>

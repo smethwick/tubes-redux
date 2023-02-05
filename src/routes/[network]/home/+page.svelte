@@ -35,78 +35,80 @@
 	let join_diag_open = false;
 </script>
 
-<section class="max-w-3xl mx-auto lg:pt-12 xl:pt-16 p-5">
-	<header class="mb-6">
-		<p>
-			{(() => {
-				switch ($isConnected) {
-					case true:
-						return 'connected to';
-					case 'connecting':
-						return 'connecting…';
-					case false:
-						return 'disconnected from';
-				}
-			})()}
-		</p>
-		<h1>{connection_info.display_name ?? connection_info.name}</h1>
-	</header>
+{#key conn.connection_info.name}
+	<section class="max-w-3xl mx-auto lg:pt-12 xl:pt-16 p-5">
+		<header class="mb-6">
+			<p>
+				{(() => {
+					switch ($isConnected) {
+						case true:
+							return 'connected to';
+						case 'connecting':
+							return 'connecting…';
+						case false:
+							return 'disconnected from';
+					}
+				})()}
+			</p>
+			<h1>{connection_info.display_name ?? connection_info.name}</h1>
+		</header>
 
-	{#if notconnected}
-		<div in:other_other_transision|local out:other_other_transision|local={{ delay: 75 }}>
-			<div in:transision|local={{ delay: 150 }} out:transision|local={{ delay: 50 }} class="mb-6">
-				<DisconnectedBanner color={conn.styles.color_name} on:click={() => conn.connect()} />
-				<div class="mt-2 flex flex-wrap gap-4">
-					<HomeAction on:click={() => goto("./edit")}>✏️ Configure</HomeAction>
-					<HomeAction>♻️ Archive</HomeAction>
+		{#if notconnected}
+			<div in:other_other_transision|local out:other_other_transision|local={{ delay: 75 }}>
+				<div in:transision|local={{ delay: 150 }} out:transision|local={{ delay: 50 }} class="mb-6">
+					<DisconnectedBanner color={conn.styles.color_name} on:click={() => conn.connect()} />
+					<div class="mt-2 flex flex-wrap gap-4">
+						<HomeAction on:click={() => goto('./edit')}>✏️ Configure</HomeAction>
+						<HomeAction>♻️ Archive</HomeAction>
+					</div>
 				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
 
-	{#if !notconnected}
-		<section
-			class="grid grid-cols-3 gap-6"
-			class:disconnected={notconnected}
-			aria-hidden={notconnected}
-			in:other_transition|local={{ delay: 100 }}
-			out:other_transition|local
-		>
-			<section class="col-span-2">
-				<GoodAdvice {connection_info} />
-				<YellingThing />
+		{#if !notconnected}
+			<section
+				class="grid grid-cols-3 gap-6"
+				class:disconnected={notconnected}
+				aria-hidden={notconnected}
+				in:other_transition|local={{ delay: 100 }}
+				out:other_transition|local
+			>
+				<section class="col-span-2">
+					<GoodAdvice {connection_info} />
+					<YellingThing />
+				</section>
+				<section>
+					<h2>Actions</h2>
+					<ul class="flex flex-col place-content-start">
+						<HomeAction on:click={() => ($isConnected ? conn.disconnect() : conn.connect())}>
+							🔌 {$isConnected ? 'Disconnect' : 'Connect'}
+						</HomeAction>
+						<HomeAction on:click={() => goto('./browse')}>🔭 Browse Channels</HomeAction>
+						<HomeAction on:click={() => (join_diag_open = true)}>👋 Join/Create Channel</HomeAction>
+						<HomeAction>📜 Server Messages</HomeAction>
+						<HomeAction on:click={() => goto('./edit')}>✏️ Configure</HomeAction>
+						<HomeAction>♻️ Archive</HomeAction>
+					</ul>
+				</section>
 			</section>
-			<section>
-				<h2>Actions</h2>
-				<ul class="flex flex-col place-content-start">
-					<HomeAction on:click={() => ($isConnected ? conn.disconnect() : conn.connect())}>
-						🔌 {$isConnected ? 'Disconnect' : 'Connect'}
-					</HomeAction>
-					<HomeAction on:click={() => goto('./browse')}>🔭 Browse Channels</HomeAction>
-					<HomeAction on:click={() => (join_diag_open = true)}>👋 Join/Create Channel</HomeAction>
-					<HomeAction>📜 Server Messages</HomeAction>
-					<HomeAction on:click={() => goto("./edit")}>✏️ Configure</HomeAction>
-					<HomeAction>♻️ Archive</HomeAction>
-				</ul>
+
+			<JoinChannel {conn} bind:isopen={join_diag_open} />
+
+			<section
+				class="fade"
+				in:other_transition|local={{ delay: 100 }}
+				out:other_transition|local
+				class:disconnected={notconnected}
+				aria-hidden={notconnected}
+			>
+				{#if $motd}
+					<h2>Message of the Day</h2>
+					<pre style="white-space: pre-wrap;">{$motd}</pre>
+				{/if}
 			</section>
-		</section>
-
-		<JoinChannel {conn} bind:isopen={join_diag_open} />
-
-		<section
-			class="fade"
-			in:other_transition|local={{ delay: 100 }}
-			out:other_transition|local
-			class:disconnected={notconnected}
-			aria-hidden={notconnected}
-		>
-			{#if $motd}
-				<h2>Message of the Day</h2>
-				<pre style="white-space: pre-wrap;">{$motd}</pre>
-			{/if}
-		</section>
-	{/if}
-</section>
+		{/if}
+	</section>
+{/key}
 
 <style>
 	h1 {

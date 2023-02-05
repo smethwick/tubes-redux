@@ -41,10 +41,10 @@
 				<div class="min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4" />
 			{/if}
 		{/key}
-		<MessageInput {isConnected} {channel} channel_name={channel.name} />
+		<MessageInput {isConnected} {channel} channel_name={channel.name} styles={conn.styles} />
 	</div>
 
 	{#if open_sidebar}
-		<ChannelInfo {channel} />
+		<ChannelInfo styles={conn.styles} {channel} />
 	{/if}
 </div>

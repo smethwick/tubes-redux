@@ -12,7 +12,7 @@
 	const nick = new Nick(source);
 </script>
 
-<BasicMessage class="text-sm hover:bg-neutral-50">
+<BasicMessage class="text-sm hover:bg-neutral-50 place-items-center">
 	<span
 		class="text-cyan-700 font-bold flex justify-end place-items-center"
 		aria-hidden

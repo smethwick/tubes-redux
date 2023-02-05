@@ -20,3 +20,9 @@
 </button>
 
 <NewConnection bind:isopen={conn_dialog} />
+
+<style>
+	button {
+		min-width: 2.5rem;
+	}
+</style>

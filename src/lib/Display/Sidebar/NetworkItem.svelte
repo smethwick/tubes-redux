@@ -15,9 +15,10 @@
 
 <button
 	class="
-		flex {active ? `w-max px-4 ${network.styles.net_selected}` : `w-10 ${network.styles.net_inactive}`} h-10  rounded-2xl
+		flex {active ? `px-4 ${network.styles.net_selected}` : `${network.styles.net_inactive}`} h-10  rounded-2xl
 		overflow-hidden
 		place-items-center justify-center"
+	class:active
 	aria-label={network.name}
 	on:click={() => goto(network.last_url)}
 >
@@ -26,3 +27,17 @@
 	</span>
 	<!-- <span class="opacity-25 rotate-12 select-none relative -bottom-2 -right-1 text-3xl">{network.icon}</span> -->
 </button>
+
+<style>
+	button {
+		transition: all 400ms cubic-bezier(0.19, 1, 0.22, 1);
+		overflow: hidden;
+		white-space: nowrap;
+		width: 2.5rem;
+		min-width: 2.5rem;
+	}
+	.active {
+		width: 100%;
+		min-width: 8rem;
+	}
+</style>

@@ -6,6 +6,7 @@
 	import EmojiHeader from './EmojiHeader.svelte';
 	import TabBar from './TabBar.svelte';
 	import Tab from './Tab.svelte';
+	import type { conn_styles } from '$lib/Chat/provider+connection';
 
 	export let value: string;
 	const emojis: { [key: string]: types.Emoji } = data.emojis;
@@ -18,31 +19,34 @@
 			})
 		};
 	});
+
+	export let styles: conn_styles;
+	const { color_name: color } = styles;
 </script>
 
 <Popover class="right-2 bottom-14">
 	<SmileyBlank size={23} />
 	<svelte:fragment slot="popover">
-		<div class="p-1">
+		<div class="py-1 px-2.5">
 			<TabBar>
-				<Tab active>Emoji</Tab>
-				<Tab>Emoticons</Tab>
-				<Tab>Kaomoji</Tab>
+				<Tab {styles} active>Emoji</Tab>
+				<Tab {styles}>Emoticons</Tab>
+				<Tab {styles}>Kaomoji</Tab>
 			</TabBar>
 			<main class="max-h-[21rem] overflow-y-auto">
-			{#each categories as { id, emojis }}
-				<EmojiHeader {id}>{id}</EmojiHeader>
-				<div class="flex flex-wrap text-2xl gap-1">
-					{#each emojis as emoji}
-						<button
-							class="p-2 w-12 h-12 rounded select-none cursor-pointer hover:bg-neutral-200"
-							on:click={() => (value = `${value} ${emoji}`)}
-						>
-							{emoji}
-						</button>
-					{/each}
-				</div>
-			{/each}
+				{#each categories as { id, emojis }}
+					<EmojiHeader {id}>{id}</EmojiHeader>
+					<div class="flex flex-wrap text-2xl gap-1">
+						{#each emojis as emoji}
+							<button
+								class="p-2 w-12 h-12 rounded select-none cursor-pointer hover:bg-neutral-200"
+								on:click={() => (value = `${value} ${emoji}`)}
+							>
+								{emoji}
+							</button>
+						{/each}
+					</div>
+				{/each}
 			</main>
 		</div>
 	</svelte:fragment>
