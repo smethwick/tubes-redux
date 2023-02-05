@@ -112,11 +112,11 @@ export abstract class IrcProvider {
     /**
      * Establish a connection to every connection in the `connections` field.
      */
-    connect_all(): boolean {
+    async connect_all(): Promise<boolean> {
         let result = true;
         if (this.connections) {
             for (const connection of this.connections) {
-                const connection_result = connection[1].connect();
+                const connection_result = await connection[1].connect();
 
                 // return false if any connection fails.
                 if (result == true) {
@@ -214,7 +214,7 @@ export abstract class IrcConnection {
         this.styles = pick_deterministic<conn_styles>(colours(), this.connection_info.name);
     }
 
-    abstract connect(): boolean;
+    abstract connect(): Promise<boolean>;
     abstract send_raw(msg: string): void;
     abstract disconnect(): void;
 
@@ -370,8 +370,7 @@ export abstract class IrcConnection {
     pinger = new Pinger(this);
 
     async handle_open() {
-        this.identify();
-        await this.task_queue.wait_for({ command: '001' });
+        await this.identify();
         this.get_motd();
         this.join_all_channels();
         this.pinger.start();
@@ -416,17 +415,21 @@ export abstract class IrcConnection {
                 until: { command: "CAP", params: ['*', 'ACK'] },
                 unsub_callback: () => this.send_raw("CAP END")
             });
-        // this.task_queue.on({command: "CAP", params: ["*", "ACK"]}, () => {
-        //     this.send_raw("AUTHENTICATE PLAIN");
-        //     this.send_raw(`AUTHENTICATE ${btoa("leah\0leah\0testtesttest")}`);
-        //     prereg_finished = true;
-        // })
 
         for (const msg of to_send) {
             if (msg) this.send_raw(msg);
         }
 
-        this.task_queue.wait_for("001").then(() => this.isConnected.set(true));
+        await this.task_queue.wait_for("001", {
+            reject_on: [
+                { command: "431" },
+                { command: "432" },
+                { command: "433" },
+                { command: "436" },
+            ]
+        }).catch(e => { throw new Error(e) });
+
+        this.isConnected.set(true)
     }
 
 

@@ -9,6 +9,7 @@ import {
 import { db } from "$lib/Storage/db";
 import { ProviderFlags } from "../flags";
 import { saveMessage } from "$lib/Storage/messages";
+import { Deferred } from "../task";
 
 export class LocalProvider extends IrcProvider {
     provider_id = "LocalProvider";
@@ -86,16 +87,21 @@ export class LocalIrcConnection extends IrcConnection {
 
     request_caps: string[] = ['sasl'];
 
-    connect() {
+    async connect() {
         this.isConnected.set("connecting");
         this._establish_connection();
         this.setup_channels();
 
+        const open = new Deferred<void>()
+
         if (this.websocket) {
-            this.websocket.onopen = () => this.handle_open();
+            this.websocket.onopen = () => {if (open.resolve) open.resolve()};
             this.websocket.onmessage = (event) => this.handle_incoming(event.data);
             this.websocket.onclose = () => this.handle_close();
         }
+
+        await open.promise;
+            await this.handle_open()
 
         setTimeout(() => {
             if (this.check_connection() == false) {

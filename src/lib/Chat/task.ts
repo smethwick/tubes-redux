@@ -57,23 +57,10 @@ export class TaskQueue {
     tasks: (task | async_task<IrcMessageEvent>)[] = [];
     subscriptions: subscription[] = [];
 
-    new_task(reply: string | msg_description, callback: (data: IrcMessageEvent) => void): string {
-        const id = uuidv4();
-        const task: task = {
-            id,
-            reply,
-            complete: false,
-            callback
-        };
-
-        this.tasks.push(task);
-        return id;
-    }
-
     new_async_task(reply: string | msg_description, reject_on?: msg_description[]) {
         const id = uuidv4();
         const d = new Deferred<IrcMessageEvent>();
-        
+
         const task: async_task<IrcMessageEvent> = {
             id,
             reply,
@@ -130,9 +117,9 @@ export class TaskQueue {
         this.tasks = this.tasks.filter((o) => {
             if (isAsync(o)) {
                 if (!o.task.resolve || !o.task.reject) throw new Error("task not yet initialised");
-            
+
                 if (o.reject_on && o.reject_on.find(o => do_we_care_about_it(o, event))) {
-                    o.task.reject(`rejected: ${JSON.stringify(event)}`);
+                    o.task.reject(JSON.stringify(event));
                     return false;
                 }
 
@@ -166,10 +153,6 @@ export class TaskQueue {
             if (o.callback) o.callback(event);
         });
 
-    }
-
-    on(reply: string | msg_description, callback: (data: IrcMessageEvent) => void) {
-        this.new_task(reply, callback);
     }
 
     async wait_for(reply: string | msg_description, opt?: { reject_on?: msg_description[] }): Promise<IrcMessageEvent> {
