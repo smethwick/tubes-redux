@@ -13,37 +13,46 @@
 	import DialogBase from '../Base/Base.svelte';
 	import { provider } from '$lib/Chat';
 	import { goto } from '$app/navigation';
+	import MiniDialog from '../Base/MiniDialog.svelte';
 
 	export let isopen = false;
 
-	let name: string,
-		url: string,
-		nick: string,
-		realname: string,
-		username: string,
-		password: string,
-		insecure: boolean;
+	let url: string;
 
-	async function add_network(close: () => void) {
+	async function add_network() {
 		let uuid = uuidv4();
 		let new_network: ConnectionInfo = {
 			name: uuid,
-			display_name: name,
+			display_name: 'Unlabeled',
 			icon: '',
 			url,
 			secure: true,
 			autojoin: [],
-			nick,
-			realname,
-			username
+			nick: 'tubes_user',
+			realname: 'https://leahc.gay/tubes',
+			username: 'tubes'
 		};
 		provider.add_persistent_connection(new_network);
 		goto(`/${uuid}/home`);
-		close();
+		url = '';
+		isopen = false;
 	}
 </script>
 
-<DialogBase bind:isopen let:close width="max-w-2xl" class="h-[95vh]">
+<MiniDialog
+	title="Add a Network"
+	bind:isopen
+	bind:value={url}
+	on:click={() => add_network()}
+	placeholder="network uri"
+>
+	<svelte:fragment slot="bit at the bottom">
+		<a href="/manual/uris">what's this?</a> •
+		<button>use hostname & port instead</button>
+	</svelte:fragment>
+</MiniDialog>
+
+<!-- <DialogBase bind:isopen let:close width="max-w-2xl" class="h-[95vh]">
 	<Heading1 class="text-center">Add a Network</Heading1>
 
 	<form class="flex flex-col my-4">
@@ -105,4 +114,4 @@
 			</PrimaryButton>
 		</div>
 	</div>
-</DialogBase>
+</DialogBase> -->

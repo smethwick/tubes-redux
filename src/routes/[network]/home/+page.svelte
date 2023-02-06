@@ -1,4 +1,8 @@
 <script lang="ts">
+  import NotConnected from './NotConnected.svelte';
+
+	import MotdSection from './MotdSection.svelte';
+
 	import HomeAction from './HomeAction.svelte';
 	import type { LayoutData } from './$types';
 	import YellingThing from '$lib/Display/RegistrationFlow/YellingThing.svelte';
@@ -54,15 +58,7 @@
 		</header>
 
 		{#if notconnected}
-			<div in:other_other_transision|local out:other_other_transision|local={{ delay: 75 }}>
-				<div in:transision|local={{ delay: 150 }} out:transision|local={{ delay: 50 }} class="mb-6">
-					<DisconnectedBanner color={conn.styles.color_name} {conn} />
-					<div class="mt-2 flex flex-wrap gap-4">
-						<HomeAction on:click={() => goto('./edit')}>✏️ Configure</HomeAction>
-						<HomeAction>♻️ Archive</HomeAction>
-					</div>
-				</div>
-			</div>
+			<NotConnected {conn} {duration}></NotConnected>
 		{/if}
 
 		{#if !notconnected}
@@ -94,18 +90,7 @@
 
 			<JoinChannel {conn} bind:isopen={join_diag_open} />
 
-			<section
-				class="fade"
-				in:other_transition|local={{ delay: 100 }}
-				out:other_transition|local
-				class:disconnected={notconnected}
-				aria-hidden={notconnected}
-			>
-				{#if $motd}
-					<h2>Message of the Day</h2>
-					<pre style="white-space: pre-wrap;">{$motd}</pre>
-				{/if}
-			</section>
+			<MotdSection {motd} {duration} {notconnected} />
 		{/if}
 	</section>
 {/key}

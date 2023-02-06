@@ -3,7 +3,7 @@ module.exports = {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   safelist: [
     {
-      pattern: /(bg|outline)-.+-(100|200|300|400|500)/,
+      pattern: /(bg|outline)-.+-(50|100|200|300|400|500)/,
       variants: ['hover', 'focus'],
     },
   ],
