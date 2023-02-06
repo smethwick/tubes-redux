@@ -11,6 +11,8 @@
 	let abbr = network.display_name
 		? network.display_name.substring(0, 2)
 		: network.name.substring(0, 2);
+
+	let button: HTMLButtonElement;
 </script>
 
 <button
@@ -20,7 +22,8 @@
 		place-items-center justify-center"
 	class:active
 	aria-label={network.name}
-	on:click={() => goto(network.last_url)}
+	bind:this={button}
+	on:click={() => {button.scrollIntoView({behavior: 'smooth'}); goto(network.last_url)}}
 >
 	<span>
 		{active ? text : abbr}

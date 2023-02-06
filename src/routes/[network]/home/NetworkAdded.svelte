@@ -59,22 +59,12 @@
 	</section>
 
 	<div class="flex">
-		<SecondaryButton
-			colors={[`bg-${color}-200`, `text-black`, `outline-${color}-200`]}
+		<PrimaryButton
+			colors={[`bg-${color}-300`, `text-black`, `outline-${color}-300`]}
 			class="mr-auto"
 			on:click={() => dismiss()}
 		>
-			Dismiss
-		</SecondaryButton>
-
-		<PrimaryButton
-			colors={[`bg-${color}-300`, `text-black`, `outline-${color}-300`]}
-			on:click={() => {
-				dismiss();
-				conn.connect();
-			}}
-		>
-			Finish & Connect
+			Finish
 		</PrimaryButton>
 	</div>
 </article>
