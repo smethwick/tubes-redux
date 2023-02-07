@@ -31,9 +31,11 @@
 	<form class="flex mt-auto mb-4 gap-4 place-items-end" bind:this={form}>
 		<p
 			class="w-full text-2xl border-0 resize-none border-b border-dashed 
-            border-neutral-700 pt-4 pb-2 break-all"
+            border-neutral-700 pt-4 pb-2 break-all cursor-text"
 			bind:textContent={value}
 			aria-placeholder={placeholder}
+			role="textbox"
+			tabindex=0
 			contenteditable
 			data-placeholder={placeholder}
 			on:keydown={(e) => {
@@ -65,6 +67,7 @@
 <style>
 	:global([data-placeholder]:empty:before) {
 		content: attr(data-placeholder);
+		cursor: text;
 		color: theme("colors.neutral.400");
 	}
 </style>
