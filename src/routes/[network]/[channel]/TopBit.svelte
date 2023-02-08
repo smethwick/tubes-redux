@@ -13,6 +13,8 @@
 		[Info, 'channel info', () => (open_sidebar = !open_sidebar)]
 	];
 
+	$: topic = channel.topic_live;
+
 	const aaaaa = () => {
 		null;
 	};
@@ -23,6 +25,12 @@
 		<Hash size={20} />
 		{channel.name.replace('#', '')}
 	</span>
+
+	{#if $topic && $topic[0]}
+		<span class="text-sm ml-2 overflow-hidden whitespace-nowrap text-ellipsis">
+			{$topic[0]}
+		</span>
+	{/if}
 
 	<div class="ml-auto flex gap-3">
 		{#each actions as [icon, label, action]}

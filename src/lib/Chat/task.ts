@@ -18,18 +18,17 @@ export type task = {
  */
 export type async_task<T> = {
     id: string,
-    reply: string | msg_description,
+    reply: string | msg_description | msg_description[],
     task: Deferred<T>,
     reject_on?: msg_description[],
 }
 
 export type subscription = {
     id: string,
-    until?: msg_description | (() => boolean),
+    until?: msg_description | msg_description[] | (() => boolean),
     only?: msg_description | msg_description[],
-    errors?: string[],
+    errors?: string[] | msg_description[],
     complete: boolean,
-    error_callback?: (data: IrcMessageEvent) => void,
     unsub_callback?: (collected?: IrcMessageEvent[]) => void,
     _collected?: IrcMessageEvent[],
     callback: ((data: IrcMessageEvent) => void) | null
@@ -57,7 +56,7 @@ export class TaskQueue {
     tasks: (task | async_task<IrcMessageEvent>)[] = [];
     subscriptions: subscription[] = [];
 
-    new_async_task(reply: string | msg_description, reject_on?: msg_description[]) {
+    new_async_task(reply: string | msg_description | msg_description[], reject_on?: msg_description[]) {
         const id = uuidv4();
         const d = new Deferred<IrcMessageEvent>();
 
@@ -75,12 +74,9 @@ export class TaskQueue {
     subscribe(
         callback: ((data: IrcMessageEvent) => void) | null,
         options?: {
-            until?: msg_description | (() => boolean);
+            until?: msg_description | msg_description[] | (() => boolean);
             only?: msg_description | msg_description[];
-            handle_errors?: {
-                errors: string[];
-                callback: (data: IrcMessageEvent) => void;
-            };
+            handle_errors?: string[] | msg_description[];
             unsub_callback?: (collected?: IrcMessageEvent[]) => void;
         }
     ) {
@@ -90,10 +86,9 @@ export class TaskQueue {
             until: options?.until,
             only: options?.only,
             complete: false,
-            errors: options?.handle_errors?.errors,
+            errors: options?.handle_errors,
 
             callback: callback,
-            error_callback: options?.handle_errors?.callback,
             unsub_callback: options?.unsub_callback,
         };
         this.subscriptions.push(subscription);
@@ -141,6 +136,11 @@ export class TaskQueue {
         }
 
         this.subscriptions.forEach((o) => {
+            if (o.errors) o.errors.forEach(o => {
+                if (typeof o == "string" && o == event.command) throw o;
+                else if (typeof o != "string" && do_we_care_about_it(o, event)) throw o;
+            })
+
             if (o.until && typeof o.until == "function") o.until() ? unsub(o) : null;
             else if (o.until && do_we_care_about_it(o.until, event)) unsub(o);
 
@@ -155,7 +155,7 @@ export class TaskQueue {
 
     }
 
-    async wait_for(reply: string | msg_description, opt?: { reject_on?: msg_description[] }): Promise<IrcMessageEvent> {
+    async wait_for(reply: string | msg_description | msg_description[], opt?: { reject_on?: msg_description[] }): Promise<IrcMessageEvent> {
         return this.new_async_task(reply, opt?.reject_on);
     }
 }

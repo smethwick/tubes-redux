@@ -5,15 +5,21 @@ import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
 export class Channel {
     nicks: Nick[];
     nicks_live: Writable<Nick[]>;
+
     nicks_subscription?: string;
     join_subscription?: string;
     part_subscription?: string;
+    topic_subscription?: string;
 
     joined = false;
     joined_live = writable(this.joined);
 
+    topic: [string, Nick?, Date?] = ["topic"];
+    topic_live: Writable<[string, Nick?, Date?]>;
+
     constructor(private conn: IrcConnection, public name: string) {
         this.nicks_live = writable([]);
+        this.topic_live = writable();
         this.nicks = [];
     }
 
@@ -60,6 +66,8 @@ export class Channel {
             }
         );
 
+        await this.get_topic();
+
         this.set_joined_status(true);
     }
 
@@ -67,6 +75,7 @@ export class Channel {
         if (this.join_subscription) this.conn.task_queue.unsubscribe(this.join_subscription);
         if (this.nicks_subscription) this.conn.task_queue.unsubscribe(this.nicks_subscription);
         if (this.part_subscription) this.conn.task_queue.unsubscribe(this.part_subscription);
+        if (this.topic_subscription) this.conn.task_queue.unsubscribe(this.topic_subscription);
     }
 
     part(msg?: string) {
@@ -112,5 +121,51 @@ export class Channel {
         this.joined_live.set(val);
 
         if (val == false) this.set_nicks([])
+    }
+
+    async get_topic(): Promise<[string, (Nick | undefined)?, (Date | undefined)?] | undefined> {
+        this.conn.send_raw("TOPIC " + this.name);
+
+        let topic = "";
+        let timestamp: Date | undefined;
+        let nick: Nick | undefined;
+
+        this.topic_subscription = this.conn.task_queue.subscribe(o => {
+            if (o.command == "331") return
+            if (o.command == "332") {
+                topic = o.params.last();
+                this.topic = [topic, this.topic[1], this.topic[2]];
+                this.topic_live.set(this.topic);
+            }
+            if (o.command == "333") {
+                console.log(o.params[3]);
+                nick = new Nick(o.params[2]);
+                timestamp = new Date(Number(o.params[3]) * 1000);
+                this.topic = [this.topic[0], nick, timestamp];
+                this.topic_live.set(this.topic);
+            }
+        }, {
+            only: [
+                { command: "331", params: ["*", this.name] },
+                { command: "333", params: ["*", this.name] },
+                { command: "332", params: ["*", this.name] },
+            ],
+            handle_errors: [
+                { command: "482", params: ["*", this.name] },
+                { command: "442", params: ["*", this.name] },
+                { command: "403", params: ["*", this.name] },
+                { command: "461", params: ["*"] },
+            ],
+        });
+
+        await this.conn.task_queue.wait_for([
+            { command: "331", params: ["*", this.name] },
+            { command: "333", params: ["*", this.name] },
+        ]);
+
+        // this.topic = [topic, nick, timestamp];
+        // this.topic_live.set(this.topic);
+
+        return this.topic;
     }
 }

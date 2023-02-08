@@ -290,14 +290,8 @@ export abstract class IrcConnection {
                 only: { command: "372" },
                 // RPL_ENDOFMOTD
                 until: { command: "376" },
-                handle_errors: {
-                    callback: (data) => {
-                        // TODO: embetter this
-                        throw new Error(data.params[0]);
-                    },
-                    // ERR_NOSUCHSERVER and ERR_NOMOTD respectively
-                    errors: ["402", "422"]
-                },
+                // ERR_NOSUCHSERVER and ERR_NOMOTD respectively
+                handle_errors: ["402", "422"],
                 // update the store when everything's been recieved
                 unsub_callback: (collected) => {
                     this.motd.set(collected
