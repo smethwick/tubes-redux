@@ -5,13 +5,13 @@
 	import ArrowElbowLeft from 'phosphor-svelte/lib/ArrowElbowLeft';
 
 	export let msg: Message;
-	const { source: full_source, content } = msg;
+	const { source: full_source, content, timestamp } = msg;
 	const source = full_source ? full_source[0] : 'Unknown';
 
 	const nick = new Nick(source);
 </script>
 
-<BasicMessage class="text-sm hover:bg-neutral-50 place-items-center">
+<BasicMessage {timestamp} class="text-sm hover:bg-neutral-50 place-items-center">
 	<span
 		class="text-pink-700 font-bold flex justify-end place-items-center"
 		aria-hidden

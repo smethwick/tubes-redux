@@ -36,7 +36,7 @@ export type subscription = {
 
 export type msg_description = {
     command: string,
-    params?: string[],
+    params?: string[] | number,
 }
 
 export class Deferred<T> {
@@ -167,6 +167,11 @@ function resolve_async_task(task: async_task<IrcMessageEvent>, msg: IrcMessageEv
     return true;
 }
 
+export enum Wildcard {
+    Any = "*",
+    None = "-"
+}
+
 function do_we_care_about_it(what_were_looking_for: msg_description | msg_description[], msg: IrcMessageEvent): boolean {
     const isArray = (obj: unknown): obj is Array<unknown> => {
         if (Object.prototype.toString.call(obj) === '[object Array]') return true;
@@ -191,9 +196,12 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
 
     function process_single(only: msg_description, msg: IrcMessageEvent): boolean {
         if (only.command != msg.command) return false;
-        if (only.params) {
+        if (typeof only.params == "number" && msg.params.length != only.params) return false;
+        if (only.params && typeof only.params != "number") {
+
             const aaa = only.params.filter((o, i) => {
                 if (o == "*") return true;
+                if (o == "-") return false;
                 if (msg.params.at(i) == o) return true;
                 return false;
             });

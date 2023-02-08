@@ -5,7 +5,7 @@
 	export let msg: Message;
 </script>
 
-<BasicMessage class="text-red-700">
+<BasicMessage timestamp={msg.timestamp} class="text-red-700">
 	<span slot="sender">⚠️</span>
 	<span slot="content">{JSON.stringify(msg)}</span>
 </BasicMessage>

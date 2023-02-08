@@ -4,9 +4,11 @@ import { handle_raw_irc_msg, type Source } from "./Providers/common";
 import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
 import { saveMessage } from "$lib/Storage/messages";
-import { TaskQueue } from "./task";
+import { Deferred, TaskQueue, Wildcard } from "./task";
 import { Channel } from "./channel";
 import { pick_deterministic } from ".";
+import { Capability } from "./caps+feats";
+import { Saslinator, type SaslMethod } from "./sasl";
 
 export interface ConnectionInfo {
     name: string;
@@ -22,6 +24,8 @@ export interface ConnectionInfo {
     nick: string;
     realname: string;
     username: string;
+
+    sasl?: SaslMethod;
 }
 
 export const default_icons = ['🍄', '🧅', '🧄', '🫘', '🌰', '🥜', '🥦', '🥬', '🍆'];
@@ -212,6 +216,7 @@ export abstract class IrcConnection {
         this.isConnected = writable(false);
         this.last_url = `/${this.connection_info.name}`;
         this.styles = pick_deterministic<conn_styles>(colours(), this.connection_info.name);
+        this.saslinator = new Saslinator(this, this.connection_info.sasl);
     }
 
     abstract connect(): Promise<boolean>;
@@ -308,29 +313,25 @@ export abstract class IrcConnection {
 
     abstract request_caps: string[];
 
-    capabilities: { cap: string, values: string[] }[] = [];
+    capabilities: Capability[] = [];
 
-    async negotiate_capabilities(msg: IrcMessageEvent | undefined): Promise<{ cap: string; values: string[]; }[]> {
+    async negotiate_capabilities(msg: IrcMessageEvent | undefined) {
         if (!msg) throw new Error("server didn't send caps");
 
         // this is... not great!
         if (!(msg.params[2] != '*' || msg.params[3])) throw new Error;
-        const caps = msg.params[3] || msg.params[2];
-        const split_caps = caps.split(" ");
-        const res = split_caps.map((o) => {
-            const [cap, values] = o.split("=");
-            let split_values: string[] = [];
-            if (values) split_values = values.split(",");
-            return { cap, values: split_values }
-        });
+        const witty_variable_name = msg.params[3] || msg.params[2];
+        const split_caps = witty_variable_name.split(" ");
 
-        for (const cap of this.request_caps) {
-            if (res.find((o) => o.cap == cap)) {
-                this.send_raw(`CAP REQ :${cap}`);
+        const caps = split_caps.map((o) => new Capability(this, o));
+        for (const cap_name of this.request_caps) {
+            const cap = caps.find((o) => o.cap == cap_name);
+            if (cap) {
+                await cap.request();
+                this.capabilities.push(cap);
             }
         }
 
-        return res
     }
 
     get_channels(): Channel[] {
@@ -371,10 +372,11 @@ export abstract class IrcConnection {
     }
 
     handle_incoming(line: string) {
-        console.debug("→", line);
         const msg = handle_raw_irc_msg(line, (msg) => {
             this.send_raw(msg)
         });
+        // small performance hack, sorry
+        if (msg.command != "322") console.debug("→", line);
         this.task_queue.resolve_tasks(msg);
         if (this.on_msg) {
             this.on_msg(msg);
@@ -390,6 +392,8 @@ export abstract class IrcConnection {
         this.isConnected.set(false);
     }
 
+    saslinator: Saslinator;
+
     async identify() {
         const conninfo = this.connection_info;
 
@@ -400,19 +404,35 @@ export abstract class IrcConnection {
             `USER ${conninfo.username} 0 * :${conninfo.realname}`,
         ];
 
-        // let prereg_finished = false;
+        const wait_for_caps = new Deferred();
 
-        this.task_queue.subscribe(async (msg) =>
-            (this.capabilities = [...this.capabilities, ...(await this.negotiate_capabilities(msg))]),
+        const collected_msgs: IrcMessageEvent[] = []
+        this.task_queue.subscribe(o => collected_msgs.push(o),
             {
-                only: { command: "CAP", params: ['*', 'LS'] },
-                until: { command: "CAP", params: ['*', 'ACK'] },
-                unsub_callback: () => this.send_raw("CAP END")
+                only: { command: "CAP", params: [Wildcard.Any, 'LS', Wildcard.Any] },
+                until: [
+                    { command: "001" },
+                    { command: "CAP", params: 3 }
+                ],
+                unsub_callback: async () => {
+                    for (const o of collected_msgs) {
+                        await this.negotiate_capabilities(o);
+                        console.log(this.capabilities);
+                    }
+                    if (wait_for_caps.resolve) wait_for_caps.resolve(null);
+                }
             });
 
         for (const msg of to_send) {
             if (msg) this.send_raw(msg);
         }
+
+        await wait_for_caps.promise;
+
+        if (this.capabilities.find(o => o.cap == "sasl") && this.connection_info.sasl)
+            await this.saslinator.authenticate();
+
+        this.send_raw("CAP END");
 
         await this.task_queue.wait_for("001", {
             reject_on: [

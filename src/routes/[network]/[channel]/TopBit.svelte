@@ -27,7 +27,7 @@
 	</span>
 
 	{#if $topic && $topic[0]}
-		<span class="text-sm ml-2 overflow-hidden whitespace-nowrap text-ellipsis">
+		<span class="text-sm ml-2 overflow-hidden whitespace-nowrap w-[75%] text-ellipsis">
 			{$topic[0]}
 		</span>
 	{/if}

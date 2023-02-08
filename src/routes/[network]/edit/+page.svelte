@@ -4,6 +4,7 @@
 	import PrimaryButton from '$lib/Display/Buttons/PrimaryButton.svelte';
 	import SecondaryButton from '$lib/Display/Buttons/SecondaryButton.svelte';
 	import TextInput from '$lib/Display/Forms/TextInput.svelte';
+	import Toggle from '$lib/Display/Forms/Toggle.svelte';
 	import List from '$lib/Display/Lists/List.svelte';
 	import Item from '$lib/Display/Lists/ListItem.svelte';
 	import Content from '$lib/Display/Type/Content.svelte';
@@ -31,9 +32,12 @@
 		name,
 		secure,
 		username,
-		server_password
+		server_password,
+		sasl
 	} = ci;
 
+	sasl = sasl ?? { username: '', password: '' };
+	$: sasl_enabled = Boolean(sasl); 
 	let thing_to_add = '';
 </script>
 
@@ -71,6 +75,24 @@
 			<p>Your real name, or any other details people might want to know about you.</p>
 		</TextInput>
 	</div>
+
+	<h2>Authentication</h2>
+	<Toggle bind:value={sasl_enabled}>
+		<h3>Use an account</h3>
+	</Toggle>
+	<div class="grid grid-cols-2 gap-4 mt-4">
+		{#if sasl_enabled && sasl}
+			<TextInput bind:value={sasl.username}>
+				<h3>Username</h3>
+				<p>This is how you're identified on the network</p>
+			</TextInput>
+			<TextInput type="password" bind:value={sasl.password}>
+				<h3>Password</h3>
+				<p>Your real name, or any other details people might want to know about you.</p>
+			</TextInput>
+		{/if}
+	</div>
+
 	<h2>Channels</h2>
 	These channels will be joined ✨ automatically when you connect to {display_name}.
 
@@ -127,7 +149,8 @@
 					name,
 					secure,
 					display_name,
-					server_password
+					server_password,
+					sasl: (sasl?.username && sasl?.password) ? sasl : undefined,
 				});
 				goto(`./home`);
 			}}

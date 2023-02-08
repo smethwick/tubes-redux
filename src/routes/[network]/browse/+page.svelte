@@ -24,7 +24,7 @@
 		if (cached != null && cached.length != 0) return cached;
 
 		let channels = await list.get_channels();
-		lscache.set(key, channels, 5);
+		lscache.set(key, channels, 30);
 		return channels;
 	}
 </script>
