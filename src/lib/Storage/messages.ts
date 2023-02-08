@@ -9,6 +9,7 @@ export enum MessageTypes {
   Invalid,
   Quit,
   Notice,
+  Topic,
 }
 
 export interface Message {
@@ -28,7 +29,7 @@ export interface Message {
 
 export async function saveMessage(net: string, e: IrcMessageEvent) {
   const acceptable_commands = [
-    'privmsg', 'join', 'part', 'quit', 'notice'
+    'privmsg', 'join', 'part', 'quit', 'notice', 'topic'
   ]
 
   if (!acceptable_commands.includes(e.command.toLowerCase())) return
@@ -90,6 +91,13 @@ async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise
       return {
         ...sensible_defaults(net, e),
         type: MessageTypes.Notice,
+        content: e.params.last(),
+        target: e.params[0],
+      }
+    case 'topic':
+      return {
+        ...sensible_defaults(net, e),
+        type: MessageTypes.Topic,
         content: e.params.last(),
         target: e.params[0],
       }

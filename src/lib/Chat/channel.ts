@@ -10,6 +10,7 @@ export class Channel {
     join_subscription?: string;
     part_subscription?: string;
     topic_subscription?: string;
+    topic_getter_subscription?: string;
 
     joined = false;
     joined_live = writable(this.joined);
@@ -66,6 +67,12 @@ export class Channel {
             }
         );
 
+        this.topic_subscription = this.conn.task_queue.subscribe(
+            d => this.process_topic(d), {
+                only: {command: "TOPIC", params: [this.name]},
+            }
+        )
+
         await this.get_topic();
 
         this.set_joined_status(true);
@@ -75,6 +82,7 @@ export class Channel {
         if (this.join_subscription) this.conn.task_queue.unsubscribe(this.join_subscription);
         if (this.nicks_subscription) this.conn.task_queue.unsubscribe(this.nicks_subscription);
         if (this.part_subscription) this.conn.task_queue.unsubscribe(this.part_subscription);
+        if (this.topic_getter_subscription) this.conn.task_queue.unsubscribe(this.topic_getter_subscription);
         if (this.topic_subscription) this.conn.task_queue.unsubscribe(this.topic_subscription);
     }
 
@@ -111,6 +119,13 @@ export class Channel {
         this.set_nicks(this.nicks.filter(o => o.name != parting_user));
     }
 
+    process_topic(data: IrcMessageEvent) {
+        const new_topic = data.params.last();
+        const new_nick = data.params[2];
+
+        this._set_topic_inner({topic: new_topic, nick: new_nick})
+    }
+
     set_nicks(val: Nick[]) {
         this.nicks = val;
         this.nicks_live.set(val);
@@ -130,7 +145,7 @@ export class Channel {
         let timestamp: Date | undefined;
         let nick: Nick | undefined;
 
-        this.topic_subscription = this.conn.task_queue.subscribe(o => {
+        this.topic_getter_subscription = this.conn.task_queue.subscribe(o => {
             if (o.command == "331") return
             if (o.command == "332") {
                 topic = o.params.last();
@@ -145,10 +160,19 @@ export class Channel {
                 this.topic_live.set(this.topic);
             }
         }, {
-            only: [
+            until: [
+                // RPL_NOTOPIC
                 { command: "331", params: ["*", this.name] },
+                // RPL_TOPICWHOTIME
                 { command: "333", params: ["*", this.name] },
+            ],
+            only: [
+                // RPL_NOTOPIC
+                { command: "331", params: ["*", this.name] },
+                // RPL_TOPIC
                 { command: "332", params: ["*", this.name] },
+                // RPL_TOPICWHOTIME
+                { command: "333", params: ["*", this.name] },
             ],
             handle_errors: [
                 { command: "482", params: ["*", this.name] },
@@ -167,5 +191,16 @@ export class Channel {
         // this.topic_live.set(this.topic);
 
         return this.topic;
+    }
+
+    private _set_topic_inner({topic, nick, timestamp}: {topic?: string, nick?: Nick | string, timestamp?: Date | string}) {
+        topic = topic ?? this.topic[0];
+        if (typeof nick === "string") nick = new Nick(nick);
+        nick = nick ?? this.topic[1];
+        if (typeof timestamp === "string") timestamp = new Date(Number(timestamp) * 1000);
+        timestamp = timestamp ?? this.topic[2];
+
+        this.topic = [topic, nick, timestamp];
+        this.topic_live.set(this.topic);
     }
 }
