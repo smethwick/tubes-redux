@@ -31,15 +31,15 @@
 			<button class="underline" on:click={toggle}>
 				{opened ? 'ensmallen' : 'embiggen'}
 			</button>
-		</svelte:fragment>
-	</BasicMessage>
-	<div>
+		</svelte:fragment>		
+		<div slot="after">
 		{#if opened}
-			<div transition:slide={{ duration: 150, easing: quadOut }}>
+			<div class="ml-6" transition:slide={{ duration: 150, easing: quadOut }}>
 				{#each group.messages as msg (msg.id)}
 					<div><MessageView {msg} /></div>
 				{/each}
 			</div>
 		{/if}
-	</div>
+		</div>
+	</BasicMessage>
 {/if}

@@ -22,7 +22,7 @@
 	}}
 />
 
-<Base bind:isopen let:close class="h-96">
+<Base bind:isopen let:close class="h-72">
 	<span class="flex place-items-center gap-2">
 		<button on:click={() => close()}><X /></button>
 		<h2>{title}</h2>

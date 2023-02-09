@@ -43,8 +43,8 @@ export class LocalProvider extends IrcProvider {
         throw new Error(ProviderError.UnimplementedMethod)
     }
 
-    add_connection(ci: ConnectionInfo): LocalIrcConnection {
-        if (this.get_connection(ci.name))
+    async add_connection(ci: ConnectionInfo): Promise<LocalIrcConnection> {
+        if (await this.get_connection(ci.name))
             throw new Error("a connection with this name already exists");
 
         this.connections = [...this.connections, [ci.name, new LocalIrcConnection(ci)]];
@@ -58,7 +58,7 @@ export class LocalProvider extends IrcProvider {
         }
     }
 
-    add_persistent_connection(ci: ConnectionInfo): LocalIrcConnection {
+    async add_persistent_connection(ci: ConnectionInfo): Promise<LocalIrcConnection> {
         const conn = this.add_connection(ci);
         db.networks.add({
             name: ci.name,
@@ -75,7 +75,7 @@ export class LocalProvider extends IrcProvider {
             .toArray();
     }
 
-    get_connections(): [string, LocalIrcConnection][] {
+    async get_connections(): Promise<[string, LocalIrcConnection][]> {
         return this.connections;
     }
 }
@@ -85,7 +85,7 @@ export class LocalIrcConnection extends IrcConnection {
     on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
     on_connect?: (() => void) | undefined;
 
-    request_caps: string[] = ['sasl'];
+    requested_caps: string[] = ['sasl', 'cap-notify'];
 
     async connect() {
         this.isConnected.set("connecting");

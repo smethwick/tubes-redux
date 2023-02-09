@@ -23,6 +23,85 @@ export type async_task<T> = {
     reject_on?: msg_description[],
 }
 
+export type batch_collector = {
+    id: string,
+    batch_name: string,
+    batch_type: string;
+    collected: IrcMessageEvent[];
+    task: Deferred<IrcMessageEvent[]>;
+}
+
+class MessageDescription {
+    
+}
+
+class Collector {
+    collection_collection: Collection[] = [];
+
+    async handle(data: IrcMessageEvent) {
+        this.collection_collection = this.collection_collection.filter(o => o.resolve(data))
+    }
+
+    add(c: Collection) {
+        this.collection_collection.push(c);
+    }
+}
+
+class Collection {
+    id: string;
+    task = new Deferred<IrcMessageEvent[]>();
+    collection: IrcMessageEvent[] = [];
+
+    private collecting = false;
+    private include_start_and_finish;
+    private reject_on?: msg_description[];
+
+    constructor(
+        private start: msg_description,
+        private include: msg_description[],
+        private finish: msg_description | msg_description[],
+        { reject_on, include_start_and_finish }: {
+            reject_on?: msg_description[], include_start_and_finish?: boolean
+        },
+    ) {
+        this.id = uuidv4();
+        this.reject_on = reject_on;
+        this.include_start_and_finish = include_start_and_finish ?? false;
+    }
+
+    resolve(data: IrcMessageEvent): boolean {
+        
+        if (do_we_care_about_it(this.start, data)) {
+            if (this.include_start_and_finish) this.collection.push(data);
+            this.collecting = true;
+            return true;
+        }
+        
+        if (!this.collecting) return true;
+
+        console.log("here", data);
+
+        if (!this.task.resolve || !this.task.reject) throw new Error("task not yet initialised");
+        if (this.reject_on && this.reject_on.find(o => do_we_care_about_it(o, data))) this.task.reject();
+
+        if (do_we_care_about_it(this.finish, data)) {
+            if (this.include_start_and_finish) this.collection.push(data);
+            this.collecting = false;
+            console.log(`${this.id} finished collecting`, data);
+            this.task.resolve(this.collection);
+            return false;
+        }
+
+        if (this.include.find(o => do_we_care_about_it(o, data))) {
+            this.collection.push(data);
+            console.log(this);
+            return true;
+        };
+
+        return true;
+    }
+}
+
 export type subscription = {
     id: string,
     until?: msg_description | msg_description[] | (() => boolean),
@@ -52,8 +131,22 @@ export class Deferred<T> {
     }
 }
 
+// don't worry about this. it's fine. probably
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isAsync = (obj: any): obj is async_task<IrcMessageEvent> => {
+    if (obj.reply && obj.task) return true;
+    else return false;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isBatched = (obj: any): obj is batch_collector => {
+    if (obj.batch_name) return true;
+    else return false;
+}
+
 export class TaskQueue {
-    tasks: (task | async_task<IrcMessageEvent>)[] = [];
+    tasks: (task | async_task<IrcMessageEvent> | batch_collector)[] = [];
+    collector: Collector = new Collector();
     subscriptions: subscription[] = [];
 
     new_async_task(reply: string | msg_description | msg_description[], reject_on?: msg_description[]) {
@@ -71,6 +164,9 @@ export class TaskQueue {
         return d.promise;
     }
 
+    /**
+     * @deprecated
+     */
     subscribe(
         callback: ((data: IrcMessageEvent) => void) | null,
         options?: {
@@ -101,25 +197,21 @@ export class TaskQueue {
     }
 
     async resolve_tasks(event: IrcMessageEvent) {
-        // don't worry about this. it's fine. probably
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const isAsync = (obj: any): obj is async_task<IrcMessageEvent> => {
-            if (obj.task) return true;
-            else return false;
-        }
-
+        this.collector.handle(event);
 
         this.tasks = this.tasks.filter((o) => {
             if (isAsync(o)) {
+                handle_async(o, event);
+            } else if (isBatched(o)) {
                 if (!o.task.resolve || !o.task.reject) throw new Error("task not yet initialised");
 
-                if (o.reject_on && o.reject_on.find(o => do_we_care_about_it(o, event))) {
-                    o.task.reject(JSON.stringify(event));
-                    return false;
-                }
+                if (event.tags && event.tags.find(t => t.key == "batch" && t.value == o.batch_name))
+                    o.collected.push(event);
 
-                if (typeof o.reply == "string" && o.reply == event.command) { resolve_async_task(o, event); return false; };
-                if (typeof o.reply != "string" && do_we_care_about_it(o.reply, event)) { resolve_async_task(o, event); return false; };
+                if (event.command == "BATCH" && event.params[0] == `-${o.batch_name}`) {
+                    o.task.resolve(o.collected);
+                    return;
+                }
             } else {
                 if (typeof o.reply == "string" && o.reply == event.command) { o.callback(event); return false; };
                 if (typeof o.reply != "string" && do_we_care_about_it(o.reply, event)) { o.callback(event); return false; };
@@ -141,22 +233,53 @@ export class TaskQueue {
                 else if (typeof o != "string" && do_we_care_about_it(o, event)) throw o;
             })
 
+            if (o.only && !do_we_care_about_it(o.only, event)) return;
+            if (o.callback) o.callback(event);
+
             if (o.until && typeof o.until == "function") o.until() ? unsub(o) : null;
             else if (o.until && do_we_care_about_it(o.until, event)) unsub(o);
 
-            if (o.only && !do_we_care_about_it(o.only, event)) return;
 
             if (o.unsub_callback) {
                 o._collected = o._collected ? [...o._collected, event] : [event];
             }
-
-            if (o.callback) o.callback(event);
         });
 
     }
 
     async wait_for(reply: string | msg_description | msg_description[], opt?: { reject_on?: msg_description[] }): Promise<IrcMessageEvent> {
         return this.new_async_task(reply, opt?.reject_on);
+    }
+
+    async collect_batch(type: string): Promise<IrcMessageEvent[]> {
+        const id = uuidv4();
+        const def = new Deferred<IrcMessageEvent[]>();
+        const msg = await this.wait_for({ command: "BATCH", params: [Wildcard.Any, type] });
+        const task: batch_collector = {
+            batch_name: msg.params[0].replace("+", ""),
+            id: id,
+            batch_type: type,
+            collected: [],
+            task: def,
+        }
+        this.tasks.push(task);
+
+        return def.promise;
+    }
+
+    async collect(
+        start: msg_description,
+        include: msg_description[],
+        finish: msg_description,
+        { reject_on, include_start_and_finish }: { reject_on?: msg_description[], include_start_and_finish?: boolean }
+    ): Promise<IrcMessageEvent[]> {
+        const collection = new Collection(start, include, finish, {
+            reject_on,
+            include_start_and_finish: include_start_and_finish ?? false
+        });
+        this.collector.add(collection);
+
+        return collection.task.promise;
     }
 }
 
@@ -218,7 +341,14 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
     }
 }
 
+function handle_async(task: async_task<IrcMessageEvent>, msg: IrcMessageEvent) {
+    if (!task.task.resolve || !task.task.reject) throw new Error("task not yet initialised");
 
-// function are_we_done(sub: subscription, msg: IrcMessageEvent): boolean {
+    if (task.reject_on && task.reject_on.find(o => do_we_care_about_it(o, msg))) {
+        task.task.reject(JSON.stringify(msg));
+        return false;
+    }
 
-// }
+    if (typeof task.reply == "string" && task.reply == msg.command) { resolve_async_task(task, msg); return false; };
+    if (typeof task.reply != "string" && do_we_care_about_it(task.reply, msg)) { resolve_async_task(task, msg); return false; };
+}

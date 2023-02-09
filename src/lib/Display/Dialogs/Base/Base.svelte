@@ -27,7 +27,7 @@
 		<dialog open class="{width} w-full bg-transparent ">
 			<div transition:scale={{ duration, start: 0.95, easing: quadOut }}>
 				<div
-					class="bg-white ext-black rounded-md shadow-lg p-8 h-[90vh] max-h-[50rem] overflow-y-auto flex flex-col {klass}"
+					class="bg-white ext-black rounded-md shadow-lg p-8 max-h-[50rem] overflow-y-auto flex flex-col {klass}"
 					transition:fly={{ duration, easing: quadOut, y: 10 }}
 				>
 					<slot {open} {close} />

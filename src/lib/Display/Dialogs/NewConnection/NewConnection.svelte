@@ -1,16 +1,6 @@
 <script lang="ts">
 	import type { ConnectionInfo } from '$lib/Chat/provider+connection';
 	import { v4 as uuidv4 } from 'uuid';
-	import { extract_bits_from_url } from '$lib/Chat/url';
-	import PrimaryButton from '$lib/Display/Buttons/PrimaryButton.svelte';
-	import SecondaryButton from '$lib/Display/Buttons/SecondaryButton.svelte';
-	import Collapsible from '$lib/Display/Etc/Collapsible.svelte';
-	import TextInput from '$lib/Display/Forms/TextInput.svelte';
-	import Toggle from '$lib/Display/Forms/Toggle.svelte';
-	import Heading1 from '$lib/Display/Type/Heading1.svelte';
-	import { quadOut } from 'svelte/easing';
-	import { slide } from 'svelte/transition';
-	import DialogBase from '../Base/Base.svelte';
 	import { provider } from '$lib/Chat';
 	import { goto } from '$app/navigation';
 	import MiniDialog from '../Base/MiniDialog.svelte';
@@ -20,6 +10,7 @@
 	let url: string;
 
 	async function add_network() {
+		if (!url) return;
 		let uuid = uuidv4();
 		let new_network: ConnectionInfo = {
 			name: uuid,

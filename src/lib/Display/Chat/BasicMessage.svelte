@@ -5,7 +5,7 @@
 	export { klass as class };
 	import dayjs from 'dayjs';
 
-	export let timestamp: Date;
+	export let timestamp: Date | undefined = undefined;
 </script>
 
 <article class="my-1 py-0.5 {outer_class}">
@@ -25,7 +25,9 @@
 			<slot name="sender" />
 		</span>
 		<p class="w-full"><slot name="content" /></p>
-		<time class="ml-auto text-sm text-neutral-700">{dayjs(timestamp).format('hh:mm')}</time>
+		{#if timestamp}
+			<time class="ml-auto text-sm text-neutral-700">{dayjs(timestamp).format('hh:mm')}</time>
+		{/if}
 	</div>
 	<slot name="after" />
 </article>

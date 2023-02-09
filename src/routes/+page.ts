@@ -4,10 +4,11 @@ import { redirect } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async () => {
-    const networks = await LocalProvider.fetch_persistent_connections('LocalProvider');
+    await provider.up();
+    const networks = await provider.get_connections();
     if (networks.length == 0) throw redirect(302, `/setup`);
     
-    const [{conn_blueprint: {name}}] = networks;
+    const name = networks[0][0];
 
     throw redirect(302, `/${name}/home`);
 };

@@ -8,7 +8,7 @@ export class Saslinator {
     constructor(private conn: IrcConnection, private info: SaslMethod) { }
 
     async authenticate() {
-        if (!this.conn.capabilities.find(o => o.cap == "sasl"))
+        if (!this.conn.capman.hasCap("sasl"))
             throw new Error("SASL is not supported on this network");
         if (!this.info) throw new Error("no sasl stuff provided");
 

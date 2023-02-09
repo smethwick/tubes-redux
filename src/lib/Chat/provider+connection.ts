@@ -7,7 +7,7 @@ import { saveMessage } from "$lib/Storage/messages";
 import { Deferred, TaskQueue, Wildcard } from "./task";
 import { Channel } from "./channel";
 import { pick_deterministic } from ".";
-import { Capability } from "./caps+feats";
+import { Capability, CapabilityManager } from "./caps";
 import { Saslinator, type SaslMethod } from "./sasl";
 
 export interface ConnectionInfo {
@@ -134,13 +134,13 @@ export abstract class IrcProvider {
     }
 
 
-    abstract add_connection?(ci: ConnectionInfo): IrcConnection
-    abstract add_persistent_connection?(ci: ConnectionInfo): IrcConnection
+    abstract add_connection?(ci: ConnectionInfo): Promise<IrcConnection>
+    abstract add_persistent_connection?(ci: ConnectionInfo): Promise<IrcConnection>
     static fetch_persistent_connections?(provider_id: string): Promise<Network[]>
-    abstract get_connections(): [string, IrcConnection][];
+    abstract get_connections(): Promise<[string, IrcConnection][]>;
 
-    get_connection(name: string): IrcConnection | undefined {
-        const connections = this.get_connections();
+    async get_connection(name: string): Promise<IrcConnection | undefined> {
+        const connections = await this.get_connections();
         return connections.find(o => o[0] == name)?.[1];
     }
 
@@ -203,12 +203,22 @@ const colours = (): conn_styles[] => {
  */
 export abstract class IrcConnection {
     isConnected: Writable<boolean | "connecting">;
+    pinger = new Pinger(this);
+
     channels: Channel[] = [];
+    channel_store: Writable<Channel[]> = writable();
+
     task_queue: TaskQueue = new TaskQueue();
 
     last_url: string;
-
     styles: conn_styles;
+
+    abstract requested_caps: string[];
+    capman: CapabilityManager = new CapabilityManager(this);
+    saslinator: Saslinator;
+
+    motd: Writable<string> = writable("");
+    motd_gotten = false;
 
     on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
 
@@ -283,62 +293,41 @@ export abstract class IrcConnection {
         return connected == true
     }
 
-    motd: Writable<string> = writable("");
-    motd_gotten = false;
     async get_motd() {
         if (this.motd_gotten) return;
         this.send_raw("MOTD");
-        this.task_queue.subscribe(
-            null,
+
+        const collected = await this.task_queue.collect(
+            // RPL_MOTDSTART
+            { command: "375" },
+            // RPL_MOTD
+            [{ command: "372" }],
+            // RPL_ENDOFMOTD
+            { command: "376" },
             {
-                // RPL_MOTD
-                only: { command: "372" },
-                // RPL_ENDOFMOTD
-                until: { command: "376" },
                 // ERR_NOSUCHSERVER and ERR_NOMOTD respectively
-                handle_errors: ["402", "422"],
-                // update the store when everything's been recieved
-                unsub_callback: (collected) => {
-                    this.motd.set(collected
-                        ? collected
-                            .map((o) => o.params[o.params.length - 1].substring(2))
-                            .join("\n")
-                        : "something went wrong");
-
-                    this.motd_gotten = true;
-                }
+                reject_on: [{ command: "402" }, { command: "422" }]
             }
-        );
-    }
+        )
 
-    abstract request_caps: string[];
+        // update the store when everything's been recieved
+        console.log("here");
+        this.motd.set(collected
+            ? collected
+                .map((o) => {
+                    const param = o.params[o.params.length - 1];
+                    return param.startsWith("- ") ? param.substring(2).trim() : param;
+                })
+                .join("\n")
+            : "something went wrong");
 
-    capabilities: Capability[] = [];
-
-    async negotiate_capabilities(msg: IrcMessageEvent | undefined) {
-        if (!msg) throw new Error("server didn't send caps");
-
-        // this is... not great!
-        if (!(msg.params[2] != '*' || msg.params[3])) throw new Error;
-        const witty_variable_name = msg.params[3] || msg.params[2];
-        const split_caps = witty_variable_name.split(" ");
-
-        const caps = split_caps.map((o) => new Capability(this, o));
-        for (const cap_name of this.request_caps) {
-            const cap = caps.find((o) => o.cap == cap_name);
-            if (cap) {
-                await cap.request();
-                this.capabilities.push(cap);
-            }
-        }
-
+        this.motd_gotten = true;
     }
 
     get_channels(): Channel[] {
         return this.channels;
     }
 
-    channel_store: Writable<Channel[]> = writable();
     get_channels_store_edition(): Writable<Channel[]> {
         this.channel_store.set(this.channels);
         return this.channel_store;
@@ -362,7 +351,6 @@ export abstract class IrcConnection {
         })
     }
 
-    pinger = new Pinger(this);
 
     async handle_open() {
         await this.identify();
@@ -371,12 +359,12 @@ export abstract class IrcConnection {
         this.pinger.start();
     }
 
-    handle_incoming(line: string) {
+    handle_incoming(line: string, conn_name?: string) {
         const msg = handle_raw_irc_msg(line, (msg) => {
             this.send_raw(msg)
         });
         // small performance hack, sorry
-        if (msg.command != "322") console.debug("→", line);
+        if (msg.command != "322") console.debug(conn_name ? `${conn_name} →` : "→", line);
         this.task_queue.resolve_tasks(msg);
         if (this.on_msg) {
             this.on_msg(msg);
@@ -392,45 +380,25 @@ export abstract class IrcConnection {
         this.isConnected.set(false);
     }
 
-    saslinator: Saslinator;
-
-    async identify() {
-        const conninfo = this.connection_info;
+    async identify(ci?: ConnectionInfo, postreg?: () => Promise<void>) {
+        if (!ci) ci = this.connection_info;
 
         const to_send = [
-            "CAP LS 302",
-            conninfo.server_password ? `PASS ${conninfo.server_password}` : ``,
-            `NICK ${conninfo.nick}`,
-            `USER ${conninfo.username} 0 * :${conninfo.realname}`,
+            ci.server_password ? `PASS ${ci.server_password}` : ``,
+            `NICK ${ci.nick}`,
+            `USER ${ci.username} 0 * :${ci.realname}`,
         ];
 
-        const wait_for_caps = new Deferred();
-
-        const collected_msgs: IrcMessageEvent[] = []
-        this.task_queue.subscribe(o => collected_msgs.push(o),
-            {
-                only: { command: "CAP", params: [Wildcard.Any, 'LS', Wildcard.Any] },
-                until: [
-                    { command: "001" },
-                    { command: "CAP", params: 3 }
-                ],
-                unsub_callback: async () => {
-                    for (const o of collected_msgs) {
-                        await this.negotiate_capabilities(o);
-                        console.log(this.capabilities);
-                    }
-                    if (wait_for_caps.resolve) wait_for_caps.resolve(null);
-                }
-            });
+        await this.capman.negotiate();
 
         for (const msg of to_send) {
             if (msg) this.send_raw(msg);
         }
 
-        await wait_for_caps.promise;
-
-        if (this.capabilities.find(o => o.cap == "sasl") && this.connection_info.sasl)
+        if (this.capman.hasCap("sasl") && ci.sasl)
             await this.saslinator.authenticate();
+
+        if (postreg) await postreg();
 
         this.send_raw("CAP END");
 
@@ -485,7 +453,7 @@ export class Pinger {
     async ping() {
         setTimeout(async () => {
             this.conn.send_raw("PING tubes");
-            const msg = await this.conn.task_queue.wait_for({ command: "PONG", params: ['*', 'tubes'] });
+            const msg = await this.conn.task_queue.wait_for({ command: "PONG", params: [Wildcard.Any, 'tubes'] });
 
             // if we don't get a response after 30 seconds, assume the connection is dead.
             setTimeout(() => {

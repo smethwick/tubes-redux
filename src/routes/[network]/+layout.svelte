@@ -11,7 +11,7 @@
 	$: conn = data.connection;
 </script>
 
-{#if provider.supportsEnvironment()}
+{#if provider.supportsEnvironment && provider.supportsEnvironment()}
 	<div class="font-serif bg-neutral-50 text-neutral-900 h-screen flex flex-col">
 		{#await provider.up()}
 			hold on

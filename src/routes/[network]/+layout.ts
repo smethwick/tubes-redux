@@ -7,7 +7,7 @@ export const load: LayoutLoad = async ({ params, url }) => {
 
     const { network } = params;
 
-    const connection = provider.get_connection(network);
+    const connection = await provider.get_connection(network);
     if (!connection) throw error(404);
 
     current_style.set(connection.styles);
