@@ -14,8 +14,9 @@ export class Saslinator {
 
         this.conn.send_raw("AUTHENTICATE PLAIN");
         await this.conn.task_queue.wait_for({ command: "AUTHENTICATE", params: ['+'] })
-        this.conn.send_raw(`AUTHENTICATE ${btoa(`${this.info.username}\0${this.info.username}\0${this.info.password
-            }`)}`);
+        this.conn.send_raw(`AUTHENTICATE ${window.btoa(
+            `${this.info.username}\0${this.info.username}\0${this.info.password}`
+        )}`);
         await this.conn.task_queue.wait_for({ command: "903" }, {
             reject_on: [
                 //  ERR_NICKLOCKED

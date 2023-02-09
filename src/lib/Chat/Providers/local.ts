@@ -1,11 +1,11 @@
 import {
     IrcProvider,
-    type ConnectionInfo,
-    ProviderError,
-    type IrcMessageEvent,
     IrcConnection,
-    Params
-} from "../provider+connection";
+    ProviderError,
+    Params,
+    type ConnectionInfo,
+    type IrcMessageEvent,
+} from "$lib/Chat/provider+connection";
 import { db } from "$lib/Storage/db";
 import { ProviderFlags } from "../flags";
 import { saveMessage } from "$lib/Storage/messages";
