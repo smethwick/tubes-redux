@@ -9,7 +9,7 @@
 <div class="w-full h-full">
 	<Content>
 		<Header back>Configuration</Header>
-		{$message_layout}
+		<!-- {$message_layout} -->
 		<button on:click={() => $message_layout = "comfy"}>go comfy</button>
 		<button on:click={() => $message_layout = "compact"}>go compact</button>
 	</Content>

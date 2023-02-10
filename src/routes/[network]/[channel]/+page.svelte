@@ -31,8 +31,8 @@
 	$: open_sidebar = false;
 </script>
 
-<div class="flex h-full">
-	<div class="flex flex-col h-full w-full">
+<div class="flex w-full max-w-full h-full">
+	<div class="flex flex-col w-full h-full">
 		<TopBit bind:open_sidebar {channel} />
 		{#key msgs}
 			{#if msgs && msgs.length != 0}
@@ -43,6 +43,5 @@
 		{/key}
 		<MessageInput {isConnected} {channel} channel_name={channel.name} styles={conn.styles} />
 	</div>
-
 	<ChannelInfo bind:open={open_sidebar} styles={conn.styles} {channel} />
 </div>

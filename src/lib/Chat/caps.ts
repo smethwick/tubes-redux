@@ -3,17 +3,18 @@ import { Deferred, Wildcard } from "./task";
 
 export class CapabilityManager {
     capabilities: Capability[] = [];
+    available: Capability[] = [];
 
     new_sub: string;
     del_sub: string;
 
-    constructor(private conn: IrcConnection) { 
-        this.new_sub = this.conn.task_queue.subscribe((d) => null, {
-            only: {command: "CAP", params: ["*", "NEW"]},
+    constructor(private conn: IrcConnection) {
+        this.new_sub = this.conn.task_queue.subscribe((d) => this.new(d.params.last()), {
+            only: { command: "CAP", params: ["*", "NEW"] },
         })
 
-        this.del_sub = this.conn.task_queue.subscribe((d) => null, {
-            only: {command: "CAP", params: ["*", "DEL"]},
+        this.del_sub = this.conn.task_queue.subscribe((d) => this.del(d.params.last()), {
+            only: { command: "CAP", params: ["*", "DEL"] },
         })
     }
 
@@ -49,9 +50,14 @@ export class CapabilityManager {
         const witty_variable_name = msg.params[3] || msg.params[2];
         const split_caps = witty_variable_name.split(" ");
 
-        const caps = split_caps.map((o) => new Capability(this.conn, o));
+        this.process_caps_but_different_name(split_caps)
+    }
+
+    private async process_caps_but_different_name(caps: string[]) {
+        const c = caps.map((o) => new Capability(this.conn, o));
+        c.forEach(o => this.available.push(o));
         for (const cap_name of this.conn.requested_caps) {
-            const cap = caps.find((o) => o.cap == cap_name);
+            const cap = c.find((o) => o.cap == cap_name);
             if (cap) {
                 await cap.request();
                 this.capabilities.push(cap);
@@ -61,6 +67,22 @@ export class CapabilityManager {
 
     hasCap(cap: string) {
         return this.capabilities.find(o => o.cap == cap);
+    }
+
+    new(cap: string) {
+        const caps = cap.split(" ");
+
+        this.process_caps_but_different_name(caps);
+        console.log("new caps", caps);
+    }
+
+    del(cap: string) {
+        const caps = cap.split(" ");
+
+        this.available = this.available.filter(o => !caps.find(c => o.cap == c));
+        this.capabilities = this.capabilities.filter(o => !caps.find(c => o.cap == c));
+
+        console.log("del caps", caps);
     }
 
     private _listen() {
@@ -76,7 +98,7 @@ export class Capability {
         const [cap, values] = capstring.split("=");
         let split_values: string[] = [];
         if (values) split_values = values.split(",");
-        
+
         this.cap = cap;
         this.values = split_values;
     }

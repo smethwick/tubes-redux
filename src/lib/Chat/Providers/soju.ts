@@ -12,7 +12,7 @@ export class SojuProvider extends IrcProvider {
     proto: 'ws' | 'tcp';
     supported_protos: ("ws" | "wss" | "ircs" | "irc")[] = ["ircs", "irc", "ws", "wss"];
 
-    flags: ProviderFlags[] = [ProviderFlags.MultipleConnections];
+    flags: ProviderFlags[] = [ProviderFlags.MultipleConnections, ProviderFlags.StoreLogs];
 
     task_queue: TaskQueue;
 
@@ -44,7 +44,7 @@ export class SojuProvider extends IrcProvider {
                     username: this.username,
                     password: this.password
                 }
-            });
+            }, this);
             this.conn.requested_caps = [...this.conn.requested_caps, "soju.im/bouncer-networks", "batch"];
             await this.conn.connect();
             this.active = true;
@@ -59,6 +59,7 @@ export class SojuProvider extends IrcProvider {
                 parsed[1],
                 this.conn?.connection_info,
                 parsed[2] != "disconnected",
+                this
             )]);
         });
     }
@@ -74,6 +75,10 @@ export class SojuProvider extends IrcProvider {
 
     async get_connections(): Promise<[string, IrcConnection][]> {
         return this.connections;
+    }
+
+    on_msg = () => {
+
     }
 
     private parse_listed_network(msg: IrcMessageEvent)
@@ -108,7 +113,7 @@ export class SojuProvider extends IrcProvider {
 }
 
 export class SojuConnection extends IrcConnection {
-    requested_caps: string[] = ['sasl', 'soju.im/bouncer-networks'];
+    requested_caps: string[] = ['sasl', 'soju.im/bouncer-networks', 'batch', 'cap-notify'];
     websocket?: WebSocket;
     nick: string;
 
@@ -117,8 +122,9 @@ export class SojuConnection extends IrcConnection {
         public connection_info: ConnectionInfo,
         public parent_info: ConnectionInfo,
         connected: boolean,
+        public provider: SojuProvider,
     ) {
-        super(connection_info);
+        super(connection_info, provider);
         this.saslinator = new Saslinator(this, parent_info.sasl);
         this.nick = this.parent_info.nick;
         if (connected) this.connect();
@@ -139,7 +145,9 @@ export class SojuConnection extends IrcConnection {
 
             this.task_queue.subscribe(d => {
                 if (d.source && d.source[0] == this.nick) {
+                    if (this.channels.find(o => o.name == d.params[0])) return;
                     const channel = new Channel(this, d.params[0]);
+                    channel.setup();
                     this.channels.push(channel)
                     this.channel_store.set(this.channels);
                 }

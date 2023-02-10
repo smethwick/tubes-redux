@@ -18,7 +18,11 @@ export class LocalProvider extends IrcProvider {
 
     supported_protos: ("ws" | "wss" | "ircs" | "irc")[] = ["ws", "wss"];
 
-    flags: ProviderFlags[] = [ProviderFlags.MultipleConnections];
+    flags: ProviderFlags[] = [
+        ProviderFlags.MultipleConnections, 
+        ProviderFlags.Autojoin,
+        ProviderFlags.StoreLogs,
+    ];
 
     async up() {
         if (this.active) return;
@@ -28,7 +32,7 @@ export class LocalProvider extends IrcProvider {
             conns.forEach(
                 (o) => this.connections.push([
                     o.conn_blueprint.name,
-                    new LocalIrcConnection(o.conn_blueprint)
+                    new LocalIrcConnection(o.conn_blueprint, this)
                 ])
             );
             this.active = true;
@@ -47,7 +51,7 @@ export class LocalProvider extends IrcProvider {
         if (await this.get_connection(ci.name))
             throw new Error("a connection with this name already exists");
 
-        this.connections = [...this.connections, [ci.name, new LocalIrcConnection(ci)]];
+        this.connections = [...this.connections, [ci.name, new LocalIrcConnection(ci, this)]];
         this.update_sidebar_conns();
         const conn = this.connections.filter((o) => o[1].connection_info.name == ci.name)[0];
 
@@ -82,7 +86,6 @@ export class LocalProvider extends IrcProvider {
 
 export class LocalIrcConnection extends IrcConnection {
     websocket?: WebSocket;
-    on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
     on_connect?: (() => void) | undefined;
 
     requested_caps: string[] = ['sasl', 'cap-notify'];
@@ -95,13 +98,13 @@ export class LocalIrcConnection extends IrcConnection {
         const open = new Deferred<void>()
 
         if (this.websocket) {
-            this.websocket.onopen = () => {if (open.resolve) open.resolve()};
+            this.websocket.onopen = () => { if (open.resolve) open.resolve() };
             this.websocket.onmessage = (event) => this.handle_incoming(event.data);
             this.websocket.onclose = () => this.handle_close();
         }
 
         await open.promise;
-            await this.handle_open()
+        await this.handle_open()
 
         setTimeout(() => {
             if (this.check_connection() == false) {

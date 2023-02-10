@@ -19,6 +19,7 @@
 	export let channel: Channel;
 	$: nicks = channel.nicks_live;
 	$: joined = channel.joined_live;
+	$: topic = channel.topic_live;
 
 	export let open: boolean;
 
@@ -38,7 +39,7 @@
 {#if open}
 	<aside
 		class="sidebar 
-		min-w-[18rem] h-full p-4 border-l overflow-y-auto border-neutral-200"
+		min-w-[18rem] max-w-[18rem] h-full p-4 border-l overflow-y-auto border-neutral-200"
 	>
 		<div
 			class="mx-auto mt-8 h-20 w-20 rounded-full flex justify-center place-items-center bg-{color}-300"
@@ -53,6 +54,12 @@
 				{/if}
 			</p>
 		</div>
+
+		{#if $topic && $topic[0]}
+			<div class="text-sm italic mb-3">
+				{$topic[0]}
+			</div>
+		{/if}
 
 		<ListList>
 			<List title="Manage" bg="bg-{color}-200">

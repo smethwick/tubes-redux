@@ -20,16 +20,20 @@
 	};
 </script>
 
-<header class="border-b border-b-neutral-200 px-4 h-14 flex place-items-center">
+<header class="border-b border-b-neutral-200 max-w-full px-4 h-14 flex place-items-center">
 	<span class="text-lg font-semibold flex place-items-center gap-1">
 		<Hash size={20} />
 		{channel.name.replace('#', '')}
 	</span>
 
-	{#if $topic && $topic[0]}
-		<span class="text-sm ml-2 overflow-hidden whitespace-nowrap w-[75%] text-ellipsis">
+	{#if $topic && $topic[0] && !open_sidebar}
+		<button
+			on:click={() => (open_sidebar = !open_sidebar)}
+			class="text-sm ml-2 overflow-hidden whitespace-nowrap max-w-[75%] 
+			text-ellipsis hover:underline text-left"
+		>
 			{$topic[0]}
-		</span>
+		</button>
 	{/if}
 
 	<div class="ml-auto flex gap-3">

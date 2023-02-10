@@ -1,5 +1,5 @@
 import { db, type Network } from "$lib/Storage/db";
-import type { ProviderFlags } from "./flags";
+import { ProviderFlags } from "./flags";
 import { handle_raw_irc_msg, type Source } from "./Providers/common";
 import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
@@ -222,9 +222,15 @@ export abstract class IrcConnection {
 
     nick = "";
 
-    on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
+    on_msg?: (event: IrcMessageEvent) => void = e =>
+        this.provider.has_flag(ProviderFlags.StoreLogs)
+            ? saveMessage(this.connection_info.name, e)
+            : null;
 
-    constructor(public connection_info: ConnectionInfo) {
+    constructor(
+        public connection_info: ConnectionInfo,
+        public provider: IrcProvider,
+    ) {
         this.isConnected = writable(false);
         this.last_url = `/${this.connection_info.name}`;
         this.styles = pick_deterministic<conn_styles>(colours(), this.connection_info.name);
@@ -277,7 +283,7 @@ export abstract class IrcConnection {
         if (!connected) throw new Error("not connected");
 
         this.send_raw(`PRIVMSG ${target} :${msg}`);
-        saveMessage(this.connection_info.name, {
+        if (this.provider.has_flag(ProviderFlags.StoreLogs)) saveMessage(this.connection_info.name, {
             command: "PRIVMSG",
             params: new Params(target, msg),
             timestamp: new Date(Date.now()),
@@ -414,7 +420,7 @@ export abstract class IrcConnection {
         }).catch(e => { throw new Error(e) });
 
         this.nick = welcome.params[0];
-        
+
         this.isConnected.set(true)
     }
 

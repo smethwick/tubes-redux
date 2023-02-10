@@ -84,6 +84,7 @@
 						<HomeAction>📜 Server Messages</HomeAction>
 						<HomeAction on:click={() => goto('./edit')}>✏️ Configure</HomeAction>
 						<HomeAction>♻️ Archive</HomeAction>
+						<HomeAction on:click={() => goto('./debug')}>🐞 Debug</HomeAction>
 					</ul>
 				</section>
 			</section>

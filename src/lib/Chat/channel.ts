@@ -26,6 +26,11 @@ export class Channel {
 
     async join() {
         this.conn.send_raw("JOIN " + this.name);
+        await this.conn.task_queue.wait_for({ command: "JOIN", params: [this.name] })
+        await this.setup();
+    }
+
+    async setup() {
 
         this.nicks_subscription = this.conn.task_queue.subscribe(
             d => this.process_names(d),
@@ -69,13 +74,14 @@ export class Channel {
 
         this.topic_subscription = this.conn.task_queue.subscribe(
             d => this.process_topic(d), {
-                only: {command: "TOPIC", params: [this.name]},
-            }
+            only: { command: "TOPIC", params: [this.name] },
+        }
         )
 
         await this.get_topic();
 
         this.set_joined_status(true);
+
     }
 
     cleanup() {
@@ -123,7 +129,7 @@ export class Channel {
         const new_topic = data.params.last();
         const new_nick = data.params[2];
 
-        this._set_topic_inner({topic: new_topic, nick: new_nick})
+        this._set_topic_inner({ topic: new_topic, nick: new_nick })
     }
 
     set_nicks(val: Nick[]) {
@@ -193,7 +199,7 @@ export class Channel {
         return this.topic;
     }
 
-    private _set_topic_inner({topic, nick, timestamp}: {topic?: string, nick?: Nick | string, timestamp?: Date | string}) {
+    private _set_topic_inner({ topic, nick, timestamp }: { topic?: string, nick?: Nick | string, timestamp?: Date | string }) {
         topic = topic ?? this.topic[0];
         if (typeof nick === "string") nick = new Nick(nick);
         nick = nick ?? this.topic[1];

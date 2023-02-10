@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { provider } from '$lib/Chat';
+	import { ProviderFlags } from '$lib/Chat/flags';
 	import PrimaryButton from '$lib/Display/Buttons/PrimaryButton.svelte';
 	import SecondaryButton from '$lib/Display/Buttons/SecondaryButton.svelte';
 	import TextInput from '$lib/Display/Forms/TextInput.svelte';
@@ -93,6 +94,7 @@
 		{/if}
 	</div>
 
+	{#if provider.has_flag(ProviderFlags.Autojoin)}
 	<h2>Channels</h2>
 	These channels will be joined ✨ automatically when you connect to {display_name}.
 
@@ -131,6 +133,7 @@
 			</Item>
 		</List>
 	</form>
+	{/if}
 
 	<h2>Hellzone</h2>
 
