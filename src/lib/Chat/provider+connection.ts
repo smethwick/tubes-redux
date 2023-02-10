@@ -220,6 +220,8 @@ export abstract class IrcConnection {
     motd: Writable<string> = writable("");
     motd_gotten = false;
 
+    nick = "";
+
     on_msg?: (event: IrcMessageEvent) => void = e => saveMessage(this.connection_info.name, e);
 
     constructor(public connection_info: ConnectionInfo) {
@@ -402,7 +404,7 @@ export abstract class IrcConnection {
 
         this.send_raw("CAP END");
 
-        await this.task_queue.wait_for("001", {
+        const welcome = await this.task_queue.wait_for("001", {
             reject_on: [
                 { command: "431" },
                 { command: "432" },
@@ -411,6 +413,8 @@ export abstract class IrcConnection {
             ]
         }).catch(e => { throw new Error(e) });
 
+        this.nick = welcome.params[0];
+        
         this.isConnected.set(true)
     }
 

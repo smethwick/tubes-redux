@@ -110,6 +110,7 @@ export class SojuProvider extends IrcProvider {
 export class SojuConnection extends IrcConnection {
     requested_caps: string[] = ['sasl', 'soju.im/bouncer-networks'];
     websocket?: WebSocket;
+    nick: string;
 
     constructor(
         private bind_to: string,
@@ -119,7 +120,7 @@ export class SojuConnection extends IrcConnection {
     ) {
         super(connection_info);
         this.saslinator = new Saslinator(this, parent_info.sasl);
-
+        this.nick = this.parent_info.nick;
         if (connected) this.connect();
     }
 
@@ -134,15 +135,19 @@ export class SojuConnection extends IrcConnection {
             });
             this.get_motd();
             this.pinger.start();
+            console.log(this.nick);
+
+            this.task_queue.subscribe(d => {
+                if (d.source && d.source[0] == this.nick) {
+                    const channel = new Channel(this, d.params[0]);
+                    this.channels.push(channel)
+                    this.channel_store.set(this.channels);
+                }
+            }, {
+                only: { command: "JOIN"},
+            })
         }
 
-        this.task_queue.subscribe(d => {
-            const channel = new Channel(this, d.params[0]);
-            this.channels.push(channel)
-            this.channel_store.set(this.channels);
-        }, {
-            only: { command: "JOIN" },
-        })
 
         this.websocket.onmessage = l => this.handle_incoming(l.data, this.bind_to);
         throw new Error("Method not implemented.");
