@@ -1,3 +1,4 @@
+import { Channel } from "../channel";
 import { ProviderFlags } from "../flags";
 import { IrcConnection, IrcProvider, type ConnectionInfo, type IrcMessageEvent } from "../provider+connection";
 import { Saslinator } from "../sasl";
@@ -41,7 +42,7 @@ export class SojuProvider extends IrcProvider {
                 url: this.url,
                 sasl: {
                     username: this.username,
-                    password: this.password,
+                    password: this.password
                 }
             });
             this.conn.requested_caps = [...this.conn.requested_caps, "soju.im/bouncer-networks", "batch"];
@@ -132,9 +133,16 @@ export class SojuConnection extends IrcConnection {
                 this._bind();
             });
             this.get_motd();
-            this.join_all_channels();
             this.pinger.start();
         }
+
+        this.task_queue.subscribe(d => {
+            const channel = new Channel(this, d.params[0]);
+            this.channels.push(channel)
+            this.channel_store.set(this.channels);
+        }, {
+            only: { command: "JOIN" },
+        })
 
         this.websocket.onmessage = l => this.handle_incoming(l.data, this.bind_to);
         throw new Error("Method not implemented.");

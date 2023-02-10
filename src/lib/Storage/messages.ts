@@ -10,6 +10,7 @@ export enum MessageTypes {
   Quit,
   Notice,
   Topic,
+  Action,
 }
 
 export interface Message {
@@ -56,7 +57,8 @@ export const sensible_defaults = (net: string, e: IrcMessageEvent) => ({
 async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise<Message | undefined> {
   switch (e.command.toLowerCase()) {
     case 'privmsg':
-      if (!e.source || !e.params[0] || !e.params[1]) return
+      if (!e.source || !e.params[0] || !e.params[1]) return;
+      if (e.params.last().startsWith("\x01") && e.params.last().endsWith("\x01")) return handle_some_ctcp_stuff(net, e);
       return {
         ...sensible_defaults(net, e),
         type: MessageTypes.PrivMsg,
@@ -101,5 +103,19 @@ async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise
         content: e.params.last(),
         target: e.params[0],
       }
+  }
+}
+
+function handle_some_ctcp_stuff(net: string, e: IrcMessageEvent): Message | undefined {
+  const msg = e.params.last().replaceAll("\x01", "");
+  const [tag, ...therest] = msg.split(" ");
+
+  console.log("tag", tag, "therest", therest);
+
+  if (tag == "ACTION") return {
+    ...sensible_defaults(net, e),
+    type: MessageTypes.Action,
+    content: therest.join(" "),
+    target: e.params[0],
   }
 }

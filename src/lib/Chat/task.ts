@@ -32,7 +32,7 @@ export type batch_collector = {
 }
 
 class MessageDescription {
-    
+
 }
 
 class Collector {
@@ -79,8 +79,6 @@ class Collection {
         
         if (!this.collecting) return true;
 
-        console.log("here", data);
-
         if (!this.task.resolve || !this.task.reject) throw new Error("task not yet initialised");
         if (this.reject_on && this.reject_on.find(o => do_we_care_about_it(o, data))) this.task.reject();
 
@@ -94,7 +92,6 @@ class Collection {
 
         if (this.include.find(o => do_we_care_about_it(o, data))) {
             this.collection.push(data);
-            console.log(this);
             return true;
         };
 

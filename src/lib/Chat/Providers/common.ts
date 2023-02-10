@@ -74,7 +74,7 @@ type servername = [name: string];
 type userline = [nickname: string, username: string, hostname: string];
 
 export function transform_user_line(source: string): Source {
-    if (source.includes("!") && source.includes("@")) {
+    if (source.includes("!") || source.includes("@")) {
         const [nickname, therest] = source.split("!");
         const [username, hostname] = therest.split("@");
 

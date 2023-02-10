@@ -7,6 +7,7 @@ import PrivMsg from "./MessageTypes/PrivMsg.svelte";
 import Quit from "./MessageTypes/Quit.svelte";
 import Notice from "./MessageTypes/Notice.svelte";
 import Topic from "./MessageTypes/Topic.svelte";
+import Action from "./MessageTypes/Action.svelte";
 
 export async function showMessage(m: Message): Promise<typeof SvelteComponent> {
     if (m.type == MessageTypes.PrivMsg) return PrivMsg;
@@ -15,5 +16,6 @@ export async function showMessage(m: Message): Promise<typeof SvelteComponent> {
     if (m.type == MessageTypes.Quit) return Quit;
     if (m.type == MessageTypes.Notice) return Notice;
     if (m.type == MessageTypes.Topic) return Topic;
+    if (m.type == MessageTypes.Action) return Action;
     return InvalidMessage
 }
