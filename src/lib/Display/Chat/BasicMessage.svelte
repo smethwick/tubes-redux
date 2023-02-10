@@ -32,8 +32,3 @@
 	<slot name="after" />
 </article>
 
-<style>
-	p {
-		word-break: break-all;
-	}
-</style>
