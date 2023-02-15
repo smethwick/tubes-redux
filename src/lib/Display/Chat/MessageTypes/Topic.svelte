@@ -11,7 +11,7 @@
 	const nick = new Nick(source);
 </script>
 
-<BasicMessage {timestamp} class="text-sm place-items-center" outer_class="hover:bg-neutral-50">
+<BasicMessage {timestamp} class="text-sm place-items-center" outer_class="hover:bg-neutral-50" highlight={nick.color[2]}>
 	<span
 		class="text-fuchsia-700 font-bold flex justify-end place-items-center"
 		aria-hidden
@@ -27,6 +27,7 @@
 		slot="after"
 		class="ml-[7.5rem] mt-1.5 pb-0.5 border-l-2 border-l-neutral-300 pl-4 text-neutral-800 italic
 			text-sm leading-relaxed"
+			
 	>
 		{content ? content : null}
 	</blockquote>

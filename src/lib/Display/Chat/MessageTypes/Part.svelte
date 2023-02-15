@@ -10,8 +10,8 @@
 
 	const nick = new Nick(source);
 </script>
-
-<BasicMessage {timestamp} class="text-sm hover:bg-neutral-50 place-items-center">
+ 
+<BasicMessage {timestamp} class="text-sm hover:bg-neutral-50 place-items-center" highlight={nick.color[2]}>
 	<span
 		class="text-pink-700 font-bold flex justify-end place-items-center"
 		aria-hidden

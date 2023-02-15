@@ -1,8 +1,10 @@
 import { writable, type Writable } from "svelte/store"
 import type { conn_styles } from "./provider+connection";
 import { LocalProvider } from "./Providers/local";
+import { SojuProvider } from "./Providers/soju";
 
-export const provider = new LocalProvider();
+export const provider = new SojuProvider("wss://irc.heathens.club/socket", "lp0", "fortnitebattlepass", { protocol: "ws" });
+// export const provider = new LocalProvider();
 
 export const current_style: Writable<conn_styles> = writable();
 

@@ -11,7 +11,7 @@
 	const nick = new Nick(source);
 </script>
 
-<BasicMessage {timestamp} class="{nick.color[1]} bg-opacity-20">
+<BasicMessage {timestamp} class="{nick.color[1]} bg-opacity-20" highlight={nick.color[2]}>
 	<span slot="sender">*</span>
 	<span slot="content"><b class="{nick.color[0]} font-semibold">{nick.name}</b> {content}</span>
 </BasicMessage>

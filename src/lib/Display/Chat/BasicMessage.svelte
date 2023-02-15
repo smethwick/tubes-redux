@@ -6,9 +6,10 @@
 	import dayjs from 'dayjs';
 
 	export let timestamp: Date | undefined = undefined;
+	export let highlight: string | undefined = undefined;
 </script>
 
-<article class="my-1 py-0.5 {outer_class}">
+<article class="my-1 py-0.5 {outer_class}" style="--highlight-color: {highlight ? highlight : '#2563eb'}">
 	<div
 		class="flex 
 		{$message_layout == 'comfy'
@@ -31,4 +32,3 @@
 	</div>
 	<slot name="after" />
 </article>
-
