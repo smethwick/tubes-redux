@@ -233,7 +233,10 @@ export abstract class IrcConnection {
     ) {
         this.isConnected = writable(false);
         this.last_url = `/${this.connection_info.name}`;
-        this.styles = pick_deterministic<conn_styles>(colours(), this.connection_info.name);
+        this.styles = pick_deterministic<conn_styles>(
+            colours(),
+            this.connection_info.display_name ?? this.connection_info.name
+        );
         this.saslinator = new Saslinator(this, this.connection_info.sasl);
     }
 

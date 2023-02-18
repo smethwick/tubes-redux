@@ -11,7 +11,7 @@
 
 <SidebarItem {styles} href="./{encodeURIComponent(channel.name.replaceAll('/', '%2F'))}">
 	<span class="mr-auto flex gap-2 place-items-center">
-		<Hash size={15} />{channel.name.replace('#', '')}
+		<Hash size={15} />{channel.name}
 	</span>
 	{#if unread}
 		{unread}

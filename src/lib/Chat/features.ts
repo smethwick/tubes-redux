@@ -1,5 +1,15 @@
-export class FeatureList extends Array<Feature> {
+import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
 
+export class FeatureList {
+    features: Feature[] = [];
+
+    constructor(private conn: IrcConnection) { }
+
+    async process_isupport(data: IrcMessageEvent) {
+        //
+    }
 }
 
-export class Feature {};
+export class Feature {
+    constructor(public key: string, public value: string) { }
+};

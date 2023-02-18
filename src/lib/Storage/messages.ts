@@ -46,13 +46,19 @@ export async function saveMessage(net: string, e: IrcMessageEvent) {
   await db.messages.add(m);
 }
 
-export const sensible_defaults = (net: string, e: IrcMessageEvent) => ({
-  timestamp: e.timestamp,
-  command: e.command,
-  source: e.source,
-  network: net,
-  origin: e,
-})
+export const sensible_defaults = (net: string, e: IrcMessageEvent) => {
+  const server_time = e.tags?.find(o => o.key == "time")?.value;
+  const timestamp = server_time ? new Date(server_time) : e.timestamp;
+
+  return {
+    timestamp: timestamp,
+    command: e.command,
+    source: e.source,
+    network: net,
+    origin: e,
+  }
+}
+
 
 async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise<Message | undefined> {
   switch (e.command.toLowerCase()) {

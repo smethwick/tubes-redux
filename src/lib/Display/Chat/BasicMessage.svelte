@@ -9,7 +9,7 @@
 	export let highlight: string | undefined = undefined;
 </script>
 
-<article class="my-1 py-0.5 {outer_class}" style="--highlight-color: {highlight ? highlight : '#2563eb'}">
+<article class="my-1 py-0.5 {outer_class}" style="--highlight-color: {highlight ? highlight : 'inherit'}">
 	<div
 		class="flex 
 		{$message_layout == 'comfy'

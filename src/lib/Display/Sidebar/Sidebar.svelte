@@ -12,11 +12,10 @@
 	$: styles = $nets.find(o => o.name == $page.params['network'])?.styles;
 </script>
 
-<aside class="sidebar min-w-[18rem] max-w-[18rem] px-4 pt-2">
+<aside class="sidebar h-full flex flex-col min-w-[18rem] max-w-[18rem] px-4 pt-2">
 	{#if provider.has_flag(ProviderFlags.MultipleConnections)}
 		<NetworkPicker {nets} />
 		<hr class="border border-neutral-300 border-dashed mx-1 my-2.5" />
 	{/if}
-
 	<ChannelList {conn} {styles} />
 </aside>

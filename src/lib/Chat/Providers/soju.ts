@@ -28,6 +28,7 @@ export class SojuProvider extends IrcProvider {
     }
 
     supportsEnvironment?: (() => boolean) | undefined = () => true;
+
     async up() {
         if (this.active) return;
         await this.up_lock.acquire("up-lock", async () => {
@@ -35,9 +36,9 @@ export class SojuProvider extends IrcProvider {
             this.conn = new LocalIrcConnection({
                 autojoin: [],
                 name: "soju",
-                nick: "leah",
-                realname: "leah",
-                username: "leah",
+                nick: this.username,
+                realname: this.username,
+                username: this.username,
                 secure: true,
                 url: this.url,
                 sasl: {
@@ -77,9 +78,7 @@ export class SojuProvider extends IrcProvider {
         return this.connections;
     }
 
-    on_msg = () => {
-
-    }
+    on_msg = () => null;
 
     private parse_listed_network(msg: IrcMessageEvent)
         : [string, ConnectionInfo, ("connected" | "connecting" | "disconnected")] {
@@ -113,7 +112,15 @@ export class SojuProvider extends IrcProvider {
 }
 
 export class SojuConnection extends IrcConnection {
-    requested_caps: string[] = ['sasl', 'soju.im/bouncer-networks', 'batch', 'cap-notify'];
+    requested_caps: string[] = [
+        'sasl', 
+        'soju.im/bouncer-networks', 
+        'batch', 
+        'cap-notify',
+        'server-time',
+        'message-tags',
+    ];
+
     websocket?: WebSocket;
     nick: string;
 
@@ -158,7 +165,7 @@ export class SojuConnection extends IrcConnection {
 
 
         this.websocket.onmessage = l => this.handle_incoming(l.data, this.bind_to);
-        throw new Error("Method not implemented.");
+        return true;
     }
 
     send_raw(msg: string): void {
