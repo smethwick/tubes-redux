@@ -60,7 +60,10 @@ export const sensible_defaults = (net: string, e: IrcMessageEvent) => {
 }
 
 
-async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise<Message | undefined> {
+export async function turnIntoSomethingUseful(
+  net: string,
+  e: IrcMessageEvent
+): Promise<Message | undefined> {
   switch (e.command.toLowerCase()) {
     case 'privmsg':
       if (!e.source || !e.params[0] || !e.params[1]) return;
@@ -115,8 +118,6 @@ async function turnIntoSomethingUseful(net: string, e: IrcMessageEvent): Promise
 function handle_some_ctcp_stuff(net: string, e: IrcMessageEvent): Message | undefined {
   const msg = e.params.last().replaceAll("\x01", "");
   const [tag, ...therest] = msg.split(" ");
-
-  console.log("tag", tag, "therest", therest);
 
   if (tag == "ACTION") return {
     ...sensible_defaults(net, e),

@@ -1,4 +1,5 @@
 import { writable, type Writable } from "svelte/store";
+import { ChatStack } from "./logs";
 import { Nick } from "./nick";
 import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
 
@@ -18,10 +19,14 @@ export class Channel {
     topic: [string, Nick?, Date?] = ["topic"];
     topic_live: Writable<[string, Nick?, Date?]>;
 
+    logs: ChatStack;
+
     constructor(private conn: IrcConnection, public name: string) {
         this.nicks_live = writable([]);
         this.topic_live = writable();
         this.nicks = [];
+
+        this.logs = new ChatStack(this.conn, this.name, "chathistory");
     }
 
     async join() {
@@ -31,7 +36,6 @@ export class Channel {
     }
 
     async setup() {
-
         this.nicks_subscription = this.conn.task_queue.subscribe(
             d => this.process_names(d),
             {
@@ -75,8 +79,9 @@ export class Channel {
         this.topic_subscription = this.conn.task_queue.subscribe(
             d => this.process_topic(d), {
             only: { command: "TOPIC", params: [this.name] },
-        }
-        )
+        });
+
+        // this.logs.open();
 
         await this.get_topic();
 

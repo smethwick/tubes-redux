@@ -48,7 +48,7 @@ class BatchCollection {
     }
 
     resolve(event: IrcMessageEvent): boolean {
-        if (do_we_care_about_it({ command: "BATCH", params: [Wildcard.Any, this.type] }, event)) {
+        if (do_we_care_about_it({ command: "BATCH", params: [Wildcard.Any, ...this.type.split(" ")] }, event)) {
             this.collecting = true;
             this.name = event.params[0].replace("+", "");
             return true;

@@ -114,7 +114,8 @@ export class SojuProvider extends IrcProvider {
 export class SojuConnection extends IrcConnection {
     requested_caps: string[] = [
         'sasl', 
-        'soju.im/bouncer-networks', 
+        'soju.im/bouncer-networks',
+        'draft/chathistory',
         'batch', 
         'cap-notify',
         'server-time',
