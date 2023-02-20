@@ -18,10 +18,10 @@ export class ChatFrame {
         before: C_Timestamp,
         target: string,
         limit: number
-    ) {
+    ): Promise<ChatFrame> {
         if (!conn.capman.hasCap(CAP_NAME)) 
             throw new Error("This connection doesn't support chathistory");
         
-        
+        throw new Error;
     }
 }

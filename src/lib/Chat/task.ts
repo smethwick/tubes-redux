@@ -23,12 +23,51 @@ export type async_task<T> = {
     reject_on?: msg_description[],
 }
 
-export type batch_collector = {
-    id: string,
-    batch_name: string,
-    batch_type: string;
-    collected: IrcMessageEvent[];
-    task: Deferred<IrcMessageEvent[]>;
+class BatchCollector {
+    collection_collection: BatchCollection[] = [];
+
+    add(c: BatchCollection) {
+        this.collection_collection.push(c);
+    }
+
+    async handle(data: IrcMessageEvent) {
+        this.collection_collection = this.collection_collection.filter(o => o.resolve(data))
+    }
+}
+
+class BatchCollection {
+    id: string;
+    task = new Deferred<IrcMessageEvent[]>();
+    collection: IrcMessageEvent[] = [];
+    name?: string;
+
+    private collecting = false;
+
+    constructor(public type: string) {
+        this.id = uuidv4();
+    }
+
+    resolve(event: IrcMessageEvent): boolean {
+        if (do_we_care_about_it({ command: "BATCH", params: [Wildcard.Any, this.type] }, event)) {
+            this.collecting = true;
+            this.name = event.params[0].replace("+", "");
+            return true;
+        }
+
+        if (!this.collecting || !this.name) return true;
+
+        if (!this.task.resolve || !this.task.reject) throw new Error("task not yet initialised");
+
+        if (event.tags && event.tags.find(t => t.key == "batch" && t.value == this.name))
+            this.collection.push(event);
+
+        if (event.command == "BATCH" && event.params[0] == `-${this.name}`) {
+            this.task.resolve(this.collection);
+            return false;
+        }
+
+        return true;
+    }
 }
 
 class MessageDescription {
@@ -70,13 +109,12 @@ class Collection {
     }
 
     resolve(data: IrcMessageEvent): boolean {
-        
         if (do_we_care_about_it(this.start, data)) {
             if (this.include_start_and_finish) this.collection.push(data);
             this.collecting = true;
             return true;
         }
-        
+
         if (!this.collecting) return true;
 
         if (!this.task.resolve || !this.task.reject) throw new Error("task not yet initialised");
@@ -135,15 +173,10 @@ const isAsync = (obj: any): obj is async_task<IrcMessageEvent> => {
     else return false;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isBatched = (obj: any): obj is batch_collector => {
-    if (obj.batch_name) return true;
-    else return false;
-}
-
 export class TaskQueue {
-    tasks: (task | async_task<IrcMessageEvent> | batch_collector)[] = [];
+    tasks: (task | async_task<IrcMessageEvent>)[] = [];
     collector: Collector = new Collector();
+    batch_collector = new BatchCollector();
     subscriptions: subscription[] = [];
 
     new_async_task(reply: string | msg_description | msg_description[], reject_on?: msg_description[]) {
@@ -195,20 +228,11 @@ export class TaskQueue {
 
     async resolve_tasks(event: IrcMessageEvent) {
         this.collector.handle(event);
+        this.batch_collector.handle(event);
 
         this.tasks = this.tasks.filter((o) => {
             if (isAsync(o)) {
                 handle_async(o, event);
-            } else if (isBatched(o)) {
-                if (!o.task.resolve || !o.task.reject) throw new Error("task not yet initialised");
-
-                if (event.tags && event.tags.find(t => t.key == "batch" && t.value == o.batch_name))
-                    o.collected.push(event);
-
-                if (event.command == "BATCH" && event.params[0] == `-${o.batch_name}`) {
-                    o.task.resolve(o.collected);
-                    return;
-                }
             } else {
                 if (typeof o.reply == "string" && o.reply == event.command) { o.callback(event); return false; };
                 if (typeof o.reply != "string" && do_we_care_about_it(o.reply, event)) { o.callback(event); return false; };
@@ -249,19 +273,10 @@ export class TaskQueue {
     }
 
     async collect_batch(type: string): Promise<IrcMessageEvent[]> {
-        const id = uuidv4();
-        const def = new Deferred<IrcMessageEvent[]>();
-        const msg = await this.wait_for({ command: "BATCH", params: [Wildcard.Any, type] });
-        const task: batch_collector = {
-            batch_name: msg.params[0].replace("+", ""),
-            id: id,
-            batch_type: type,
-            collected: [],
-            task: def,
-        }
-        this.tasks.push(task);
+        const c = new BatchCollection(type);
+        this.batch_collector.add(c);
 
-        return def.promise;
+        return c.task.promise;
     }
 
     async collect(
