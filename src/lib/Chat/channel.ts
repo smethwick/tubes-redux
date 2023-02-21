@@ -113,9 +113,10 @@ export class Channel {
             target: this.name,
             timestamp: new Date(Date.now()),
             content: msg,
-            source: [this.conn.connection_info.nick]
+            source: [this.conn.nick]
         })
     }
+
 
     process_names(data: IrcMessageEvent) {
         const param = data.params.last();
@@ -173,7 +174,6 @@ export class Channel {
                 this.topic_live.set(this.topic);
             }
             if (o.command == "333") {
-                console.log(o.params[3]);
                 nick = new Nick(o.params[2]);
                 timestamp = new Date(Number(o.params[3]) * 1000);
                 this.topic = [this.topic[0], nick, timestamp];

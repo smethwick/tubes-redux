@@ -32,7 +32,7 @@ export function handle_raw_irc_msg(
     const raw_params = state.split(" ");
     for (const param of raw_params) {
         if (param.startsWith(":")) {
-            params.push(state.substring(state.search(" :"), state.length).replace(" :", "")
+            params.push(state.substring(state.search(" :"), state.length).trimStart().replace(":", "")
             ); break;
         }
 

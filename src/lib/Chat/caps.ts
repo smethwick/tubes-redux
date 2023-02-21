@@ -73,7 +73,6 @@ export class CapabilityManager {
         const caps = cap.split(" ");
 
         this.process_caps_but_different_name(caps);
-        console.log("new caps", caps);
     }
 
     del(cap: string) {
@@ -81,8 +80,6 @@ export class CapabilityManager {
 
         this.available = this.available.filter(o => !caps.find(c => o.cap == c));
         this.capabilities = this.capabilities.filter(o => !caps.find(c => o.cap == c));
-
-        console.log("del caps", caps);
     }
 
     private _listen() {
