@@ -18,18 +18,6 @@
 	$: channel = data.channel;
 	const { isConnected } = conn;
 
-	let msgs: Message[];
-	$: msgs_store = liveQuery(async () =>
-		browser
-			? db.messages
-					.where('target')
-					.equals(channel.name)
-					.and((item) => item.network == network_name)
-					.toArray()
-			: []
-	);
-	$: msgs = $msgs_store as Message[];
-
 	let frame: ChatFrame;
 
 	$: open_sidebar = false;
@@ -42,15 +30,10 @@
 
 <div class="flex w-full max-w-full h-full">
 	<div class="flex flex-col w-full h-full">
-		{#key msgs}
+		{#key channel}
 			<TopBit bind:open_sidebar {channel} />
-			<!-- {#if msgs && msgs.length != 0}
-				<MessageList {msgs} />
-			{:else}
-				<div class="min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4" />
-			{/if} -->
 			{#if frame}
-				<MessageList msgs={frame.messages} />
+				<MessageList {channel} />
 			{:else}
 				<div class="min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4" />
 			{/if}

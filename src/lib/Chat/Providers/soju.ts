@@ -120,6 +120,7 @@ export class SojuConnection extends IrcConnection {
         'cap-notify',
         'server-time',
         'message-tags',
+        'draft/event-playback',
     ];
 
     websocket?: WebSocket;

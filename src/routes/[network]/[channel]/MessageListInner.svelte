@@ -8,25 +8,32 @@
 	import { group, isAGroup } from './grouper';
 	import { on_mount, scrollToBottom } from './list';
 	import type { Channel } from '$lib/Chat/channel';
-	import Spinner from '$lib/Display/Etc/Spinner.svelte';
-	import MessageListInner from './MessageListInner.svelte';
 
-	// export let msgs: Message[];
+	let div: Element;
 
-	export let channel: Channel;
-	let grouped: (Message | MessageGroup)[];
+    export let channel: Channel;
+	export let msgs: (Message | MessageGroup)[];
+
+	$: frame = channel.session_frame.store;
+	$: session_grouped = group($frame);
 
 	onMount(async () => {
-		await channel.logs.open();
-		await channel.session_frame.open();
-		grouped = channel.logs.frames.flatMap((o) => group(o.messages));
+		await on_mount(div, channel);
 	});
 </script>
 
-{#if grouped}
-	<MessageListInner {channel} msgs={grouped} />
-{:else}
-	<div class="flex w-full h-full justify-center place-items-center">
-		<Spinner />
-	</div>
-{/if}
+<div
+	bind:this={div}
+	use:scrollToBottom={session_grouped}
+	class="min-w-full max-w-full overflow-y-auto h-full max-h-screen p-4 py-4"
+>
+	{#each [...msgs, ...session_grouped] as msg}
+		{#if isAGroup(msg)}
+			<MessageGroupView group={msg} />
+		{:else}
+			{#key msg.id}
+				<MessageView {msg} />
+			{/key}
+		{/if}
+	{/each}
+</div>

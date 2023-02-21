@@ -3,7 +3,7 @@ import { ProviderFlags } from "./flags";
 import { handle_raw_irc_msg, type Source } from "./Providers/common";
 import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
-import { saveMessage } from "$lib/Storage/messages";
+import { saveMessage, turnIntoSomethingUseful } from "$lib/Storage/messages";
 import { Deferred, TaskQueue, Wildcard } from "./task";
 import { Channel } from "./channel";
 import { pick_deterministic } from ".";
@@ -370,16 +370,21 @@ export abstract class IrcConnection {
         this.pinger.start();
     }
 
-    handle_incoming(line: string, conn_name?: string) {
+    async handle_incoming(line: string, conn_name?: string) {
         const msg = handle_raw_irc_msg(line, (msg) => {
             this.send_raw(msg)
         });
         // small performance hack, sorry
         if (msg.command != "322") console.debug(conn_name ? `${conn_name} →` : "→", line);
-        this.task_queue.resolve_tasks(msg);
+        await this.task_queue.resolve_tasks(msg);
         if (this.on_msg) {
             this.on_msg(msg);
         }
+
+        if (msg.tags?.find(e => e.key == "batch")) return;
+        const parsed = await turnIntoSomethingUseful(this.connection_info.name, msg);
+        if (!parsed) return;
+        this.channels.find(e => e.name == parsed.target)?.session_frame.push(parsed);
     }
 
     handle_close(reason?: string) {

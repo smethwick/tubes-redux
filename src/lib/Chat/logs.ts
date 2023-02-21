@@ -1,12 +1,12 @@
 import { turnIntoSomethingUseful, type Message } from "$lib/Storage/messages";
-import type { IrcConnection } from "./provider+connection";
+import { writable, type Writable } from "svelte/store";
+import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
 
 // This is expected to change when the chathistory extensions
 // stops being a draft
 const CAP_NAME = "draft/chathistory";
 
 type C_Timestamp = ["timestamp", Date] | ["msg_id", string];
-
 
 export class ChatStack {
     frames: ChatFrame[] = [];
@@ -20,7 +20,7 @@ export class ChatStack {
     async open() {
         if (this.frames.length != 0) { return }
         if (this.method == "chathistory") {
-            const frame = await ChatFrame.fromChatHistory(this.conn, this.target)
+            const frame = await ChatFrame.fromChatHistory(this.conn, this.target);
             this.frames.push(frame);
             console.log(this.target, frame);
         }
@@ -28,7 +28,16 @@ export class ChatStack {
 }
 
 export class ChatFrame {
-    constructor(private conn: IrcConnection, public messages: Message[]) { }
+    store: Writable<Message[]>;
+    opened = false;
+
+    constructor(private conn: IrcConnection, public messages: Message[]) {
+        this.store = writable(messages);
+    }
+
+    async open() {
+        this.opened = true;
+    }
 
     static async fromIdxDb() {
         //
@@ -59,5 +68,11 @@ export class ChatFrame {
         });
 
         return new ChatFrame(conn, result);
+    }
+
+    async push(data: Message) {
+        if (!this.opened) return;
+        this.messages = [...this.messages, data];
+        this.store.set(this.messages);
     }
 }

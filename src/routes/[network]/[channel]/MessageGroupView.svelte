@@ -35,7 +35,7 @@
 		<div slot="after">
 		{#if opened}
 			<div class="ml-6" transition:slide={{ duration: 150, easing: quadOut }}>
-				{#each group.messages as msg (msg.id)}
+				{#each group.messages as msg}
 					<div><MessageView {msg} /></div>
 				{/each}
 			</div>

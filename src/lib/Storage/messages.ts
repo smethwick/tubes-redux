@@ -25,7 +25,7 @@ export interface Message {
 
   timestamp: Date;
 
-  origin: IrcMessageEvent;
+  origin?: IrcMessageEvent;
 }
 
 export async function saveMessage(net: string, e: IrcMessageEvent) {

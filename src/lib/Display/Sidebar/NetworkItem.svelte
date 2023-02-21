@@ -18,7 +18,7 @@
 <button
 	class="
 		flex {active ? `px-4 ${network.styles.net_selected}` : `${network.styles.net_inactive}`} h-10  rounded-2xl
-		overflow-hidden
+		overflow-hidden select-none
 		place-items-center justify-center"
 	class:active
 	aria-label={network.name}

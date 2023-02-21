@@ -27,7 +27,7 @@
 		</span>
 		<p class="w-full"><slot name="content" /></p>
 		{#if timestamp}
-			<time class="ml-auto text-sm text-neutral-700">{dayjs(timestamp).format('hh:mm')}</time>
+			<time class="ml-auto text-sm text-neutral-700">{dayjs(timestamp).format('HH:mm')}</time>
 		{/if}
 	</div>
 	<slot name="after" />
