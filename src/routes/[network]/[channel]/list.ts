@@ -6,7 +6,7 @@ export const scrollToBottom = (node: Element, list: Array<unknown>) => {
         await tick();
         node.scroll({
             top: node.scrollHeight,
-            behavior: 'smooth'
+            behavior: 'auto'
         });
     }
     scroll(list);
