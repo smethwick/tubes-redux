@@ -5,14 +5,15 @@
 	import { onMount, tick } from 'svelte';
 	import type { MessageGroup } from '$lib/Chat/groups';
 	import MessageGroupView from './MessageGroupView.svelte';
-	import { group, isAGroup } from './grouper';
+	import { group, isAGroup, isntAMessage, NotAMessage } from './grouper';
 	import { on_mount, scrollToBottom } from './list';
 	import type { Channel } from '$lib/Chat/channel';
+	import { current_style } from '$lib/Chat';
 
 	let div: Element;
 
-    export let channel: Channel;
-	export let msgs: (Message | MessageGroup)[];
+	export let channel: Channel;
+	export let msgs: (Message | MessageGroup | NotAMessage<unknown>)[];
 
 	$: frame = channel.session_frame.store;
 	$: session_grouped = group($frame);
@@ -30,6 +31,8 @@
 	{#each [...msgs, ...session_grouped] as msg}
 		{#if isAGroup(msg)}
 			<MessageGroupView group={msg} />
+		{:else if isntAMessage(msg)}
+			<svelte:component this={msg.comp} style={$current_style} params={msg.params} />
 		{:else}
 			{#key msg.id}
 				<MessageView {msg} />

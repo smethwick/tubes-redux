@@ -25,7 +25,7 @@
 
 	<blockquote
 		slot="after"
-		class="ml-[7.5rem] mt-1.5 pb-0.5 border-l-2 border-l-neutral-300 pl-4 text-neutral-800 italic
+		class="ml-[8rem] mt-1.5 pb-0.5 border-l-2 border-l-neutral-300 pl-5 text-neutral-800 italic
 			text-sm leading-relaxed"
 			
 	>

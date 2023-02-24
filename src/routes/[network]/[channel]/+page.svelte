@@ -14,7 +14,6 @@
 	export let data: PageData;
 
 	const { connection: conn } = data;
-	$: network_name = data.network;
 	$: channel = data.channel;
 	const { isConnected } = conn;
 

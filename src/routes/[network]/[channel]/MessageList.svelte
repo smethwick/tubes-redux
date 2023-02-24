@@ -5,7 +5,7 @@
 	import { onMount, tick } from 'svelte';
 	import type { MessageGroup } from '$lib/Chat/groups';
 	import MessageGroupView from './MessageGroupView.svelte';
-	import { group, isAGroup } from './grouper';
+	import { group, isAGroup, NotAMessage } from './grouper';
 	import { on_mount, scrollToBottom } from './list';
 	import type { Channel } from '$lib/Chat/channel';
 	import Spinner from '$lib/Display/Etc/Spinner.svelte';
@@ -14,7 +14,7 @@
 	// export let msgs: Message[];
 
 	export let channel: Channel;
-	let grouped: (Message | MessageGroup)[];
+	let grouped: (Message | MessageGroup | NotAMessage<unknown>)[];
 
 	onMount(async () => {
 		await channel.logs.open();
