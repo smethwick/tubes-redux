@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChannelList, type ListEntry } from '$lib/Chat/chan_list';
+	import { ChannelCollector, type ListEntry } from '$lib/Chat/chan_list';
 	import Content from '$lib/Display/Type/Content.svelte';
 	import Header from '$lib/Display/Type/Header.svelte';
 	import type { PageData } from './$types';
@@ -9,11 +9,11 @@
 	export let data: PageData;
 	const { connection } = data;
 
-	let list = new ChannelList(connection);
-
 	const key = `channels:${connection.connection_info.name}`;
+
 	async function refresh() {
 		lscache.remove(key);
+		lscache.flush();
 		promise = get_chans();
 	}
 
@@ -21,9 +21,10 @@
 
 	async function get_chans(): Promise<Array<ListEntry>> {
 		let cached: Array<ListEntry> = lscache.get(key);
+		console.log(cached);
 		if (cached != null && cached.length != 0) return cached;
 
-		let channels = await list.get_channels();
+		let channels = await ChannelCollector.get_channels(connection);
 		lscache.set(key, channels, 30);
 		return channels;
 	}

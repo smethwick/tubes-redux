@@ -10,3 +10,7 @@
     background: var(--highlight-color);
     color: white;
 }
+
+.long {
+    font-stretch: ultra-condensed;
+}

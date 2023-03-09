@@ -2,24 +2,33 @@ import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
 
 export type ListEntry = [channel: string, client_count: number, topic: string]
 
-export class ChannelList extends Array<ListEntry> {
-    constructor(private conn: IrcConnection, array?: Array<ListEntry>) { array ? super(...array) : super() }
+export class ChannelCollector {
+    static async get_channels(conn: IrcConnection): Promise<ListEntry[]> {
+        conn.send_raw("LIST");
+        const msgs = await conn.task_queue.collect(
+            // RPL_LIST
+            { command: "322" },
+            // RPL_LIST
+            [{ command: "322" }],
+            // RPL_LISTEND
+            { command: "323" },
+            { include_start_and_finish: true }
+        );
 
-    async get_channels(): Promise<this> {
-        this.conn.send_raw("LIST");
-        this.conn.task_queue.subscribe((msg) => this._process_input(msg), {
-            only: { command: "322" },
-            until: { command: "323" }
-        })
-        await this.conn.task_queue.wait_for({ command: "323" });
-        return this;
+        const result: ListEntry[] = [];
+        msgs.forEach(msg => {
+            const res = this._parse_input(msg);
+            if (res) result.push(res);
+        });
+
+        return result;
     }
 
-    private _process_input(msg: IrcMessageEvent) {
+    static _parse_input(msg: IrcMessageEvent): ListEntry | undefined {
         const [channel, count, topic] = msg.params.slice(1);
         const client_count = Number(count);
         if (!channel || !client_count || !topic) return;
 
-        this.push([channel, client_count, topic]);
+        return ([channel, client_count, topic]);
     }
 }

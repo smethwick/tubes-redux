@@ -110,6 +110,7 @@ class Collection {
 
     resolve(data: IrcMessageEvent): boolean {
         if (do_we_care_about_it(this.start, data)) {
+            console.log("here");
             if (this.include_start_and_finish) this.collection.push(data);
             this.collecting = true;
             return true;
@@ -283,11 +284,14 @@ export class TaskQueue {
         start: msg_description,
         include: msg_description[],
         finish: msg_description,
-        { reject_on, include_start_and_finish }: { reject_on?: msg_description[], include_start_and_finish?: boolean }
+        options?: {
+            reject_on?: msg_description[], 
+            include_start_and_finish?: boolean
+        }
     ): Promise<IrcMessageEvent[]> {
         const collection = new Collection(start, include, finish, {
-            reject_on,
-            include_start_and_finish: include_start_and_finish ?? false
+            reject_on: options?.reject_on,
+            include_start_and_finish: options?.include_start_and_finish ?? false
         });
         this.collector.add(collection);
 
