@@ -1,9 +1,19 @@
+import { redirect } from "@sveltejs/kit";
 import { Channel } from "../channel";
 import { ProviderFlags } from "../flags";
 import { IrcConnection, IrcProvider, type ConnectionInfo, type IrcMessageEvent } from "../provider+connection";
 import { Saslinator } from "../sasl";
 import { TaskQueue } from "../task";
 import { LocalIrcConnection } from "./local";
+
+async function get_info_bad() {    
+    const login = localStorage.getItem("login");
+    const password = localStorage.getItem("password");
+
+    if (!login || !password) throw redirect(302, '/setup');
+
+    return [login, password]
+}
 
 export class SojuProvider extends IrcProvider {
     conn?: LocalIrcConnection;
@@ -16,13 +26,13 @@ export class SojuProvider extends IrcProvider {
 
     task_queue: TaskQueue;
 
-    constructor(private url: string,
-        private username: string,
-        private password: string,
+    constructor(
+        private url: string,
         opt: { protocol: 'ws' | 'tcp' }
     ) {
         super();
         if (opt.protocol == "tcp") throw new Error("TCP support is yet to be implemented");
+        
         this.proto = opt.protocol;
         this.task_queue = new TaskQueue();
     }
@@ -33,17 +43,19 @@ export class SojuProvider extends IrcProvider {
         if (this.active) return;
         await this.up_lock.acquire("up-lock", async () => {
             if (this.active) return;
+            const [login, password] = await get_info_bad();
+
             this.conn = new LocalIrcConnection({
                 autojoin: [],
                 name: "soju",
-                nick: this.username,
-                realname: this.username,
-                username: this.username,
+                nick: login,
+                realname: login,
+                username: login,
                 secure: true,
                 url: this.url,
                 sasl: {
-                    username: this.username,
-                    password: this.password
+                    username: login,
+                    password: password
                 }
             }, this);
             this.conn.requested_caps = [...this.conn.requested_caps, "soju.im/bouncer-networks", "batch"];

@@ -7,6 +7,8 @@
 	import { saveMessage } from '$lib/Storage/messages';
 	import { provider } from '$lib/Chat';
 	import { v4 as uuidv4 } from 'uuid';
+	import { goto } from '$app/navigation';
+	import { redirect } from '@sveltejs/kit';
 
 	const addProvider = async () => {
 		const uuid = uuidv4();
@@ -20,10 +22,33 @@
 		};
 
 		let conn = await provider.add_persistent_connection(ci);
-		conn.on_msg = e => saveMessage(ci.name, e);
+		conn.on_msg = (e) => saveMessage(ci.name, e);
 	};
+
+	let login: string, password: string;
 </script>
 
 todo
 
 <button on:click={() => addProvider()}>new all</button>
+
+<form>
+	<label>
+		login
+		<input type="text" bind:value={login} />
+	</label>
+
+	<label>
+		password
+		<input type="text" bind:value={password} />
+	</label>
+
+	<button on:click={() => {
+		localStorage.setItem("login", login);
+		localStorage.setItem("password", password);
+
+		throw redirect(302, "/");
+	}}>
+		save
+	</button>
+</form>

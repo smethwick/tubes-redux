@@ -1,6 +1,6 @@
 import { writable, type Writable } from "svelte/store";
 
-class Setting<T> {
+export class Setting<T> {
     property: Writable<T>;
     key: string;
 
@@ -25,6 +25,13 @@ class Setting<T> {
         localStorage.setItem(this.key, JSON.stringify(val));
         this.store_set(val);
     };
+
+    get = (): T => {
+        const ls = localStorage.getItem(this.key);
+        if (!ls) throw new Error("key is not defined");
+
+        return JSON.parse(ls)
+    }
 }
 
 export const message_layout = new Setting<"comfy" | "compact">("layout", "comfy");
