@@ -1,6 +1,6 @@
 import { MessageTypes } from "$lib/Storage/messages";
 import { writable, type Writable } from "svelte/store";
-import { ChatFrame, ChatStack } from "./logs";
+import { MessageLogList } from "./logs";
 import { Nick } from "./nick";
 import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
 
@@ -20,16 +20,15 @@ export class Channel {
     topic: [string, Nick?, Date?] = ["topic"];
     topic_live: Writable<[string, Nick?, Date?]>;
 
-    session_frame: ChatFrame;
-    logs: ChatStack;
+    session: MessageLogList;
+    backlog?: MessageLogList;
 
     constructor(private conn: IrcConnection, public name: string) {
         this.nicks_live = writable([]);
         this.topic_live = writable();
         this.nicks = [];
 
-        this.logs = new ChatStack(this.conn, this.name, "chathistory");
-        this.session_frame = new ChatFrame(this.conn, []);
+        this.session = new MessageLogList(this.conn, []);
     }
 
     async join() {
@@ -106,7 +105,7 @@ export class Channel {
 
     privmsg(msg: string) {
         this.conn.privmsg(this.name, msg);
-        this.session_frame.push({
+        this.session.push({
             type: MessageTypes.PrivMsg,
             network: this.conn.connection_info.name,
             command: "PRIVMSG",

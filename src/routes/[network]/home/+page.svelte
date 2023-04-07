@@ -39,6 +39,10 @@
 	let join_diag_open = false;
 </script>
 
+<svelte:head>
+	<title>{conn.connection_info.display_name} • Tubes</title>
+</svelte:head>
+
 {#key conn.connection_info.name}
 	<section class="max-w-3xl mx-auto lg:pt-12 xl:pt-16 p-5">
 		<header class="mb-6">

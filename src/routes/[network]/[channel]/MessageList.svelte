@@ -10,16 +10,20 @@
 	import type { Channel } from '$lib/Chat/channel';
 	import Spinner from '$lib/Display/Etc/Spinner.svelte';
 	import MessageListInner from './MessageListInner.svelte';
+	import { MessageLogList } from '$lib/Chat/logs';
+	import type { IrcConnection } from '$lib/Chat/provider+connection';
 
 	// export let msgs: Message[];
 
 	export let channel: Channel;
+	export let conn: IrcConnection;
 	let grouped: (Message | MessageGroup | NotAMessage<unknown>)[];
 
 	onMount(async () => {
-		await channel.logs.open();
-		await channel.session_frame.open();
-		grouped = channel.logs.frames.flatMap((o) => group(o.messages));
+		if (!channel.backlog) channel.backlog = await MessageLogList.fromChatHistory(conn, channel.name);
+		await channel.backlog.open();
+		await channel.session.open();
+		grouped = group(channel.backlog.messages);
 	});
 </script>
 

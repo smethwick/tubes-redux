@@ -384,7 +384,7 @@ export abstract class IrcConnection {
         if (msg.tags?.find(e => e.key == "batch")) return;
         const parsed = await turnIntoSomethingUseful(this.connection_info.name, msg);
         if (!parsed) return;
-        this.channels.find(e => e.name == parsed.target)?.session_frame.push(parsed);
+        this.channels.find(e => e.name == parsed.target)?.session.push(parsed);
     }
 
     handle_close(reason?: string) {

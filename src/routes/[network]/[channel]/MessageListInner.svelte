@@ -15,7 +15,7 @@
 	export let channel: Channel;
 	export let msgs: (Message | MessageGroup | NotAMessage<unknown>)[];
 
-	$: frame = channel.session_frame.store;
+	$: frame = channel.session.store;
 	$: session_grouped = group($frame);
 
 	onMount(async () => {
