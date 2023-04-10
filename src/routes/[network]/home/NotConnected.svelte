@@ -34,14 +34,3 @@
 		</div>
 	</div>
 </div>
-
-<style>
-	h1 {
-		@apply text-4xl;
-		font-stretch: extra-condensed;
-	}
-	h2 {
-		@apply text-2xl mb-2 font-[450];
-		font-stretch: condensed;
-	}
-</style>

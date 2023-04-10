@@ -73,10 +73,4 @@
 	h2 {
 		font-stretch: extra-condensed;
 	}
-	a {
-		@apply underline font-semibold;
-	}
-	ul {
-		@apply list-disc list-outside pl-4 flex flex-col gap-2;
-	}
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Nick } from '$lib/Chat/nick';
 	import type { Message } from '$lib/Storage/messages';
-	import BasicMessage from '../BasicMessage.svelte';
+	import MessageTemplate from '../MessageTemplate.svelte';
 	import Pencil from 'phosphor-svelte/lib/PencilSimple';
 
 	export let msg: Message;
@@ -11,7 +11,7 @@
 	const nick = new Nick(source);
 </script>
 
-<BasicMessage {timestamp} class="text-sm place-items-center" outer_class="hover:bg-neutral-50" highlight={nick.color[2]}>
+<MessageTemplate {timestamp} class="text-sm place-items-center" outer_class="hover:bg-neutral-50" highlight={nick.color[2]}>
 	<span
 		class="text-fuchsia-700 font-bold flex justify-end place-items-center"
 		aria-hidden
@@ -25,13 +25,13 @@
 
 	<blockquote
 		slot="after"
-		class="ml-[8rem] mt-1.5 pb-0.5 border-l-2 border-l-neutral-300 pl-5 text-neutral-800 italic
+		class="ml-[8.75rem] mt-1.5 pb-0.5 border-l-2 border-l-neutral-300 pl-5 text-neutral-800 italic
 			text-sm leading-relaxed"
 			
 	>
 		{content ? content : null}
 	</blockquote>
-</BasicMessage>
+</MessageTemplate>
 
 <style>
 	b {

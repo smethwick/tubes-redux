@@ -24,6 +24,7 @@ export interface Message {
   content?: string;
 
   timestamp: Date;
+  server_time?: string;
 
   origin?: IrcMessageEvent;
 }
@@ -51,7 +52,8 @@ export const sensible_defaults = (net: string, e: IrcMessageEvent) => {
   const timestamp = server_time ? new Date(server_time) : e.timestamp;
 
   return {
-    timestamp: timestamp,
+    timestamp,
+    server_time,
     command: e.command,
     source: e.source,
     network: net,

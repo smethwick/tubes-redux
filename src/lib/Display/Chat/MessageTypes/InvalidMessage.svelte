@@ -1,14 +1,14 @@
 <script lang="ts">
 	import type { Message } from '$lib/Storage/messages';
-	import BasicMessage from '../BasicMessage.svelte';
+	import MessageTemplate from '../MessageTemplate.svelte';
 
 	export let msg: Message;
 </script>
 
-<BasicMessage timestamp={msg.timestamp} class="text-red-700" highlight="red">
+<MessageTemplate timestamp={msg.timestamp} class="text-red-700" highlight="red">
 	<span slot="sender">⚠️</span>
 	<span slot="content">{JSON.stringify(msg)}</span>
-</BasicMessage>
+</MessageTemplate>
 
 <style>
     b {

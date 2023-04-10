@@ -1,15 +1,9 @@
 <script lang="ts">
 	import MessageList from './MessageList.svelte';
-	import MessageInput from './MessageInput.svelte';
-	import { liveQuery } from 'dexie';
-	import { db } from '$lib/Storage/db';
-	import { browser } from '$app/environment';
+	import MessageInput from './Input.svelte';
 	import type { PageData } from './$types';
-	import type { Message } from '$lib/Storage/messages';
 	import TopBit from './TopBit.svelte';
 	import ChannelInfo from '$lib/Display/ChannelInfo/ChannelInfo.svelte';
-	import { onMount } from 'svelte';
-	import { MessageLogList } from '$lib/Chat/logs';
 
 	export let data: PageData;
 

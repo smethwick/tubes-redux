@@ -326,7 +326,7 @@ export abstract class IrcConnection {
         this.motd.set(collected
             ? collected
                 .map((o) => {
-                    const param = o.params[o.params.length - 1];
+                    const param = o.params.at(-1)!;
                     return param.startsWith("- ") ? param.substring(2).trim() : param;
                 })
                 .join("\n")
@@ -374,16 +374,21 @@ export abstract class IrcConnection {
         const msg = handle_raw_irc_msg(line, (msg) => {
             this.send_raw(msg)
         });
-        // small performance hack, sorry
+        // the if here is a quick and dirty performance hack, sorry
         if (msg.command != "322") console.debug(conn_name ? `${conn_name} →` : "→", line);
+        // notify any tasks that are listening out for a matching message
         await this.task_queue.resolve_tasks(msg);
-        if (this.on_msg) {
-            this.on_msg(msg);
-        }
+        // for when the provider needs to do anything with the message
+        if (this.on_msg) this.on_msg(msg);
 
-        if (msg.tags?.find(e => e.key == "batch")) return;
+        // i have forgotten what this was for so i've commented it out.
+        // if (msg.tags?.find(e => e.key == "batch")) return;
+
+        // turn the message into something we can use in the ui
         const parsed = await turnIntoSomethingUseful(this.connection_info.name, msg);
+        // if there isn't anything worth doing just return here
         if (!parsed) return;
+        // push the message into the channel's session buffer if it exists
         this.channels.find(e => e.name == parsed.target)?.session.push(parsed);
     }
 
@@ -446,7 +451,7 @@ export interface IrcMessageEvent {
 
 export class Params extends Array<string> {
     last(): string {
-        return this[this.length - 1];
+        return this.at(-1)!;
     }
 
     static get [Symbol.species]() {

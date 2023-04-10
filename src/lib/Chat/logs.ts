@@ -23,19 +23,21 @@ export class MessageLogList {
         //
     }
 
-    static async fromChatHistory(
+    private static async fetch_chat_history(
         conn: IrcConnection,
         target: string,
         before?: C_Timestamp,
         limit = 100
-    ): Promise<MessageLogList> {
+    ) {
         if (!conn.capman.hasCap(CAP_NAME))
             throw new Error("This connection doesn't support chathistory");
 
         if (!before) {
             conn.send_raw(`CHATHISTORY LATEST ${target} * ${limit}`);
         } else {
-            conn.send_raw(`CHATHISTORY BEFORE ${target} ${before[1]} ${limit}`);
+            const stamp = before[0] == "timestamp" ? before[1].toISOString() : before[1];
+            console.log(stamp);
+            conn.send_raw(`CHATHISTORY BEFORE ${target} timestamp=${stamp} ${limit}`);
         }
 
         const messages = await conn.task_queue.collect_batch(`chathistory ${target}`);
@@ -47,11 +49,43 @@ export class MessageLogList {
             msg ? result.push(msg) : null;
         });
 
-        return new MessageLogList(conn, result);
+        return result;
+    }
+
+    static async fromChatHistory(
+        conn: IrcConnection,
+        target: string,
+        before?: C_Timestamp,
+        limit = 100
+    ): Promise<MessageLogList> {
+        const messages = await this.fetch_chat_history(conn, target, before, limit);
+
+        return new MessageLogList(conn, messages);
+    }
+
+    async load_more(
+        conn: IrcConnection,
+        target: string,
+        before?: C_Timestamp,
+        limit = 100
+    ) {
+        const response = await MessageLogList.fetch_chat_history(conn, target, before, limit);
+        console.log(response);
+
+        if (!this.opened) return;
+        this.messages = response.concat(this.messages);
+        console.log(this.messages);
+        this.store.set(this.messages);
     }
 
     async push(data: Message) {
         if (!this.opened) return;
+
+        // hack to get the thing to exclude subsequent chathistory responses.
+        // FIXME: this will break things in the future!!
+        const tag = data.origin?.tags?.find(o => o.key == "batch");
+        if (tag) return;
+
         this.messages = [...this.messages, data];
         this.store.set(this.messages);
     }

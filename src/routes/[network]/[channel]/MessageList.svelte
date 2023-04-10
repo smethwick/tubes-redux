@@ -5,7 +5,7 @@
 	import { onMount, tick } from 'svelte';
 	import type { MessageGroup } from '$lib/Chat/groups';
 	import MessageGroupView from './MessageGroupView.svelte';
-	import { group, isAGroup, NotAMessage } from './grouper';
+	import { group, isAGroup, ComponentAdapter } from './grouper';
 	import { on_mount, scrollToBottom } from './list';
 	import type { Channel } from '$lib/Chat/channel';
 	import Spinner from '$lib/Display/Etc/Spinner.svelte';
@@ -17,18 +17,18 @@
 
 	export let channel: Channel;
 	export let conn: IrcConnection;
-	let grouped: (Message | MessageGroup | NotAMessage<unknown>)[];
+	let ready = false;
 
 	onMount(async () => {
 		if (!channel.backlog) channel.backlog = await MessageLogList.fromChatHistory(conn, channel.name);
 		await channel.backlog.open();
 		await channel.session.open();
-		grouped = group(channel.backlog.messages);
+		ready = true
 	});
 </script>
 
-{#if grouped}
-	<MessageListInner {channel} msgs={grouped} />
+{#if ready}
+	<MessageListInner {conn} {channel}/>
 {:else}
 	<div class="flex w-full h-full justify-center place-items-center">
 		<Spinner />
