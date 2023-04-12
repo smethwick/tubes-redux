@@ -10,8 +10,12 @@ import { db } from "$lib/Storage/db";
 import { ProviderFlags } from "../flags";
 import { saveMessage } from "$lib/Storage/messages";
 import { Deferred } from "../task";
+import { redirect } from "@sveltejs/kit";
+import { goto } from "$app/navigation";
 
 export class LocalProvider extends IrcProvider {
+    friendly_name: string = "Local";
+
     provider_id = "LocalProvider";
 
     connections: [string, LocalIrcConnection][] = [];
@@ -19,7 +23,7 @@ export class LocalProvider extends IrcProvider {
     supported_protos: ("ws" | "wss" | "ircs" | "irc")[] = ["ws", "wss"];
 
     flags: ProviderFlags[] = [
-        ProviderFlags.MultipleConnections, 
+        ProviderFlags.MultipleConnections,
         ProviderFlags.Autojoin,
         ProviderFlags.StoreLogs,
     ];
@@ -92,7 +96,11 @@ export class LocalIrcConnection extends IrcConnection {
 
     async connect() {
         this.isConnected.set("connecting");
-        this._establish_connection();
+        try {
+            this._establish_connection();
+        } catch (e) {
+            throw e;
+        }
         this.setup_channels();
 
         const open = new Deferred<void>()
@@ -141,5 +149,10 @@ export class LocalIrcConnection extends IrcConnection {
         const url = this.connection_info.url;
 
         this.websocket = new WebSocket(url);
+        this.websocket.onerror = (e) => {
+            goto(
+                `/setup/tubinate?error=${encodeURIComponent(`couldn't connect to ${url}`)}`
+            );
+        };
     }
 }
