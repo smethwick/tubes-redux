@@ -50,7 +50,7 @@
 			<svelte:component this={msg.comp} style={$current_style} params={msg.params} />
 		{:else}
 			{#key msg.id}
-				<MessageView {msg} />
+				<MessageView {conn} {msg} />
 			{/key}
 		{/if}
 	{/each}

@@ -4,17 +4,31 @@
 	import MessageTemplate from '../MessageTemplate.svelte';
 	import Color from 'color';
 	import RichText from '../RichText.svelte';
+	import type { IrcConnection } from '$lib/Chat/provider+connection';
+	import Whois from '$lib/Display/Dialogs/Whois/Whois.svelte';
 
 	export let msg: Message;
+	export let conn: IrcConnection;
 	const { source: full_source, timestamp, content } = msg;
 	const source = full_source ? full_source[0] : 'Unknown';
 
 	const nick = new Nick(source);
+	let whois = false;
 </script>
 
 <MessageTemplate {timestamp} class="{nick.color[1]} bg-opacity-20" highlight={nick.color[2]}>
-	<span slot="sender" class={nick.color[0]} class:long={nick.name.length >= 12}>
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<span
+		slot="sender"
+		class="hover:underline cursor-pointer {nick.color[0]}"
+		class:long={nick.name.length >= 12}
+		on:click={() => {
+			whois = !whois;
+		}}
+	>
 		{nick.name}
 	</span>
 	<span slot="content"><RichText link_colour={nick.color[2]} {content} /></span>
 </MessageTemplate>
+
+<Whois {conn} {nick} bind:isopen={whois} />

@@ -1,4 +1,7 @@
 import { pick_deterministic } from ".";
+import { CommandList } from "./Providers/common";
+import type { IrcConnection } from "./provider+connection";
+import { Wildcard } from "./task";
 
 const colours: [string, string, string][] = [
     ["text-red-600", "hover:bg-red-50", "#dc2626",],
@@ -24,6 +27,40 @@ export class Nick {
     color: [string, string, string];
 
     decide_colour = (seed: string) => pick_deterministic(colours, seed);
+
+    async whois(conn: IrcConnection) {
+        conn.send_raw(`WHOIS ${this.name}`);
+        const msgs = await conn.task_queue.collect(
+            { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISUSER },
+            [
+                // sometimes programming is bad
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISCERTFP },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISREGNICK },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISUSER },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISSERVER },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISOPERATOR },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISIDLE },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISCHANNELS },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISSPECIAL },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISACCOUNT },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISACTUALLY },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISHOST },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISMODES },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISSECURE },
+                { params: [Wildcard.Any, this.name], command: CommandList.RPL_AWAY },
+            ],
+            { command: CommandList.RPL_ENDOFWHOIS },
+            {
+                include_start_and_finish: true,
+                reject_on: [
+                    { command: CommandList.ERR_NOSUCHNICK },
+                    { command: CommandList.ERR_NOSUCHSERVER },
+                ],
+            },
+        );
+
+        return msgs;
+    }
 
     constructor(public name: string) {
         this.color = this.decide_colour(name);

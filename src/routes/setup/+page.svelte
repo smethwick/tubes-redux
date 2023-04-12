@@ -15,7 +15,7 @@
 		Tubes <i>Redux</i> is the thinking man/woman/enby's IRC client.
 	</p>
 	<section class="my-8 flex w-full flex-col place-items-center gap-2">
-		<PrimaryButton on:click={() => goto('/setup/tubinate/')}>Start Tubinating</PrimaryButton>
+		<PrimaryButton on:click={() => goto('/setup/tubinate/')}>Get Started</PrimaryButton>
 		<a href="/import" class="mt-4 text-sm text-neutral-700 underline">import an old config</a>
 	</section>
 </main>

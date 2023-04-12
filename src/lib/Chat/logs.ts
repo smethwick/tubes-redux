@@ -10,13 +10,23 @@ type C_Timestamp = ["timestamp", Date] | ["msg_id", string];
 export class MessageLogList {
     store: Writable<Message[]>;
     opened = false;
+    active = false;
+    unread = 0;
+    unread_live = writable(0);
 
     constructor(private conn: IrcConnection, public messages: Message[]) {
         this.store = writable(messages);
     }
 
     async open() {
+        this.unread = 0;
+        this.unread_live.set(this.unread);
+        this.active = true;
         this.opened = true;
+    }
+
+    async deactivate() {
+        this.active = false;
     }
 
     static async fromIdxDb() {
@@ -79,12 +89,17 @@ export class MessageLogList {
     }
 
     async push(data: Message) {
-        if (!this.opened) return;
-
         // hack to get the thing to exclude subsequent chathistory responses.
         // FIXME: this will break things in the future!!
         const tag = data.origin?.tags?.find(o => o.key == "batch");
         if (tag) return;
+
+        if (!this.active && !["join", "part", "quit"].includes(data.command.toLocaleLowerCase())) {
+            this.unread = this.unread + 1;
+            this.unread_live.set(this.unread);
+        }
+
+        if (!this.opened) return;
 
         this.messages = [...this.messages, data];
         this.store.set(this.messages);

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { redirect } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
 import { CommandList } from "$lib/Chat/Providers/common";
+import { Params } from "$lib/Chat/provider+connection";
 
 const is_redirect = z.object({
     location: z.string(),
@@ -11,6 +12,7 @@ const is_redirect = z.object({
 
 const is_irc_resp = z.object({
     "command": z.string(),
+    "params": z.array(z.string())
 }).partial();
 
 export const load: PageLoad = async () => {
@@ -30,7 +32,8 @@ export const load: PageLoad = async () => {
             console.log(e);
             const parsed = await is_irc_resp.safeParseAsync(JSON.parse(String(e)));
             if (parsed.success && parsed.data.command == CommandList.ERR_SASLFAIL) {
-                throw redirect(302, `/setup/tubinate?error=${encodeURIComponent("Invalid username or password.")
+                throw redirect(302, `/setup/tubinate?error=${encodeURIComponent(
+                    parsed.data.params?.at(-1) ?? "Invalid username or password")
                     }`)
             }
         }

@@ -1,9 +1,9 @@
 import { Nick } from "./nick";
 
-class Query {
-    user: Nick;
+// class Query {
+//     user: Nick;
     
-    constructor(user: string) {
-        this.user = new Nick(user);
-    }
-}
+//     constructor(user: string) {
+//         this.user = new Nick(user);
+//     }
+// }
