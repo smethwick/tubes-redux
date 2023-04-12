@@ -66,6 +66,8 @@ export enum ProviderError {
  * or whatever. Have fun!
  */
 export abstract class IrcProvider {
+    abstract friendly_name: string;
+
     /**
      * Every connection in this provider. use `connect_all()` to connect to em
      */

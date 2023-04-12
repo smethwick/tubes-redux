@@ -3,7 +3,6 @@ import type { conn_styles } from "./provider+connection";
 import { SojuProvider } from "./Providers/soju";
 
 export const provider = new SojuProvider(
-    "wss://irc.heathens.club/socket",
     { protocol: "ws" }
 );
 // export const provider = new LocalProvider();

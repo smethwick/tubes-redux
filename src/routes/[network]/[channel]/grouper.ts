@@ -1,24 +1,30 @@
 import { MessageGroup } from "$lib/Chat/groups";
 import { MessageTypes, type Message } from "$lib/Storage/messages";
-import type { SvelteComponent } from "svelte";
+import type { ComponentType, SvelteComponentTyped } from "svelte";
 import DateMarker from "./DateMarker.svelte";
+import type { conn_styles } from "$lib/Chat/provider+connection";
 
+/**
+ * a class for putting svelte components in the message stream.
+ */
 export class ComponentAdapter<T> {
-    comp: typeof SvelteComponent;
+    comp: ComponentType<SvelteComponentTyped<{params?: T, style?: conn_styles}>>;
     params?: T;
 
-    constructor(comp: typeof SvelteComponent, params?: T) {
+    constructor(comp: ComponentType, params?: T) {
         this.comp = comp;
         this.params = params;
     }
 }
 
+// the message types we want to be grouped together
 const groupable_types = [
     MessageTypes.Join,
     MessageTypes.Quit,
     MessageTypes.Part
 ];
 
+// types that could be in the list
 type TypesItCouldBe<T> = Message | MessageGroup | ComponentAdapter<T> | undefined;
 
 export const isAMessage = <T>(input: TypesItCouldBe<T>): input is Message => {
@@ -58,6 +64,7 @@ export const group = (msgs: Message[], prev?: Message) => {
             last_message
             && o.timestamp.getDay() > last_message.timestamp.getDay()
         ) {
+            //@ts-ignore i'm sick of this shit
             grouped.push(new ComponentAdapter<Date>(DateMarker, o.timestamp));
         }
 

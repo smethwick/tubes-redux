@@ -1,54 +1,21 @@
 <script lang="ts">
-	import {
-		default_config,
-		default_icons,
-		type ConnectionInfo
-	} from '$lib/Chat/provider+connection';
-	import { saveMessage } from '$lib/Storage/messages';
-	import { provider } from '$lib/Chat';
-	import { v4 as uuidv4 } from 'uuid';
+	import Tubes from './tubes.svg';
+	import Redux from './redux.gif';
+	import PrimaryButton from '$lib/Display/Buttons/PrimaryButton.svelte';
 	import { goto } from '$app/navigation';
-	import { redirect } from '@sveltejs/kit';
-
-	const addProvider = async () => {
-		const uuid = uuidv4();
-		let ci: ConnectionInfo = {
-			...default_config,
-			name: uuid,
-			display_name: 'Ergo Testnet',
-			icon: default_icons[Math.floor(Math.random() * default_icons.length)],
-			url: 'wss://testnet.ergo.chat/webirc',
-			autojoin: ['#tubes', '#tubes/test', '#testaaaa']
-		};
-
-		let conn = await provider.add_persistent_connection(ci);
-		conn.on_msg = (e) => saveMessage(ci.name, e);
-	};
-
-	let login: string, password: string;
 </script>
 
-todo
+<main class="mx-auto h-full w-full max-w-screen-sm">
+	<header class="mb-12 mt-24 flex h-min w-full place-items-end justify-center gap-2">
+		<img src={Tubes} alt="tubes" width="180" />
+		<img src={Redux} alt="redux" width="140" />
+	</header>
 
-<button on:click={() => addProvider()}>new all</button>
-
-<form>
-	<label>
-		login
-		<input type="text" bind:value={login} />
-	</label>
-
-	<label>
-		password
-		<input type="text" bind:value={password} />
-	</label>
-
-	<button on:click={() => {
-		localStorage.setItem("login", login);
-		localStorage.setItem("password", password);
-
-		throw redirect(302, "/");
-	}}>
-		save
-	</button>
-</form>
+	<p class="text-center">
+		Tubes <i>Redux</i> is the thinking man/woman/enby's IRC client.
+	</p>
+	<section class="my-8 flex w-full flex-col place-items-center gap-2">
+		<PrimaryButton on:click={() => goto('/setup/tubinate/')}>Start Tubinating</PrimaryButton>
+		<a href="/import" class="mt-4 text-sm text-neutral-700 underline">import an old config</a>
+	</section>
+</main>

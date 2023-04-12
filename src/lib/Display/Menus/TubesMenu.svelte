@@ -21,3 +21,4 @@
 	<MenuItem on:click={() => (donate = true)} icon="💷">Donate…</MenuItem>
 	<MenuItem icon="ℹ️">About…</MenuItem>
 </MenuBase>
+<Donate bind:isopen={donate} />

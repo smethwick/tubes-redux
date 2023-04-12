@@ -17,7 +17,7 @@ This will:
 - Turn the URLs into clickable links.
 - Try and generate media previews for URLs that are definately media.
 -->
-<span>
+<span style="display: inline">
 	{#each split as thing}
 		{#if isALink(thing)}
 			<a
@@ -32,7 +32,7 @@ This will:
 		{:else}
 			{thing + ' '}
 		{/if}
-	{/each}
+{/each}
 </span>
 
 <style>

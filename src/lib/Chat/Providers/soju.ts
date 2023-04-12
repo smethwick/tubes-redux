@@ -7,15 +7,18 @@ import { TaskQueue } from "../task";
 import { LocalIrcConnection } from "./local";
 
 async function get_info_bad() {    
-    const login = localStorage.getItem("login");
+    const login = localStorage.getItem("username");
     const password = localStorage.getItem("password");
+    const url = localStorage.getItem("url");
 
-    if (!login || !password) throw redirect(302, '/setup');
+    if (!login || !password || !url) throw redirect(302, '/setup');
 
-    return [login, password]
+    return [login, password, url]
 }
 
 export class SojuProvider extends IrcProvider {
+    friendly_name: string = "Soju";
+
     conn?: LocalIrcConnection;
     connections: [string, SojuConnection][] = [];
 
@@ -27,7 +30,6 @@ export class SojuProvider extends IrcProvider {
     task_queue: TaskQueue;
 
     constructor(
-        private url: string,
         opt: { protocol: 'ws' | 'tcp' }
     ) {
         super();
@@ -43,7 +45,7 @@ export class SojuProvider extends IrcProvider {
         if (this.active) return;
         await this.up_lock.acquire("up-lock", async () => {
             if (this.active) return;
-            const [login, password] = await get_info_bad();
+            const [login, password, url] = await get_info_bad();
 
             this.conn = new LocalIrcConnection({
                 autojoin: [],
@@ -52,7 +54,7 @@ export class SojuProvider extends IrcProvider {
                 realname: login,
                 username: login,
                 secure: true,
-                url: this.url,
+                url: url,
                 sasl: {
                     username: login,
                     password: password

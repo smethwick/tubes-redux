@@ -1,5 +1,5 @@
 import { MessageTypes, type Message } from "$lib/Storage/messages";
-import type { ComponentType  } from "svelte";
+import type { ComponentType, SvelteComponentTyped } from 'svelte/internal';
 import InvalidMessage from "./MessageTypes/InvalidMessage.svelte";
 import Join from "./MessageTypes/Join.svelte";
 import Part from "./MessageTypes/Part.svelte";
@@ -9,7 +9,8 @@ import Notice from "./MessageTypes/Notice.svelte";
 import Topic from "./MessageTypes/Topic.svelte";
 import Action from "./MessageTypes/Action.svelte";
 
-export async function showMessage(m: Message): Promise<ComponentType> {
+// TODO: oops!
+export async function showMessage(m: Message): Promise<any> {
     if (m.type == MessageTypes.PrivMsg) return PrivMsg;
     if (m.type == MessageTypes.Join) return Join;
     if (m.type == MessageTypes.Part) return Part;
