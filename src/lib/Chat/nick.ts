@@ -23,6 +23,20 @@ const colours: [string, string, string][] = [
     ["text-rose-600", "hover:bg-rose-50", "#e11d48",],
 ]
 
+
+export type WhoisResponse = {
+    host?: string;
+    /** the number of seconds the user has been idle for */
+    idle_for?: number;
+    server?: string;
+
+    nick?: string;
+    username?: string;
+    realname?: string;
+
+    registered?: boolean;
+}
+
 export class Nick {
     color: [string, string, string];
 
@@ -59,7 +73,30 @@ export class Nick {
             },
         );
 
-        return msgs;
+        const user = msgs.find(o => o.command == CommandList.RPL_WHOISUSER);
+
+        const nick = user?.params[1];
+        const username = user?.params[2];
+        const realname = user?.params.last();
+
+        const idle_for =
+            Number(msgs.find(o => o.command == CommandList.RPL_WHOISIDLE)?.params[2]);
+        const server =
+            msgs.find(o => o.command == CommandList.RPL_WHOISSERVER)?.params[2];
+        const host = msgs.find(o => o.command == CommandList.RPL_WHOISHOST)?.params.last();
+        const registered = Boolean(msgs.find(o => o.command == CommandList.RPL_WHOISREGNICK));
+
+        const resp: WhoisResponse = {
+            idle_for,
+            host,
+            server,
+            nick,
+            username,
+            realname,
+            registered
+        }
+
+        return resp;
     }
 
     constructor(public name: string) {

@@ -34,4 +34,4 @@ export class Setting<T> {
     }
 }
 
-export const message_layout = new Setting<"comfy" | "compact">("layout", "comfy");
+export const message_layout = new Setting<"comfy" | "compact">("layout", "compact");
