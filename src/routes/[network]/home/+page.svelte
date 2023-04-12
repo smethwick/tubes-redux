@@ -1,5 +1,5 @@
 <script lang="ts">
-  import NotConnected from './NotConnected.svelte';
+	import NotConnected from './NotConnected.svelte';
 
 	import MotdSection from './MotdSection.svelte';
 
@@ -12,6 +12,8 @@
 	import GoodAdvice from '$lib/Display/Setup/GoodAdvice.svelte';
 	import { goto } from '$app/navigation';
 	import JoinChannel from '$lib/Display/Dialogs/JoinChannel/JoinChannel.svelte';
+	import Dismissable from '$lib/Display/Etc/Dismissable.svelte';
+	import PrimaryButton from '$lib/Display/Buttons/PrimaryButton.svelte';
 
 	export let data: LayoutData;
 
@@ -44,7 +46,7 @@
 </svelte:head>
 
 {#key conn.connection_info.name}
-	<section class="max-w-3xl mx-auto lg:pt-12 xl:pt-16 p-5">
+	<section class="mx-auto max-w-3xl p-5 lg:pt-12 xl:pt-16">
 		<header class="mb-6">
 			<p>
 				{(() => {
@@ -62,7 +64,7 @@
 		</header>
 
 		{#if notconnected}
-			<NotConnected {conn} {duration}></NotConnected>
+			<NotConnected {conn} {duration} />
 		{/if}
 
 		{#if !notconnected}
@@ -74,8 +76,16 @@
 				out:other_transition|local
 			>
 				<section class="col-span-2">
+					<Dismissable key="alpha" let:dismiss>
+						<div class="mb-4 rounded-lg bg-rose-200 px-5 py-4 text-black">
+							<p>
+								you're using an <b>alpha build</b> of Tubes. expect bugs, mising features, perplexing
+								behaviour, egregious oversights and more!
+							</p>
+							<PrimaryButton class="ml-auto mt-2" on:click={dismiss}>Dismiss</PrimaryButton>
+						</div>
+					</Dismissable>
 					<GoodAdvice {connection_info} />
-					<YellingThing />
 				</section>
 				<section>
 					<h2>Actions</h2>
@@ -106,7 +116,7 @@
 		font-stretch: extra-condensed;
 	}
 	h2 {
-		@apply text-2xl mb-2 font-[450];
+		@apply mb-2 text-2xl font-[450];
 		font-stretch: condensed;
 	}
 </style>
