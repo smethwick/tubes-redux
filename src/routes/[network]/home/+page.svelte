@@ -17,13 +17,13 @@
 
 	export let data: LayoutData;
 
-	$: connection = data.connection;
+	const connection = data.connection;
 
 	// idk if $'ing all these is really needed but it errors if i don't. so. y'know.
-	$: conn = connection;
-	$: isConnected = conn.isConnected;
-	$: connection_info = conn.connection_info;
-	$: motd = conn.motd;
+	const conn = connection;
+	const isConnected = conn.isConnected;
+	const connection_info = conn.connection_info;
+	const motd = conn.motd;
 
 	$: notconnected = $isConnected == false || $isConnected == 'connecting';
 

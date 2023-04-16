@@ -6,25 +6,33 @@
 	import { circIn, circOut } from 'svelte/easing';
 	import type { LayoutData } from './$types';
 	import Unsuppported from './Unsuppported.svelte';
+	import { page } from '$app/stores';
 
 	export let data: LayoutData;
 	$: conn = data.connection;
 </script>
 
 {#if provider.supportsEnvironment && provider.supportsEnvironment()}
-	<div class="font-serif bg-neutral-50 text-neutral-900 h-screen flex flex-col">
+	<div class="h-screen bg-neutral-50 font-serif text-neutral-900">
 		{#await provider.up()}
 			hold on
 		{:then}
 			<TopBar />
 			<div
-				class="inner flex h-full w-screen max-w-screen"
+				class="inner max-w-screen min-w-screen h-full w-screen main-view"
 				in:fly={{ duration: 300, easing: circOut, opacity: 0, y: 8 }}
 			>
 				<Sidebar {conn} />
-				<main class="bg-white border-t w-full max-w-full border-l rounded-tl-md overflow-y-auto overflow-x-hidden">
-					<slot />
-				</main>
+				{#key $page.params['network']}
+					<main
+						class="w-full max-w-full min-w-full overflow-y-auto overflow-x-hidden rounded-tl-md border-l
+				border-t bg-white"
+						in:fly|local={{ duration: 200, easing: circOut, opacity: 0, x: 12, delay: 300 }}
+						out:fly|local={{ duration: 300, easing: circOut, opacity: 0, x: -12 }}
+					>
+						<slot />
+					</main>
+				{/key}
 			</div>
 		{/await}
 	</div>
@@ -41,5 +49,11 @@
 		.inner {
 			padding-top: calc(env(titlebar-area-height) + 0.5rem);
 		}
+	}
+
+	.main-view {
+		display: grid;
+		grid-template-columns: min-content 1fr;
+		grid-template-rows: 100%;
 	}
 </style>

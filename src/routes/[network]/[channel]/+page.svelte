@@ -1,14 +1,14 @@
 <script lang="ts">
 	import MessageList from './MessageList.svelte';
 	import MessageInput from './Input.svelte';
-	import type { PageData } from './$types';
+	import type { LayoutData, PageData } from './$types';
 	import TopBit from './TopBit.svelte';
 	import ChannelInfo from '$lib/Display/ChannelInfo/ChannelInfo.svelte';
 
-	export let data: PageData;
+	export let data: LayoutData;
 
 	const { connection: conn } = data;
-	$: channel = data.channel;
+	const channel = data.channel;
 	const { isConnected } = conn;
 
 	$: open_sidebar = false;
