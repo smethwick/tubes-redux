@@ -19,16 +19,16 @@
 		{:then}
 			<TopBar />
 			<div
-				class="inner max-w-screen min-w-screen h-full w-screen main-view"
+				class="inner max-w-screen min-w-screen main-view h-full w-screen"
 				in:fly={{ duration: 300, easing: circOut, opacity: 0, y: 8 }}
 			>
 				<Sidebar {conn} />
 				{#key $page.params['network']}
 					<main
-						class="w-full max-w-full min-w-full overflow-y-auto overflow-x-hidden rounded-tl-md border-l
+						class="w-full min-w-full max-w-full overflow-y-auto overflow-x-hidden rounded-tl-md border-l
 				border-t bg-white"
-						in:fly|local={{ duration: 200, easing: circOut, opacity: 0, x: 12, delay: 300 }}
-						out:fly|local={{ duration: 300, easing: circOut, opacity: 0, x: -12 }}
+						in:fly|local={{ duration: 300, easing: circOut, opacity: 0, x: 18, delay: 300 }}
+						out:fly|local={{ duration: 300, easing: circOut, opacity: 0, x: -18 }}
 					>
 						<slot />
 					</main>
