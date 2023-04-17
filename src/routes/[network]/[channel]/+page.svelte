@@ -4,13 +4,15 @@
 	import type { LayoutData, PageData } from './$types';
 	import TopBit from './TopBit.svelte';
 	import ChannelInfo from '$lib/Display/ChannelInfo/ChannelInfo.svelte';
+	import UnreadBanner from './UnreadBanner.svelte';
+	import { writable } from 'svelte/store';
 
 	export let data: LayoutData;
 
 	const { connection: conn } = data;
 	const channel = data.channel;
 	const { isConnected } = conn;
-
+	
 	$: open_sidebar = false;
 </script>
 
@@ -24,7 +26,7 @@
 			<TopBit bind:open_sidebar {channel} />
 			<MessageList {conn} {channel} />
 		{/key}
-
+		<UnreadBanner {channel} styles={conn.styles} />
 		<MessageInput {isConnected} {channel} channel_name={channel.name} />
 	</div>
 	<ChannelInfo bind:open={open_sidebar} styles={conn.styles} {channel} />

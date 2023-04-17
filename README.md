@@ -1,7 +1,6 @@
 # "i sure hope someone asked for this!"
 
-tubes redux is the world's first good irc client, with a strong focus on not
-confusing the hell out of people who haven't used irc before.
+tubes redux is _the_ irc client. it runs in your web browser, sorry about that.
 
 ## you're gonna have to wait a little bit
 
@@ -57,7 +56,7 @@ npm install
 
 ```bash
 npm run build
-# put the contents of `build` on a web server somewhere (github pages works quite well).
+# put the contents of `build` on a web server somewhere (i use netlify).
 ```
 
 ### build for development
@@ -118,3 +117,5 @@ i would be completely fucked.
 
 also many thanks to the people on libera.chat & tilde.chat who answered my silly
 questions about irc's innards.
+
+thank you to my mother for bringing me a cup of tea while i was writing this
