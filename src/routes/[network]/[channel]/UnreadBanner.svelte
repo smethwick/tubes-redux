@@ -1,8 +1,6 @@
 <script lang="ts">
 	import type { Channel } from '$lib/Chat/channel';
 	import type { conn_styles } from '$lib/Chat/provider+connection';
-	import { tick } from 'svelte';
-	import { messagelist } from './list';
 	import UnreadMarker from '$lib/Display/Sidebar/UnreadMarker.svelte';
 	import Check from 'phosphor-svelte/lib/Check';
 

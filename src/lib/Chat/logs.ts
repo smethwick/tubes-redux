@@ -11,7 +11,9 @@ type C_Timestamp = ["timestamp", Date] | ["msg_id", string];
 // TODO: this sucks LMAO
 export class MessageLogList {
     store: Writable<Message[]>;
+    /** whether the logs have been initialised yet */
     opened = false;
+    /** true if the user is looking at the conversation */
     active = false;
     unread = 0;
     unread_live = writable(0);
