@@ -7,6 +7,8 @@ import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
 const CAP_NAME = "draft/chathistory";
 
 type C_Timestamp = ["timestamp", Date] | ["msg_id", string];
+
+// TODO: this sucks LMAO
 export class MessageLogList {
     store: Writable<Message[]>;
     opened = false;

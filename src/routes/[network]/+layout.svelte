@@ -3,7 +3,7 @@
 	import Sidebar from '$lib/Display/Sidebar/Sidebar.svelte';
 	import { provider } from '$lib/Chat';
 	import { fly } from 'svelte/transition';
-	import { circIn, circOut } from 'svelte/easing';
+	import { circOut } from 'svelte/easing';
 	import type { LayoutData } from './$types';
 	import Unsuppported from './Unsuppported.svelte';
 	import { page } from '$app/stores';
@@ -27,8 +27,8 @@
 					<main
 						class="w-full min-w-full max-w-full overflow-y-auto overflow-x-hidden rounded-tl-md border-l
 				border-t bg-white"
-						in:fly|local={{ duration: 300, easing: circOut, opacity: 0, x: 18, delay: 300 }}
-						out:fly|local={{ duration: 300, easing: circOut, opacity: 0, x: -18 }}
+						in:fly|local={{ duration: 150, easing: circOut, x: 8, delay: 150 }}
+						out:fly|local={{ duration: 150, easing: circOut, x: -8 }}
 					>
 						<slot />
 					</main>

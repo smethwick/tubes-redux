@@ -9,9 +9,3 @@
 	<span slot="sender">⚠️</span>
 	<span slot="content">{JSON.stringify(msg)}</span>
 </MessageTemplate>
-
-<style>
-    b {
-        @apply font-semibold
-    }
-</style>
