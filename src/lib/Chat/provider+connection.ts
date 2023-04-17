@@ -324,7 +324,6 @@ export abstract class IrcConnection {
         )
 
         // update the store when everything's been recieved
-        console.log("here");
         this.motd.set(collected
             ? collected
                 .map((o) => {

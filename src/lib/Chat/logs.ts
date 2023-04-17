@@ -50,7 +50,6 @@ export class MessageLogList {
             conn.send_raw(`CHATHISTORY LATEST ${target} * ${limit}`);
         } else {
             const stamp = before[0] == "timestamp" ? before[1].toISOString() : before[1];
-            console.log(stamp);
             conn.send_raw(`CHATHISTORY BEFORE ${target} timestamp=${stamp} ${limit}`);
         }
 
@@ -84,11 +83,9 @@ export class MessageLogList {
         limit = 100
     ) {
         const response = await MessageLogList.fetch_chat_history(conn, target, before, limit);
-        console.log(response);
 
         if (!this.opened) return;
         this.messages = response.concat(this.messages);
-        console.log(this.messages);
         this.store.set(this.messages);
     }
 

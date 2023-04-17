@@ -164,7 +164,6 @@ export class SojuConnection extends IrcConnection {
             });
             this.get_motd();
             this.pinger.start();
-            console.log(this.nick);
 
             this.task_queue.subscribe(d => {
                 if (d.source && d.source[0] == this.nick) {

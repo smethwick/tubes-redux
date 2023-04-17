@@ -40,8 +40,6 @@
 		} else {
 			channel.session.deactivate();
 		}
-
-		console.log(channel.session.active);
 	};
 </script>
 

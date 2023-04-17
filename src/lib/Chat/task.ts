@@ -110,7 +110,6 @@ class Collection {
 
     resolve(data: IrcMessageEvent): boolean {
         if (do_we_care_about_it(this.start, data)) {
-            console.log("here");
             if (this.include_start_and_finish) this.collection.push(data);
             this.collecting = true;
             return true;

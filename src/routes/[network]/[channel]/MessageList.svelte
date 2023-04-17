@@ -20,7 +20,6 @@
 	});
 
 	onDestroy(async () => {
-		console.log("here");
 		await channel.session.deactivate();
 	})
 </script>
