@@ -1,11 +1,10 @@
 <script lang="ts">
 	import MessageList from './MessageList.svelte';
 	import MessageInput from './Input.svelte';
-	import type { LayoutData, PageData } from './$types';
+	import type { LayoutData } from './$types';
 	import TopBit from './TopBit.svelte';
 	import ChannelInfo from '$lib/Display/ChannelInfo/ChannelInfo.svelte';
 	import UnreadBanner from './UnreadBanner.svelte';
-	import { writable } from 'svelte/store';
 
 	export let data: LayoutData;
 

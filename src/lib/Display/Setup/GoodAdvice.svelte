@@ -7,9 +7,9 @@
 </script>
 
 <Dismissable key="welcome" let:dismiss>
-	<article class="bg-purple-200 text-black px-5 py-6 rounded-lg mb-8">
-		<h1 class="text-3xl mb-4">Welcome to your first network!</h1>
-		<p class="text-lg mb-3">
+	<article class="mb-8 rounded-lg bg-purple-200 px-5 py-6 text-black">
+		<h1 class="mb-4 text-3xl">Welcome to your first network!</h1>
+		<p class="mb-3 text-lg">
 			You're now connected to <b>{connection_info.display_name}</b>. Have fun!
 		</p>
 		<ul>
@@ -21,8 +21,8 @@
 				</ul>
 			</li>
 			<li>
-				coming from another platform? Due to Old™, IRC might be a little different to what you're used to: check
-				out
+				coming from another platform? Due to Old™, IRC might be a little different to what you're
+				used to: check out
 				<a href="/manual/discord-slack">IRC for Discord and Slack users</a>.
 			</li>
 			<li>make sure to <a href="/manual/etiquette">respect the space and your peers</a>.</li>
@@ -44,9 +44,9 @@
 		font-stretch: extra-condensed;
 	}
 	a {
-		@apply underline font-semibold;
+		@apply font-semibold underline;
 	}
 	ul {
-		@apply list-disc list-outside pl-4 flex flex-col gap-2;
+		@apply flex list-outside list-disc flex-col gap-2 pl-4;
 	}
 </style>
