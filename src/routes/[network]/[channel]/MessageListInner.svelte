@@ -19,7 +19,7 @@
 	const session = channel.session.store;
 
 	$: backlog_grouped = group($backlog_live);
-	$: session_grouped = group($session);
+	$: session_grouped = group($session, {last_read: channel.session.last_read});
 
 	onMount(async () => {
 		await on_mount(div, channel);

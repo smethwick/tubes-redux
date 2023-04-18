@@ -3,12 +3,14 @@ import { MessageTypes, type Message } from "$lib/Storage/messages";
 import type { ComponentType, SvelteComponentTyped } from "svelte";
 import DateMarker from "./DateMarker.svelte";
 import type { conn_styles } from "$lib/Chat/provider+connection";
+import type { Channel } from "$lib/Chat/channel";
+import UnreadMarker from "./UnreadMarker.svelte";
 
 /**
  * a class for putting svelte components in the message stream.
  */
 export class ComponentAdapter<T> {
-    comp: ComponentType<SvelteComponentTyped<{params?: T, style?: conn_styles}>>;
+    comp: ComponentType<SvelteComponentTyped<{ params?: T, style?: conn_styles }>>;
     params?: T;
 
     constructor(comp: ComponentType, params?: T) {
@@ -46,11 +48,17 @@ export const isAComponent = <T>(input: TypesItCouldBe<T>): input is ComponentAda
     else return false;
 }
 
-export const group = (msgs: Message[], prev?: Message) => {
+export const group = (msgs: Message[], options?: {
+    last_read?: Message;
+}, prev?: Message) => {
     const grouped: (Message | MessageGroup | ComponentAdapter<unknown>)[] = [];
 
     // TODO: this really feels like it needs a more streamlined implementation
-    msgs.forEach((o) => {
+    msgs.forEach(o => {
+        if (o == options?.last_read) {
+            grouped.push(new ComponentAdapter(UnreadMarker));
+        }
+
         let last_elem = prev ?? grouped.at(-1);
 
         // get the latest message if it's a group

@@ -8,9 +8,10 @@
 	export let styles: conn_styles;
 
 	const unread = channel.session.unread_live;
+	$: open = channel.session.opened;
 </script>
 
-{#if $unread}
+{#if $unread && open}
 	<div class="bg-{styles.color_name}-300 flex place-items-center gap-1.5 px-4 py-1 text-sm lowercase">
 		<UnreadMarker>{$unread}</UnreadMarker> Unread {$unread == 1 ? 'Message' : 'Messages'}
 		<button

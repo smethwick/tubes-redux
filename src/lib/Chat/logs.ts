@@ -15,8 +15,10 @@ export class MessageLogList {
     opened = false;
     /** true if the user is looking at the conversation */
     active = false;
+
     unread = 0;
     unread_live = writable(0);
+    last_read?: Message;
 
     constructor(private conn: IrcConnection, public messages: Message[]) {
         this.store = writable(messages);
@@ -96,6 +98,7 @@ export class MessageLogList {
         if (tag) return;
 
         if (!this.active && !["join", "part", "quit"].includes(data.command.toLocaleLowerCase())) {
+            if (this.unread == 0) this.last_read = data;
             this.unread = this.unread + 1;
             this.unread_live.set(this.unread);
         }
