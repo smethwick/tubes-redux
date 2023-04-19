@@ -15,6 +15,7 @@
 		: styles?.chan_inactive ?? "hover:bg-pink-500/10"}
 		place-items-center
 		 text-neutral-600
+		 dark:text-neutral-400
 			rounded-md duration-[150ms] ease-out transition-all select-none"
 		class:active
 		{href}
@@ -25,6 +26,6 @@
 
 <style>
 	.active {
-		@apply  text-black;
+		@apply  text-black dark:text-white;
 	}
 </style>

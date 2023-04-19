@@ -22,14 +22,3 @@
 	</Dismissable>
 	<GoodAdvice {connection_info} />
 </section>
-
-<style>
-	h1 {
-		@apply text-4xl;
-		font-stretch: extra-condensed;
-	}
-	h2 {
-		@apply mb-2 text-2xl font-[450];
-		font-stretch: condensed;
-	}
-</style>

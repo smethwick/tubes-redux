@@ -13,7 +13,7 @@
 
 <MessageTemplate
 	{timestamp}
-	class="place-items-center text-sm hover:bg-neutral-50"
+	class="place-items-center text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800"
 	highlight={nick.color[2]}
 >
 	<span

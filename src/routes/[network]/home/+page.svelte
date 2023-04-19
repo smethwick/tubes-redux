@@ -7,7 +7,6 @@
 	import type { LayoutData } from './$types';
 	import { fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import JoinChannel from '$lib/Display/Dialogs/JoinChannel/JoinChannel.svelte';
 
 	export let data: LayoutData;
 
@@ -23,8 +22,6 @@
 
 	const other_transition = (n: Element, opt?: { delay: number }) =>
 		fade(n, { duration, easing: quintOut, delay: duration ? opt?.delay : 0 });
-
-	let join_diag_open = false;
 </script>
 
 <svelte:head>
@@ -49,8 +46,6 @@
 				<Cards {conn} />
 				<Actions {conn} />
 			</section>
-
-			<JoinChannel {conn} bind:isopen={join_diag_open} />
 
 			<MotdSection {motd} {duration} {notconnected} />
 		{/if}

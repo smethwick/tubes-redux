@@ -7,6 +7,6 @@
 	const style = $current_style.color_name;
 </script>
 
-<div class="flex place-items-center gap-2 bg-{style}-200 px-4 py-2 rounded-lg">
+<div class="flex place-items-center gap-2 bg-{style}-200 dark:bg-{style}-900 mb-2 px-4 py-2 rounded-lg">
 	<User /> Logged in as {conn.nick}
 </div>

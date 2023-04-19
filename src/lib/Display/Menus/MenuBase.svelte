@@ -7,7 +7,7 @@
 
 	let klass = '';
 	let isopen = false;
-	const close_menu = () => isopen = false;
+	const close_menu = () => (isopen = false);
 
 	const duration = 150,
 		easing = quintOut,
@@ -16,10 +16,11 @@
 	export { klass as class };
 </script>
 
-<details bind:open={isopen} class="z-50 relative w-max">
+<details bind:open={isopen} class="relative z-50 w-max">
 	<summary
-		class="list-none w-max select-none hover:bg-neutral-200 active:bg-neutral-300
-		cursor-pointer py-0.5 rounded px-1.5 flex place-items-center gap-1"
+		class="flex w-max cursor-pointer select-none list-none place-items-center
+		gap-1 rounded px-1.5 py-0.5 hover:bg-neutral-200 active:bg-neutral-300 
+		dark:hover:bg-neutral-800"
 	>
 		<slot name="text" />
 		<span class="text-xs">
@@ -30,7 +31,7 @@
 		<div transition:fly={{ duration, easing, opacity, y: -8, x: -8 }}>
 			<div
 				transition:scale={{ duration, opacity, easing, start: 0.9 }}
-				class="absolute mt-2 bg-purple-50 border border-neutral-200 rounded-lg text-base shadow-xl w-56 {klass}"
+				class="absolute mt-2 w-56 rounded-lg border border-neutral-200 bg-purple-50 text-base shadow-xl {klass}"
 			>
 				<slot {close_menu} />
 			</div>

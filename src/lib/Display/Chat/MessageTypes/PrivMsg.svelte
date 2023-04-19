@@ -16,7 +16,7 @@
 	let whois = false;
 </script>
 
-<MessageTemplate {timestamp} class="{nick.color[1]} bg-opacity-20" highlight={nick.color[2]}>
+<MessageTemplate {timestamp} class="{nick.color[1]} bg-opacity-20 dark:bg-opacity-5" highlight={nick.color[2]}>
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<span
 		slot="sender"

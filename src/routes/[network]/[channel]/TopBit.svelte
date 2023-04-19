@@ -20,7 +20,7 @@
 	};
 </script>
 
-<header class="border-b border-b-neutral-200 max-w-full px-4 h-14 flex place-items-center">
+<header class="border-b border-b-neutral-200 dark:border-b-neutral-700 max-w-full px-4 h-14 flex place-items-center">
 	<span class="text-lg font-semibold flex place-items-center gap-1">
 		<Hash size={20} />
 		{channel.name.replace('#', '')}

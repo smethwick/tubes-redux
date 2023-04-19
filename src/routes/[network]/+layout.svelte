@@ -13,7 +13,8 @@
 </script>
 
 {#if provider.supportsEnvironment && provider.supportsEnvironment()}
-	<div class="h-screen bg-neutral-50 font-serif text-neutral-900">
+	<div class="h-screen bg-neutral-50 font-serif text-neutral-900
+	dark:bg-neutral-950 dark:text-neutral-50">
 		{#await provider.up()}
 			hold on
 		{:then}
@@ -26,7 +27,8 @@
 				{#key $page.params['network']}
 					<main
 						class="w-full min-w-full max-w-full overflow-y-auto overflow-x-hidden rounded-tl-md border-l
-				border-t bg-white"
+				border-t bg-white
+				dark:bg-neutral-900 dark:border-neutral-700"
 						in:fly|local={{ duration: 150, easing: circOut, x: 8, delay: 150 }}
 						out:fly|local={{ duration: 150, easing: circOut, x: -8 }}
 					>

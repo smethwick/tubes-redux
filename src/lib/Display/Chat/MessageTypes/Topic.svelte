@@ -11,9 +11,14 @@
 	const nick = new Nick(source);
 </script>
 
-<MessageTemplate {timestamp} class="text-sm place-items-center" outer_class="hover:bg-neutral-50" highlight={nick.color[2]}>
+<MessageTemplate
+	{timestamp}
+	class="place-items-center text-sm"
+	outer_class="hover:bg-neutral-50 dark:hover:bg-neutral-800"
+	highlight={nick.color[2]}
+>
 	<span
-		class="text-fuchsia-700 font-bold flex justify-end place-items-center"
+		class="flex place-items-center justify-end font-bold text-fuchsia-700"
 		aria-hidden
 		slot="sender"
 	>
@@ -25,9 +30,8 @@
 
 	<blockquote
 		slot="after"
-		class="ml-[8.75rem] mt-1.5 pb-0.5 border-l-2 border-l-neutral-300 pl-5 text-neutral-800 italic
-			text-sm leading-relaxed"
-			
+		class="ml-[8.75rem] mt-1.5 border-l-2 border-l-neutral-300 pb-0.5 pl-5 text-sm italic
+			leading-relaxed text-neutral-800"
 	>
 		{content ? content : null}
 	</blockquote>

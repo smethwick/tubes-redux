@@ -18,7 +18,7 @@
 {#if group.messages.length == 1}
 	<MessageView msg={group.messages[0]} />
 {:else}
-	<MessageTemplate class="text-sm hover:bg-neutral-50 place-items-center">
+	<MessageTemplate class="text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 place-items-center">
 		<span
 			class="text-purple-700 font-bold flex justify-end place-items-center"
 			aria-hidden

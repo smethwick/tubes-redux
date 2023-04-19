@@ -34,7 +34,7 @@
 			rounded {klass}"
 	>
 		{#if timestamp}
-			<time class="mt-1 w-12 text-xs text-neutral-700">{dayjs(timestamp).format('HH:mm')}</time>
+			<time class="mt-1 w-12 text-xs text-neutral-700 dark:text-neutral-300">{dayjs(timestamp).format('HH:mm')}</time>
 		{:else}
 			<div class="w-12" />
 		{/if}

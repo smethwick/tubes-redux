@@ -192,10 +192,10 @@ const colours = (): conn_styles[] => {
     return color_names.map((o) =>
     ({
         color_name: o,
-        chan_selected: `bg-${o}-300 hover:bg-${o}-300`,
+        chan_selected: `bg-${o}-300 hover:bg-${o}-300 dark:bg-${o}-800 hover:bg-${o}-800`,
         chan_inactive: `hover:bg-${o}-500/10`,
-        net_selected: `bg-${o}-300`,
-        net_inactive: `bg-${o}-100 hover:bg-${o}-200`
+        net_selected: `bg-${o}-300 dark:bg-${o}-800`,
+        net_inactive: `bg-${o}-100 hover:bg-${o}-200 dark:bg-${o}-900 dark:hover:bg-${o}-700`
     })
     )
 }

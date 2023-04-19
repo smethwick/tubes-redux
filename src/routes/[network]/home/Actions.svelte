@@ -2,6 +2,7 @@
 	import HomeAction from './HomeAction.svelte';
 	import { goto } from '$app/navigation';
 	import type { IrcConnection } from '$lib/Chat/provider+connection';
+	import JoinChannel from '$lib/Display/Dialogs/JoinChannel/JoinChannel.svelte';
 
 	export let conn: IrcConnection;
 	const isConnected = conn.isConnected;
@@ -23,6 +24,8 @@
 		<HomeAction on:click={() => goto('./debug')}>🐞 Debug</HomeAction>
 	</ul>
 </section>
+
+<JoinChannel {conn} bind:isopen={join_diag_open} />
 
 <style>
 	h2 {
