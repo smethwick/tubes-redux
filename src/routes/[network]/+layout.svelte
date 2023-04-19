@@ -27,7 +27,7 @@
 				{#key $page.params['network']}
 					<main
 						class="w-full min-w-full max-w-full overflow-y-auto overflow-x-hidden rounded-tl-md border-l
-				border-t bg-white
+				border-t bg-white 
 				dark:bg-neutral-900 dark:border-neutral-700"
 						in:fly|local={{ duration: 150, easing: circOut, x: 8, delay: 150 }}
 						out:fly|local={{ duration: 150, easing: circOut, x: -8 }}

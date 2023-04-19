@@ -4,8 +4,10 @@
 	import SecondaryButton from '$lib/Display/Buttons/SecondaryButton.svelte';
 	import Spinner from '$lib/Display/Etc/Spinner.svelte';
 	import Heading1 from '$lib/Display/Type/Heading1.svelte';
+	import { parse } from 'postcss';
 	import DialogBase from '../Base/Base.svelte';
 	import Registered from './registered.png';
+	import ErrorBox from '$lib/Display/Error/ErrorBox.svelte';
 
 	export let isopen = false;
 	export let conn: IrcConnection;
@@ -29,6 +31,10 @@
 			<p class="text-xl text-neutral-800">{realname}</p>
 			<p class="text-sm mt-2">{username}</p>
 		</main>
+		{:catch e}
+		<ErrorBox>
+			{JSON.parse(e).params.at(-1)}
+		</ErrorBox>
 	{/await}
 	<SecondaryButton class="mt-auto max-w-max" on:click={close}>Close</SecondaryButton>
 </DialogBase>

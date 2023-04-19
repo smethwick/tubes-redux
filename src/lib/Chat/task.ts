@@ -109,16 +109,18 @@ class Collection {
     }
 
     resolve(data: IrcMessageEvent): boolean {
+        if (this.task.reject
+            && this.reject_on
+            && this.reject_on.find(o => do_we_care_about_it(o, data))) this.task.reject(JSON.stringify(data));
+
         if (do_we_care_about_it(this.start, data)) {
             if (this.include_start_and_finish) this.collection.push(data);
             this.collecting = true;
             return true;
         }
+        if (!this.task.resolve || !this.task.reject) throw new Error("task not yet initialised");
 
         if (!this.collecting) return true;
-
-        if (!this.task.resolve || !this.task.reject) throw new Error("task not yet initialised");
-        if (this.reject_on && this.reject_on.find(o => do_we_care_about_it(o, data))) this.task.reject();
 
         if (do_we_care_about_it(this.finish, data)) {
             if (this.include_start_and_finish) this.collection.push(data);
@@ -284,7 +286,7 @@ export class TaskQueue {
         include: msg_description[],
         finish: msg_description,
         options?: {
-            reject_on?: msg_description[], 
+            reject_on?: msg_description[],
             include_start_and_finish?: boolean
         }
     ): Promise<IrcMessageEvent[]> {

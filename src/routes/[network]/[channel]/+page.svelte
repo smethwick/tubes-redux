@@ -11,7 +11,7 @@
 	const { connection: conn } = data;
 	const channel = data.channel;
 	const { isConnected } = conn;
-	
+
 	$: open_sidebar = false;
 </script>
 
@@ -19,14 +19,14 @@
 	<title>{channel.name} • {conn.connection_info.display_name} • Tubes</title>
 </svelte:head>
 
-<div class="flex w-full max-w-full h-full">
-	<div class="flex flex-col w-full h-full">
+<div class="flex h-full w-full max-w-full">
+	<div class="flex h-full w-full flex-col">
 		{#key channel}
 			<TopBit bind:open_sidebar {channel} />
 			<MessageList {conn} {channel} />
+			<UnreadBanner {channel} styles={conn.styles} />
+			<MessageInput {isConnected} {channel} channel_name={channel.name} />
 		{/key}
-		<UnreadBanner {channel} styles={conn.styles} />
-		<MessageInput {isConnected} {channel} channel_name={channel.name} />
 	</div>
 	<ChannelInfo bind:open={open_sidebar} styles={conn.styles} {channel} />
 </div>

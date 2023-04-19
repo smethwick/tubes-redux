@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root, body {
+:root,
+body {
     --highlight-color: #9333ea;
 }
 

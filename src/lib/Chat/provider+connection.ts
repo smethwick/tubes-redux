@@ -319,7 +319,7 @@ export abstract class IrcConnection {
             { command: "376" },
             {
                 // ERR_NOSUCHSERVER and ERR_NOMOTD respectively
-                reject_on: [{ command: "402" }, { command: "422" }]
+                reject_on: [{ command: "402" }, /* { command: "422" } */]
             }
         )
 

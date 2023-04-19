@@ -11,7 +11,7 @@
 	$: sorted = $channels.sort((a, b) => a.name.localeCompare(b.name));
 </script>
 
-<ul class="flex flex-col my-2 pb-2 gap-1 overflow-y-auto h-full">
+<ul class="my-2 flex h-full flex-col gap-1 overflow-y-auto pb-2">
 	<SidebarItem {styles} href="./home">
 		<span class="flex place-items-center gap-2"><House /> Home</span>
 	</SidebarItem>
@@ -19,3 +19,28 @@
 		<ChannelItem {styles} {channel} />
 	{/each}
 </ul>
+
+<style>
+	ul {
+		scrollbar-gutter: stable;
+	}
+	ul::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+
+	ul::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	ul::-webkit-scrollbar-thumb {
+		background: #d3d3d3;
+		border-radius: 8px;
+	}
+
+	ul::-webkit-scrollbar-thumb:hover {
+		background: #747474;
+		width: 10px;
+		height: 12px;
+	}
+</style>
