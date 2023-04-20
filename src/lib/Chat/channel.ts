@@ -1,4 +1,4 @@
-import { MessageTypes } from "$lib/Storage/messages";
+import { MessageTypes, type Message } from "$lib/Storage/messages";
 import { writable, type Writable } from "svelte/store";
 import { MessageLogList } from "./logs";
 import { Nick } from "./nick";
@@ -22,6 +22,8 @@ export class Channel {
 
     session: MessageLogList;
     backlog?: MessageLogList;
+    pending: Message[] = [];
+    pending_live: Writable<Message[]> = writable(this.pending);
 
     constructor(private conn: IrcConnection, public name: string) {
         this.nicks_live = writable([]);
@@ -103,9 +105,9 @@ export class Channel {
         this.set_joined_status(false);
     }
 
-    privmsg(msg: string) {
-        this.conn.privmsg(this.name, msg);
-        this.session.push({
+    async privmsg(msg: string) {
+        const label = await this.conn.privmsg(this.name, msg);
+        const msg_obj: Message = {
             type: MessageTypes.PrivMsg,
             network: this.conn.connection_info.name,
             command: "PRIVMSG",
@@ -113,7 +115,30 @@ export class Channel {
             timestamp: new Date(Date.now()),
             content: msg,
             source: [this.conn.nick]
-        })
+        };
+
+        if (this.conn.capman.hasCap('echo-message')) {
+            // if (!label) return;
+            this.pending.push(msg_obj);
+            this.pending_live.set(this.pending);
+            
+            if (label) {
+                await this.conn.task_queue.wait_for({
+                    command: "PRIVMSG",
+                    tags: { key: "label", value: label }
+                });
+            } else {
+                await this.conn.task_queue.wait_for({
+                    command: "PRIVMSG",
+                    params: [this.name, msg]
+                });
+            }
+
+            this.pending = [];
+            this.pending_live.set(this.pending);
+        } else {
+            this.session.push(msg_obj);
+        }
     }
 
 

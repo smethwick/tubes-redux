@@ -8,6 +8,7 @@ import { Deferred, TaskQueue, Wildcard } from "./task";
 import { Channel } from "./channel";
 import { pick_deterministic } from ".";
 import { Capability, CapabilityManager } from "./caps";
+import { v4 as uuidv4 } from 'uuid';
 import { Saslinator, type SaslMethod } from "./sasl";
 
 export interface ConnectionInfo {
@@ -283,17 +284,27 @@ export abstract class IrcConnection {
         this.connection_info = entry.conn_blueprint;
     }
 
-    async privmsg(target: string, msg: string): Promise<void> {
+    async privmsg(target: string, msg: string): Promise<string | void> {
         const connected = this.check_connection();
         if (!connected) throw new Error("not connected");
 
-        this.send_raw(`PRIVMSG ${target} :${msg}`);
+        let label: string | undefined;
+
+        if (this.capman.hasCap("labeled-response")) {
+            label = uuidv4();
+            this.send_raw(`@label=${label} PRIVMSG ${target} :${msg}`);
+        } else {
+            this.send_raw(`PRIVMSG ${target} :${msg}`);
+        }
+
         if (this.provider.has_flag(ProviderFlags.StoreLogs)) saveMessage(this.connection_info.name, {
             command: "PRIVMSG",
             params: new Params(target, msg),
             timestamp: new Date(Date.now()),
             source: [this.connection_info.nick, this.connection_info.username, "localhost"],
-        })
+        });
+
+        return label;
     }
 
     check_connection(): boolean {

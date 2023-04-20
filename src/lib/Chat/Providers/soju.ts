@@ -135,6 +135,8 @@ export class SojuConnection extends IrcConnection {
         'server-time',
         'message-tags',
         'draft/event-playback',
+        'echo-message',
+        'labeled-response',
     ];
 
     websocket?: WebSocket;

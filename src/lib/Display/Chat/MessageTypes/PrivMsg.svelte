@@ -16,11 +16,15 @@
 	let whois = false;
 </script>
 
-<MessageTemplate {timestamp} class="{nick.color[1]} bg-opacity-20 dark:bg-opacity-5" highlight={nick.color[2]}>
+<MessageTemplate
+	{timestamp}
+	class="{nick.color[1]} bg-opacity-20 dark:bg-opacity-5"
+	highlight={nick.color[2]}
+>
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<span
 		slot="sender"
-		class="hover:underline cursor-pointer {nick.color[0]}"
+		class="cursor-pointer hover:underline {nick.color[0]}"
 		class:long={nick.name.length >= 12}
 		on:click={() => {
 			whois = !whois;
@@ -29,6 +33,14 @@
 		{nick.name}
 	</span>
 	<span slot="content"><RichText link_colour={nick.color[2]} {content} /></span>
+	<!-- <svelte:fragment slot="after">
+		{#if msg.server_id}<button
+				on:click={() =>
+					conn.send_raw(`@+draft/reply=${msg.server_id};+draft/react=😳 TAGMSG ${msg.target}`)}
+			>
+				react
+			</button>{/if}
+	</svelte:fragment> -->
 </MessageTemplate>
 
 <Whois {conn} {nick} bind:isopen={whois} />

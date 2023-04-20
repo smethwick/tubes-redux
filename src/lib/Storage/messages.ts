@@ -25,6 +25,7 @@ export interface Message {
 
   timestamp: Date;
   server_time?: string;
+  server_id?: string;
 
   origin?: IrcMessageEvent;
 }
@@ -49,11 +50,13 @@ export async function saveMessage(net: string, e: IrcMessageEvent) {
 
 export const sensible_defaults = (net: string, e: IrcMessageEvent) => {
   const server_time = e.tags?.find(o => o.key == "time")?.value;
+  const server_id = e.tags?.find(o => o.key == "msgid")?.value;
   const timestamp = server_time ? new Date(server_time) : e.timestamp;
 
   return {
     timestamp,
     server_time,
+    server_id,
     command: e.command,
     source: e.source,
     network: net,

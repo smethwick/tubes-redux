@@ -153,6 +153,7 @@ export type subscription = {
 export type msg_description = {
     command: string,
     params?: string[] | number,
+    tags?: {key: string, value: string};
 }
 
 export class Deferred<T> {
@@ -352,6 +353,9 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
             })
 
             if (!res) return false;
+        }
+        if (only.tags) {
+            if (!msg.tags?.includes(only.tags)) return false;
         }
 
         return true;

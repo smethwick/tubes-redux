@@ -19,7 +19,8 @@
 	const session = channel.session.store;
 
 	$: backlog_grouped = group($backlog_live);
-	$: session_grouped = group($session, {last_read: channel.session.last_read});
+	$: session_grouped = group($session, { last_read: channel.session.last_read });
+	$: pending = channel.pending_live;
 
 	onMount(async () => {
 		await on_mount(div, channel);
@@ -46,7 +47,7 @@
 <div
 	bind:this={div}
 	on:scroll={(e) => handleScroll(e)}
-	use:scrollToBottom={{ list: session_grouped, channel }}
+	use:scrollToBottom={{ list: [...session_grouped, ...$pending], channel }}
 	class="h-full max-h-screen min-w-full max-w-full overflow-y-auto p-4 py-4"
 >
 	<ShowMore
@@ -69,4 +70,11 @@
 			{/key}
 		{/if}
 	{/each}
+	<div class="opacity-50">
+	{#each $pending as msg}
+		{#key msg.id}
+			<MessageView {conn} {msg} />
+		{/key}
+	{/each}
+	</div>
 </div>
