@@ -26,7 +26,7 @@ export const scrollToBottom = (
     return { update: scroll };
 };
 
-export const on_mount = async (div: Element, channel: Channel) => {
+export const on_mount = async (div: Element) => {
     await tick();
 
     div.scroll({

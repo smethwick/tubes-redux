@@ -56,13 +56,13 @@ export const group = (msgs: Message[], options?: {
     // TODO: this really feels like it needs a more streamlined implementation
     msgs.forEach(o => {
         let last_elem = prev ?? grouped.at(-1);
-        
+
         // get the latest message if it's a group
         let last_message: Message | undefined;
         if (isAGroup(last_elem) && !isAComponent(last_elem))
-        last_message = last_elem.messages.at(-1)!;
+            last_message = last_elem.messages.at(-1)!;
         else if (isAMessage(last_elem)) last_message = last_elem;
-        
+
         if (o == options?.last_read) {
             grouped.push(new ComponentAdapter(UnreadMarker));
         }

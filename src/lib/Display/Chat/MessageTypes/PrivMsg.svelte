@@ -6,6 +6,8 @@
 	import RichText from '../RichText.svelte';
 	import type { IrcConnection } from '$lib/Chat/provider+connection';
 	import Whois from '$lib/Display/Dialogs/Whois/Whois.svelte';
+	import type { Media } from '../richtext';
+	import MediaPreview from '../MediaPreview.svelte';
 
 	export let msg: Message;
 	export let conn: IrcConnection;
@@ -14,6 +16,8 @@
 
 	const nick = new Nick(source);
 	let whois = false;
+
+	let media: Media[] = [];
 </script>
 
 <MessageTemplate
@@ -32,15 +36,20 @@
 	>
 		{nick.name}
 	</span>
-	<span slot="content"><RichText colour_name={nick.color[3]} link_colour={nick.color[2]} {content} /></span>
-	<!-- <svelte:fragment slot="after">
-		{#if msg.server_id}<button
+	<span slot="content">
+		<RichText bind:media colour_name={nick.color[3]} link_colour={nick.color[2]} {content} />
+	</span>
+	<svelte:fragment slot="after">
+		{#if media.length != 0}
+			<MediaPreview {media} colour_name={nick.color[3]} />
+		{/if}
+		<!-- {#if msg.server_id}<button
 				on:click={() =>
 					conn.send_raw(`@+draft/reply=${msg.server_id};+draft/react=😳 TAGMSG ${msg.target}`)}
 			>
 				react
-			</button>{/if}
-	</svelte:fragment> -->
+			</button>{/if} -->
+	</svelte:fragment>
 </MessageTemplate>
 
 <Whois {conn} {nick} bind:isopen={whois} />

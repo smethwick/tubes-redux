@@ -22,8 +22,9 @@
 	$: session_grouped = group($session, { last_read: channel.session.last_read });
 	$: pending = channel.pending_live;
 
+
 	onMount(async () => {
-		await on_mount(div, channel);
+		await on_mount(div);
 	});
 
 	const handleScroll = (

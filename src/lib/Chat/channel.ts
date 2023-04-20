@@ -25,7 +25,7 @@ export class Channel {
     pending: Message[] = [];
     pending_live: Writable<Message[]> = writable(this.pending);
 
-    constructor(private conn: IrcConnection, public name: string) {
+    constructor(public conn: IrcConnection, public name: string) {
         this.nicks_live = writable([]);
         this.topic_live = writable();
         this.nicks = [];

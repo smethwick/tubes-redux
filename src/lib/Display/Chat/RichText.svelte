@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { re_weburl } from '$lib/Chat/awful';
-	import MediaPreview from './MediaPreview.svelte';
+	import MediaPreview from './InlineMediaPreview.svelte';
 	import { Link, Media, MediaType, link_schema, media_schema } from './richtext';
 
 	const re_img = /[^\s]+(.*?).(jpg|jpeg|png|gif)$/;
@@ -9,12 +9,19 @@
 	export let link_colour = 'inherit';
 	export let colour_name: string;
 
+	export let media: Media[] = [];
+
 	content = content ?? '';
 	const split = content.split(' ').map((o) => {
-		if (re_img.test(o)) return new Media(o, MediaType.Image);
+		if (re_img.test(o)) {
+			const m = new Media(o, MediaType.Image);
+			media.push(m);
+			return m;
+		}
 		if (re_weburl.test(o)) return new Link(o);
 		return o;
 	});
+
 </script>
 
 <!--
