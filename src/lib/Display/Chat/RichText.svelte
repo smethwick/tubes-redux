@@ -7,6 +7,7 @@
 
 	export let content: string | undefined;
 	export let link_colour = 'inherit';
+	export let colour_name: string;
 
 	content = content ?? '';
 	const split = content.split(' ').map((o) => {
@@ -27,7 +28,7 @@ This will:
 <span style="display: inline">
 	{#each split as thing}
 		{#await media_schema.parseAsync(thing) then thing}
-			<MediaPreview media={thing} />
+			<MediaPreview {colour_name} media={thing} />
 		{:catch}
 			{#await link_schema.parseAsync(thing) then thing}
 				<a

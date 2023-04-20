@@ -32,7 +32,7 @@
 	>
 		{nick.name}
 	</span>
-	<span slot="content"><RichText link_colour={nick.color[2]} {content} /></span>
+	<span slot="content"><RichText colour_name={nick.color[3]} link_colour={nick.color[2]} {content} /></span>
 	<!-- <svelte:fragment slot="after">
 		{#if msg.server_id}<button
 				on:click={() =>

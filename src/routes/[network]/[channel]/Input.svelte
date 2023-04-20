@@ -20,7 +20,7 @@
 		disabled={!$isConnected}
 		class:disabled={!$isConnected}
 		on:keydown={(e) => {
-			if (e.key == 'Enter' && channel) {
+			if (e.key == 'Enter' && input && channel) {
 				channel.privmsg(input);
 				input = '';
 			}

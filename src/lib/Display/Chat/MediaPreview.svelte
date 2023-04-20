@@ -5,6 +5,7 @@
 	import Image from 'phosphor-svelte/lib/Image';
 
 	export let media: Media;
+	export let colour_name: string;
 
 	let isopen = false;
 </script>
@@ -12,13 +13,13 @@
 <button class="group inline-flex text-sm" on:click={() => isopen = true}>
 	<span
 		class="
-    bg-{$current_style.color_name}-300 group-hover:bg-{$current_style.color_name}-400
+    bg-{colour_name}-300 group-hover:bg-{colour_name}-400
     flex place-items-center rounded-l-md px-2 py-1"
 	>
 		<Image weight="fill" />
 	</span>
 	<span
-		class="bg-{$current_style.color_name}-200 group-hover:bg-{$current_style.color_name}-300
+		class="bg-{colour_name}-200 group-hover:bg-{colour_name}-300
     rounded-r-md px-2 py-1"
 	>
 		{new URL(media.url).host}

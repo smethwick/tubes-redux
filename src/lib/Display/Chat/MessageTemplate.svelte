@@ -46,7 +46,7 @@
 		>
 			<slot name="sender" />
 		</span>
-		<p class="w-full"><slot name="content" /></p>
+		<p class="w-full break-words"><slot name="content" /></p>
 	</div>
 	<slot name="after" />
 </article>
