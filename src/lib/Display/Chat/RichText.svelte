@@ -1,12 +1,19 @@
 <script lang="ts">
 	import { re_weburl } from '$lib/Chat/awful';
-	import { Link, isALink } from './richtext';
+	import MediaPreview from './MediaPreview.svelte';
+	import { Link, Media, MediaType, link_schema, media_schema } from './richtext';
+
+	const re_img = /[^\s]+(.*?).(jpg|jpeg|png|gif)$/;
 
 	export let content: string | undefined;
 	export let link_colour = 'inherit';
-	
+
 	content = content ?? '';
-	const split = content.split(' ').map((o) => (re_weburl.test(o) ? new Link(o) : o));
+	const split = content.split(' ').map((o) => {
+		if (re_img.test(o)) return new Media(o, MediaType.Image);
+		if (re_weburl.test(o)) return new Link(o);
+		return o;
+	});
 </script>
 
 <!--
@@ -19,20 +26,24 @@ This will:
 -->
 <span style="display: inline">
 	{#each split as thing}
-		{#if isALink(thing)}
-			<a
-				class="underline"
-				style="--color: {link_colour}"
-				target="_blank"
-				rel="noreferrer"
-				href={thing.content}
-			>
-				{decodeURI(thing.content)}
-			</a>
-		{:else}
-			{thing + ' '}
-		{/if}
-{/each}
+		{#await media_schema.parseAsync(thing) then thing}
+			<MediaPreview media={thing} />
+		{:catch}
+			{#await link_schema.parseAsync(thing) then thing}
+				<a
+					class="underline"
+					style="--color: {link_colour}"
+					target="_blank"
+					rel="noreferrer"
+					href={thing.content}
+				>
+					{decodeURI(thing.content)}
+				</a>
+			{:catch}
+				{thing + ' '}
+			{/await}
+		{/await}
+	{/each}
 </span>
 
 <style>

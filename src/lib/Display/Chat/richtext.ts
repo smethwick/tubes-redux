@@ -1,9 +1,22 @@
+import { z } from "zod";
+
 export class Link {
     constructor(public content: string) {}
 }
 
-export const isALink = (test: string | Link): test is Link => {
-    // eslint-disable-next-line no-prototype-builtins
-    if (test.hasOwnProperty('content')) return true;
-    else return false;
+export const link_schema = z.instanceof(Link);
+
+export enum MediaType {
+    Image,
+    Video,
+    Audio,
+    
 }
+
+export class Media {
+    trusted = true;
+
+    constructor(public url: string, public type: MediaType) {}
+}
+
+export const media_schema = z.instanceof(Media);
