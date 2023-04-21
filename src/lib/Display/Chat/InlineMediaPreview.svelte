@@ -10,22 +10,22 @@
 	let isopen = false;
 </script>
 
-<button class="group inline-flex text-sm" on:click={() => isopen = true}>
+<button class="group inline-flex h-7 text-sm" on:click={() => (isopen = true)}>
 	<span
 		class="
     bg-{colour_name}-300 group-hover:bg-{colour_name}-400
-    flex place-items-center rounded-l-md px-2 py-1"
+    flex h-full place-items-center rounded-l-md px-2 py-1"
 	>
 		<Image weight="fill" />
 	</span>
 	<span
 		class="bg-{colour_name}-200 group-hover:bg-{colour_name}-300
-    rounded-r-md px-2 py-1"
+    flex h-full place-items-center rounded-r-md px-2 py-1"
 	>
 		{new URL(media.url).host}
 	</span>
 </button>
 
 {#if isopen}
-<Lightbox bind:isopen {media} />
+	<Lightbox bind:isopen {media} />
 {/if}

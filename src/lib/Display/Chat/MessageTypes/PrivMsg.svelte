@@ -33,6 +33,7 @@
 		on:click={() => {
 			whois = !whois;
 		}}
+		title={nick.name}
 	>
 		{nick.name}
 	</span>
@@ -41,7 +42,7 @@
 	</span>
 	<svelte:fragment slot="after">
 		{#if media.length != 0}
-			<MediaPreview {media} colour_name={nick.color[3]} />
+			<MediaPreview {media}/>
 		{/if}
 		<!-- {#if msg.server_id}<button
 				on:click={() =>

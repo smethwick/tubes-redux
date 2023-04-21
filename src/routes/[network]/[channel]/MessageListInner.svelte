@@ -19,9 +19,10 @@
 	const session = channel.session.store;
 
 	$: backlog_grouped = group($backlog_live);
-	$: session_grouped = group($session, { last_read: channel.session.last_read });
+	$: session_grouped = group($session, {
+		last_read: channel.session.last_read
+	});
 	$: pending = channel.pending_live;
-
 
 	onMount(async () => {
 		await on_mount(div);
@@ -64,7 +65,11 @@
 		{#if isAGroup(msg)}
 			<MessageGroupView group={msg} />
 		{:else if isAComponent(msg)}
-			<svelte:component this={msg.comp} style={$current_style} params={msg.params} />
+			<svelte:component
+				this={msg.comp}
+				style={$current_style}
+				params={msg.params}
+			/>
 		{:else}
 			{#key msg.id}
 				<MessageView {conn} {msg} />
@@ -72,10 +77,10 @@
 		{/if}
 	{/each}
 	<div class="opacity-50">
-	{#each $pending as msg}
-		{#key msg.id}
-			<MessageView {conn} {msg} />
-		{/key}
-	{/each}
+		{#each $pending as msg}
+			{#key msg.id}
+				<MessageView {conn} {msg} />
+			{/key}
+		{/each}
 	</div>
 </div>
