@@ -39,6 +39,11 @@ export class CommandHandler {
         }),
         new ClientCommand("query", "open a direct message conversation with someone"),
         new ClientCommand("msg", "send a one-off message to a channel or user"),
+        new ClientCommand("quote", "send a raw and uncensored irc message to the server", {
+            async on_activate(_target, params, connection) {
+                connection.send_raw(params.join(" "));
+            },
+        })
     ]
 
     static fuse = new Fuse(this.commands, {

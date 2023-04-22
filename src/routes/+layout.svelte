@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '@fontsource/roboto-serif/variable-full.css';
-	import '@fontsource/roboto-serif/variable-italic.css';
+	import '@fontsource/roboto-serif/variable-full-italic.css';
 	import { onMount } from 'svelte';
 	import '../app.css';
 </script>

@@ -14,27 +14,34 @@
 	export let nick: Nick;
 </script>
 
-<DialogBase bind:isopen let:close width="max-w-2xl" class="h-96">
+<DialogBase bind:isopen let:close width="max-w-2xl" class="h-96" padding="p-0">
 	{#await nick.whois(conn)}
 		<div class="max-w-min"><Spinner /></div>
-	{:then { registered, nick, realname, username }}
-		<main>
+	{:then { registered, nick: nick2, realname, username }}
+		<div class="bg-{nick.color[3]}-300 h-8 w-full" />
+		<main class="px-8 py-4">
 			{#if registered}
 				<img
 					class="float-right w-48 rotate-2"
 					style="filter: drop-shadow(-2px 2px 4px rgba(0,0,0,0.2));"
 					src={Registered}
-					alt="{nick} is registered on this network"
+					alt="{nick2} is registered on this network"
 				/>
 			{/if}
-			<Heading1>{nick}</Heading1>
+			<Heading1>{nick2}</Heading1>
 			<p class="text-xl text-neutral-800">{realname}</p>
-			<p class="text-sm mt-2">{username}</p>
+			<p class="mt-2 text-sm">{username}</p>
 		</main>
-		{:catch e}
+	{:catch e}
 		<ErrorBox>
 			{JSON.parse(e).params.at(-1)}
 		</ErrorBox>
 	{/await}
-	<SecondaryButton class="mt-auto max-w-max" on:click={close}>Close</SecondaryButton>
+	<SecondaryButton
+		class="mt-auto max-w-max m-8"
+		colors={[`bg-${nick.color[3]}-200`, 'text-black']}
+		on:click={close}
+	>
+		Close
+	</SecondaryButton>
 </DialogBase>
