@@ -1,15 +1,16 @@
 # "i sure hope someone asked for this!"
 
-tubes redux is _the_ irc client. it runs in your web browser, sorry about that.
+tubes redux is _the_ irc client. it runs in your web
+browser, sorry about that.
 
 ## you're gonna have to wait a little bit
 
 tubes is, uhhh.... "functional" at the moment. it only really works with the
 soju irc bouncer (and theoretically other bouncers that support the
 [soju.im/bouncer-networks](https://git.sr.ht/~emersion/soju/tree/master/item/doc/ext/bouncer-networks.md)
-extension) (support for local connections is implemented but i think i've broken
-it several times while trying to get soju working. i've been afraid to test it
-for a few months now.)
+extension) (support for local connections over websocket is implemented but i
+think i've broken it several times while trying to get soju working. i've been
+afraid to test it for a few months now.)
 
 ### things that work
 
@@ -22,6 +23,7 @@ for a few months now.)
 - [x] viewing chat logs using chathistory (kinda broken at the moment, oh well)
 - [x] looking at the message of the day
 - [x] a thing that keeps track of unread messages
+- [x] / commands (there aren't many yet)
 
 ### things that don't work
 
@@ -32,9 +34,8 @@ for a few months now.)
 - [ ] settings
 - [ ] viewing the server buffer (workaround: check the debug log in devtools)
 - [ ] disconnecting from networks while on soju
-- [ ] / commands
 - [ ] getting a ding when someone mentions your nick
-- [ ] whois
+- [ ] whois (it exists but its bad)
 - [ ] ignoring users
 - [ ] most other things
 
@@ -47,9 +48,8 @@ you'll need:
 - git
 
 ```bash
-git clone https://tildegit.org/leah/tubes-redux.git
-cd tubes-redux
-npm install
+# clone the repo somewhere and cd into it
+npm install # or pnpm install. or whatever you use i'm not your mother.
 ```
 
 ### build for production
@@ -98,22 +98,27 @@ basic offline support. it's like an electron app that doesn't use upwards of
 
 if i've done it properly, chrome should flash up a thing in your address bar
 asking you if you want to install it as a pwa. if not, go to the 3-dot menu in
-the top right, then go to more tools > create shortcut (or apps > install this
-site as an app on edge).
+the top right, then go to more tools > create shortcut (or apps > "install this
+site as an app" on edge).
 
 i think firefox is planning on supporting these at some point. we'll see how
 that goes.
 
 ## help out
 
-file an issue or open a pull request!! i'll have more in depth information here
-"at some point"
+[there's a mailing list](https://lists.sr.ht/~leah/tubes-redux) that you can
+send patches and such to. i'm really not a fan of the email workflow for this
+kinda thing but github[^1] started defaulting me to the "for you" tab whenever i go
+to my dashboard so it's what it's.
+
+[^1]: they also have a contract with ICE but that's water under the bridge at
+    this point
 
 ## thanks
 
-my undying gratitude goes to the maintainers of the
-[Modern IRC Client Protocol](https://modern.ircdocs.horse/) spec, without which
-i would be completely fucked.
+my undying gratitude goes to the maintainers of the [Modern IRC Client
+Protocol](https://modern.ircdocs.horse/) spec, without which i would be
+completely fucked.
 
 also many thanks to the people on libera.chat & tilde.chat who answered my silly
 questions about irc's innards.
