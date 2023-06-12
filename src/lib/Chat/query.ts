@@ -1,9 +1,13 @@
 import { Nick } from "./nick";
+import type { IrcConnection } from "./provider+connection";
 
-// class Query {
-//     user: Nick;
-    
-//     constructor(user: string) {
-//         this.user = new Nick(user);
-//     }
-// }
+class QueryBuffer {
+    nick: Nick;
+
+    constructor(
+        private name: string,
+        private conn: IrcConnection
+    ) { 
+        this.nick = new Nick(name);
+    }
+}

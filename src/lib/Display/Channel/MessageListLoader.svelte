@@ -2,30 +2,34 @@
 	import { onMount, onDestroy } from 'svelte';
 	import type { Channel } from '$lib/Chat/channel';
 	import Spinner from '$lib/Display/Etc/Spinner.svelte';
-	import MessageListInner from './MessageListInner.svelte';
-	import { MessageLogList } from '$lib/Chat/logs';
 	import type { IrcConnection } from '$lib/Chat/provider+connection';
-
-	// export let msgs: Message[];
+	import { MessageLogList } from '$lib/Chat/logs';
+	import MessageList from './MessageList.svelte';
 
 	export let channel: Channel;
-	export let conn: IrcConnection;
+	export let connection: IrcConnection;
 	let ready = false;
 
 	onMount(async () => {
-		if (!channel.backlog) channel.backlog = await MessageLogList.fromChatHistory(conn, channel.name);
+		if (!channel.backlog)
+			channel.backlog = await MessageLogList.fromChatHistory(
+				connection,
+				channel.name
+			);
 		await channel.backlog.open();
 		await channel.session.open();
-		ready = true
+		ready = true;
 	});
 
 	onDestroy(async () => {
 		await channel.session.deactivate();
-	})
+	});
 </script>
 
 {#if ready}
-	<MessageListInner {conn} {channel}/>
+	<div>
+		<MessageList backlog={channel.backlog} session={channel.session} />
+	</div>
 {:else}
 	<div class="flex w-full h-full justify-center place-items-center">
 		<Spinner />

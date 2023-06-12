@@ -1,7 +1,6 @@
 import { error, redirect } from "@sveltejs/kit";
-import type { LayoutLoad } from "./$types";
 
-export const load: LayoutLoad = async ({ parent, params }) => {
+export const load = async ({ parent, params }) => {
     const data = await parent();
 
     if (!data.connection) throw error(404);
