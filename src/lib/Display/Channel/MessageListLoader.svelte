@@ -27,9 +27,7 @@
 </script>
 
 {#if ready}
-	<div>
-		<MessageList backlog={channel.backlog} session={channel.session} />
-	</div>
+	<MessageList backlog={channel.backlog} session={channel.session} />
 {:else}
 	<div class="flex w-full h-full justify-center place-items-center">
 		<Spinner />
