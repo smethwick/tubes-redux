@@ -1,7 +1,7 @@
 <script lang="ts">
 	import MessageView from '$lib/Display/Chat/MessageView.svelte';
 	import { onMount } from 'svelte';
-	import MessageGroupView from './MessageGroupView.svelte';
+	import MessageGroupView from '../../../lib/Display/Channel/MessageGroupView.svelte';
 	import { group, isAGroup, isAComponent } from './grouper';
 	import { on_mount, scrollToBottom } from './list';
 	import type { Channel } from '$lib/Chat/channel';

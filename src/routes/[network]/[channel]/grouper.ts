@@ -1,7 +1,7 @@
 import { MessageGroup } from "$lib/Chat/groups";
 import { MessageTypes, type Message } from "$lib/Storage/messages";
 import type { ComponentType, SvelteComponentTyped } from "svelte";
-import DateMarker from "./DateMarker.svelte";
+import DateMarker from "../../../lib/Display/Channel/DateMarker.svelte";
 import type { conn_styles } from "$lib/Chat/provider+connection";
 import type { Channel } from "$lib/Chat/channel";
 import UnreadMarker from "./UnreadMarker.svelte";
