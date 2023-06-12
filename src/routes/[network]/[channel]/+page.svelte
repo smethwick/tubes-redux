@@ -1,10 +1,11 @@
 <script lang="ts">
-	import MessageList from './MessageList.svelte';
+	import MessageList from './MessageListLoader.svelte';
 	import MessageInput from './Input.svelte';
 	import type { LayoutData } from './$types';
 	import TopBit from './TopBit.svelte';
 	import ChannelInfo from '$lib/Display/ChannelInfo/ChannelInfo.svelte';
 	import UnreadBanner from './UnreadBanner.svelte';
+	import MessageListLoader from './MessageListLoader.svelte';
 
 	export let data: LayoutData;
 
@@ -23,7 +24,7 @@
 	<div class="flex h-full w-full flex-col">
 		{#key channel}
 			<TopBit bind:open_sidebar {channel} />
-			<MessageList {conn} {channel} />
+			<MessageListLoader {conn} {channel} />
 			<UnreadBanner {channel} styles={conn.styles} />
 			<MessageInput {isConnected} {channel} channel_name={channel.name} />
 		{/key}
