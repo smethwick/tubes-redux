@@ -19,10 +19,6 @@
 	const backlog_live = channel.backlog!.store;
 	const session = channel.session.store;
 
-	$: backlog_grouped = group($backlog_live);
-	$: session_grouped = group($session, {
-		last_read: channel.session.last_read
-	});
 	$: pending = channel.pending_live;
 
 	onMount(async () => {
@@ -39,12 +35,9 @@
 		const view_height = event.currentTarget.clientHeight;
 		const scroll = height + (scroll_pos - view_height);
 		
-		console.log(height, scroll)
-
 		// this logic used to be less fucked up before i switched
 		// this to a reverse-col flex thingamajig. sorry!!!!!
 		if (scroll + view_height > height - 20) {
-			console.log("hello");
 			channel.session.open();
 		} else {
 			channel.session.deactivate();
@@ -55,7 +48,7 @@
 <div
 	bind:this={div}
 	on:scroll={(e) => handleScroll(e)}
-	use:scrollToBottom={{ list: [...session_grouped, ...$pending], channel }}
+	use:scrollToBottom={{ list: [...$session, ...$pending], channel }}
 	class="h-full max-h-screen min-w-full flex flex-col-reverse max-w-full overflow-y-auto p-4 py-4"
 >
 	<ul class="opacity-50">
@@ -65,7 +58,7 @@
 			{/key}
 		{/each}
 	</ul>
-	<LogReader {conn} log={channel.session} />
+	<LogReader {conn} last_read={channel.session.last_read} log={channel.session} />
 	<LogReader {conn} log={backlog} />
 	<ShowMore
 		on:click={() => {
@@ -73,7 +66,7 @@
 			if (!last) return;
 
 			backlog.load_more(conn, channel.name, ['timestamp', last.timestamp]);
-			backlog_grouped = group($backlog_live);
+			// backlog_grouped = group($backlog_live);
 		}}
 	/>
 </div>
