@@ -13,7 +13,7 @@
 	$: grouped = group($store);
 </script>
 
-<div class="flex flex-col">
+<ul class="flex flex-col">
 	{#each grouped as msg}
 		{#if isAGroup(msg)}
 			<MessageGroupView group={msg} />
@@ -29,4 +29,4 @@
 			{/key}
 		{/if}
 	{/each}
-</div>
+</ul>

@@ -22,8 +22,8 @@
     The danger is unleashed only if you substantially disturb this place physically. This place is best shunned and left uninhabited.
 -->
 
-<article
-	class="my-1 py-0.5 {outer_class}"
+<li
+	class="my-0.5 py-0.5 {outer_class}"
 	style="--highlight-color: {highlight ? highlight : 'inherit'}"
 >
 	<div
@@ -49,4 +49,4 @@
 		<p class="w-full break-words"><slot name="content" /></p>
 	</div>
 	<slot name="after" />
-</article>
+</li>

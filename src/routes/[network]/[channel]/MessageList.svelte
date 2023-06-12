@@ -58,13 +58,13 @@
 	use:scrollToBottom={{ list: [...session_grouped, ...$pending], channel }}
 	class="h-full max-h-screen min-w-full flex flex-col-reverse max-w-full overflow-y-auto p-4 py-4"
 >
-	<div class="opacity-50">
+	<ul class="opacity-50">
 		{#each $pending.slice().reverse() as msg}
 			{#key msg.id}
 				<MessageView {conn} {msg} />
 			{/key}
 		{/each}
-	</div>
+	</ul>
 	<LogReader {conn} log={channel.session} />
 	<LogReader {conn} log={backlog} />
 	<ShowMore
