@@ -1,4 +1,4 @@
-import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
+import type { IrcConnection, RawIrcMessage } from "./provider+connection";
 import { Deferred, Wildcard } from "./task";
 
 export class CapabilityManager {
@@ -21,7 +21,7 @@ export class CapabilityManager {
     async negotiate() {
         const wait_for_caps = new Deferred();
 
-        const collected_msgs: IrcMessageEvent[] = []
+        const collected_msgs: RawIrcMessage[] = []
         this.conn.task_queue.subscribe(o => collected_msgs.push(o),
             {
                 only: { command: "CAP", params: [Wildcard.Any, 'LS', Wildcard.Any] },
@@ -42,7 +42,7 @@ export class CapabilityManager {
         await wait_for_caps.promise;
     }
 
-    private async process_caps(msg: IrcMessageEvent) {
+    private async process_caps(msg: RawIrcMessage) {
         if (!msg) throw new Error("server didn't send caps");
 
         // this is... not great!

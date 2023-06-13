@@ -1,4 +1,4 @@
-import type { IrcMessageEvent } from '$lib/Chat/provider+connection';
+import type { RawIrcMessage } from '$lib/Chat/provider+connection';
 import { db } from './db';
 import type { Source } from '$lib/Chat/Providers/common';
 
@@ -27,10 +27,10 @@ export interface Message {
   server_time?: string;
   server_id?: string;
 
-  origin?: IrcMessageEvent;
+  origin?: RawIrcMessage;
 }
 
-export async function saveMessage(net: string, e: IrcMessageEvent) {
+export async function saveMessage(net: string, e: RawIrcMessage) {
   const acceptable_commands = [
     'privmsg', 'join', 'part', 'quit', 'notice', 'topic'
   ]
@@ -48,7 +48,7 @@ export async function saveMessage(net: string, e: IrcMessageEvent) {
   await db.messages.add(m);
 }
 
-export const sensible_defaults = (net: string, e: IrcMessageEvent) => {
+export const sensible_defaults = (net: string, e: RawIrcMessage) => {
   const server_time = e.tags?.find(o => o.key == "time")?.value;
   const server_id = e.tags?.find(o => o.key == "msgid")?.value;
   const timestamp = server_time ? new Date(server_time) : e.timestamp;
@@ -67,7 +67,7 @@ export const sensible_defaults = (net: string, e: IrcMessageEvent) => {
 
 export async function turnIntoSomethingUseful(
   net: string,
-  e: IrcMessageEvent
+  e: RawIrcMessage
 ): Promise<Message | undefined> {
   switch (e.command.toLowerCase()) {
     case 'privmsg':
@@ -120,7 +120,7 @@ export async function turnIntoSomethingUseful(
   }
 }
 
-function handle_some_ctcp_stuff(net: string, e: IrcMessageEvent): Message | undefined {
+function handle_some_ctcp_stuff(net: string, e: RawIrcMessage): Message | undefined {
   const msg = e.params.last().replaceAll("\x01", "");
   const [tag, ...therest] = msg.split(" ");
 

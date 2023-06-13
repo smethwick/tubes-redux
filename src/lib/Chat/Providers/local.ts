@@ -4,7 +4,7 @@ import {
     ProviderError,
     Params,
     type ConnectionInfo,
-    type IrcMessageEvent,
+    type RawIrcMessage,
 } from "$lib/Chat/provider+connection";
 import { db } from "$lib/Storage/db";
 import { ProviderFlags } from "../flags";

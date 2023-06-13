@@ -1,6 +1,6 @@
 import { turnIntoSomethingUseful, type Message } from "$lib/Storage/messages";
 import { writable, type Writable } from "svelte/store";
-import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
+import type { IrcConnection, RawIrcMessage } from "./provider+connection";
 
 // This is expected to change when the chathistory extensions
 // stops being a draft

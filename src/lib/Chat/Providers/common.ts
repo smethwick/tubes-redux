@@ -1,9 +1,9 @@
-import { Params, type IrcMessageEvent } from "../provider+connection";
+import { Params, type RawIrcMessage } from "../provider+connection";
 
 export function handle_raw_irc_msg(
     raw: string,
     resp: (msg: string) => void
-): IrcMessageEvent {
+): RawIrcMessage {
     if (raw.startsWith("PING")) resp(raw.replace("PING", "PONG"));
 
     let state = raw.trimStart();

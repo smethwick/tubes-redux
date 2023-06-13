@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IrcConnection, IrcMessageEvent } from '$lib/Chat/provider+connection';
+	import type { IrcConnection, RawIrcMessage } from '$lib/Chat/provider+connection';
 	import type { SvelteComponent } from 'svelte';
 	import PrimaryButton from '../Buttons/PrimaryButton.svelte';
 	import UsernameTaken from '../Dialogs/UsernameTaken/UsernameTaken.svelte';
@@ -17,7 +17,7 @@
 		try {
 			await conn.connect();
 		} catch (e) {
-			const err: IrcMessageEvent = JSON.parse(String(e).replace('Error: ', '') /* oops! jank! */);
+			const err: RawIrcMessage = JSON.parse(String(e).replace('Error: ', '') /* oops! jank! */);
 			console.log(err);
 			if (err.command == '433') {
 				conn.disconnect();

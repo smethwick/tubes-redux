@@ -1,7 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import { Channel } from "../channel";
 import { ProviderFlags } from "../flags";
-import { IrcConnection, IrcProvider, type ConnectionInfo, type IrcMessageEvent } from "../provider+connection";
+import { IrcConnection, IrcProvider, type ConnectionInfo, type RawIrcMessage } from "../provider+connection";
 import { Saslinator } from "../sasl";
 import { TaskQueue } from "../task";
 import { LocalIrcConnection } from "./local";
@@ -94,7 +94,7 @@ export class SojuProvider extends IrcProvider {
 
     on_msg = () => null;
 
-    private parse_listed_network(msg: IrcMessageEvent)
+    private parse_listed_network(msg: RawIrcMessage)
         : [string, ConnectionInfo, ("connected" | "connecting" | "disconnected")] {
         const id = msg.params[1];
         const details_line = msg.params[2];

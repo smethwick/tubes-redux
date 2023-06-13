@@ -1,5 +1,5 @@
 import { expect, expectTypeOf, test } from 'vitest'
-import type { IrcMessageEvent } from '../provider+connection';
+import type { RawIrcMessage } from '../provider+connection';
 import { handle_raw_irc_msg, transform_raw_tags, transform_user_line } from './common';
 
 test("transform_raw_tags()", () => {
@@ -42,7 +42,7 @@ test("try and parse a message", () => {
     }
     const output = handle_raw_irc_msg(input, () => { null });
 
-    expectTypeOf(output).toMatchTypeOf<IrcMessageEvent>();
+    expectTypeOf(output).toMatchTypeOf<RawIrcMessage>();
     expect(output).toEqual(expected);
 })
 
@@ -59,7 +59,7 @@ test("parse join", () => {
     }
     const output = handle_raw_irc_msg(input, () => { null });
 
-    expectTypeOf(output).toMatchTypeOf<IrcMessageEvent>();
+    expectTypeOf(output).toMatchTypeOf<RawIrcMessage>();
     expect(output).toEqual(expected);
 })
 

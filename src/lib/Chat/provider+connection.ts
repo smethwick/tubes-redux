@@ -225,7 +225,7 @@ export abstract class IrcConnection {
 
     nick = "";
 
-    on_msg?: (event: IrcMessageEvent) => void = e =>
+    on_msg?: (event: RawIrcMessage) => void = e =>
         this.provider.has_flag(ProviderFlags.StoreLogs)
             ? saveMessage(this.connection_info.name, e)
             : null;
@@ -453,7 +453,7 @@ export abstract class IrcConnection {
     abstract on_connect?: (() => void) | undefined;
 }
 
-export interface IrcMessageEvent {
+export interface RawIrcMessage {
     tags?: { key: string, value?: string }[];
     source?: Source;
     command: string;

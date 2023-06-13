@@ -1,4 +1,4 @@
-import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
+import type { IrcConnection, RawIrcMessage } from "./provider+connection";
 
 export type ListEntry = [channel: string, client_count: number, topic: string]
 
@@ -24,7 +24,7 @@ export class ChannelCollector {
         return result;
     }
 
-    static _parse_input(msg: IrcMessageEvent): ListEntry | undefined {
+    static _parse_input(msg: RawIrcMessage): ListEntry | undefined {
         const [channel, count, topic] = msg.params.slice(1);
         const client_count = Number(count);
         if (!channel || !client_count || !topic) return;

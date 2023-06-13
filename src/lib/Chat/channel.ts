@@ -2,7 +2,7 @@ import { MessageTypes, type Message } from "$lib/Storage/messages";
 import { writable, type Writable } from "svelte/store";
 import { MessageLogList } from "./logs";
 import { Nick } from "./nick";
-import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
+import type { IrcConnection, RawIrcMessage } from "./provider+connection";
 
 export class Channel {
     nicks: Nick[];
@@ -142,14 +142,14 @@ export class Channel {
     }
 
 
-    process_names(data: IrcMessageEvent) {
+    process_names(data: RawIrcMessage) {
         const param = data.params.last();
         const names_split = param.split(" ");
         const nicks = names_split.map(o => new Nick(o));
         this.set_nicks([...this.nicks, ...nicks]);
     }
 
-    process_join(data: IrcMessageEvent) {
+    process_join(data: RawIrcMessage) {
         const joining_user = data.source?.[0];
         if (joining_user == this.conn.connection_info.nick) this.set_joined_status(true);
         if (!joining_user) throw new Error("user joined but didn't, apparently");
@@ -157,14 +157,14 @@ export class Channel {
         this.set_nicks([...this.nicks, new Nick(joining_user)]);
     }
 
-    process_part(data: IrcMessageEvent) {
+    process_part(data: RawIrcMessage) {
         const parting_user = data.source?.[0];
         if (parting_user == this.conn.connection_info.nick) this.set_joined_status(false);
         if (!parting_user) throw new Error("user parted but didn't, apparently");
         this.set_nicks(this.nicks.filter(o => o.name != parting_user));
     }
 
-    process_topic(data: IrcMessageEvent) {
+    process_topic(data: RawIrcMessage) {
         const new_topic = data.params.last();
         const new_nick = data.params[2];
 

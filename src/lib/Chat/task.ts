@@ -4,14 +4,14 @@
  */
 
 import type { CommandList } from "./Providers/common";
-import type { IrcMessageEvent } from "./provider+connection";
+import type { RawIrcMessage } from "./provider+connection";
 import { v4 as uuidv4 } from 'uuid';
 
 export type task = {
     id: string,
     reply: string | msg_description,
     complete: boolean,
-    callback: (data: IrcMessageEvent) => void
+    callback: (data: RawIrcMessage) => void
 }
 
 /**
@@ -31,15 +31,15 @@ class BatchCollector {
         this.collection_collection.push(c);
     }
 
-    async handle(data: IrcMessageEvent) {
+    async handle(data: RawIrcMessage) {
         this.collection_collection = this.collection_collection.filter(o => o.resolve(data))
     }
 }
 
 class BatchCollection {
     id: string;
-    task = new Deferred<IrcMessageEvent[]>();
-    collection: IrcMessageEvent[] = [];
+    task = new Deferred<RawIrcMessage[]>();
+    collection: RawIrcMessage[] = [];
     name?: string;
 
     private collecting = false;
@@ -48,7 +48,7 @@ class BatchCollection {
         this.id = uuidv4();
     }
 
-    resolve(event: IrcMessageEvent): boolean {
+    resolve(event: RawIrcMessage): boolean {
         if (do_we_care_about_it({ command: "BATCH", params: [Wildcard.Any, ...this.type.split(" ")] }, event)) {
             this.collecting = true;
             this.name = event.params[0].replace("+", "");
@@ -72,7 +72,7 @@ class BatchCollection {
 }
 
 interface Matchable {
-    match: (msg: IrcMessageEvent) => boolean;
+    match: (msg: RawIrcMessage) => boolean;
 }
 
 /// Describes an IRC message that can be used to check
@@ -85,7 +85,7 @@ class MessageMask implements Matchable {
 
     }
 
-    match(msg: IrcMessageEvent): boolean {
+    match(msg: RawIrcMessage): boolean {
         return this._match_command(msg.command)
             && this._match_params(msg.params);
     }
@@ -120,7 +120,7 @@ class MessageMask implements Matchable {
 class MessageMaskGroup implements Matchable {
     constructor(public masks: MessageMaskGroup) { }
 
-    match(msg: IrcMessageEvent): boolean {
+    match(msg: RawIrcMessage): boolean {
         // Look for any masks that match
         return Boolean(this.masks.find(o => o.match(msg)));
     }
@@ -129,7 +129,7 @@ class MessageMaskGroup implements Matchable {
 class Collector {
     collection_collection: Collection[] = [];
 
-    async handle(data: IrcMessageEvent) {
+    async handle(data: RawIrcMessage) {
         this.collection_collection = this.collection_collection.filter(o => o.resolve(data))
     }
 
@@ -140,8 +140,8 @@ class Collector {
 
 class Collection {
     id: string;
-    task = new Deferred<IrcMessageEvent[]>();
-    collection: IrcMessageEvent[] = [];
+    task = new Deferred<RawIrcMessage[]>();
+    collection: RawIrcMessage[] = [];
 
     private collecting = false;
     private include_start_and_finish;
@@ -160,7 +160,7 @@ class Collection {
         this.include_start_and_finish = include_start_and_finish ?? false;
     }
 
-    resolve(data: IrcMessageEvent): boolean {
+    resolve(data: RawIrcMessage): boolean {
         if (this.task.reject
             && this.reject_on
             && this.reject_on.find(o => do_we_care_about_it(o, data))) this.task.reject(JSON.stringify(data));
@@ -197,9 +197,9 @@ export type subscription = {
     only?: Matchable,
     errors?: string[] | Matchable,
     complete: boolean,
-    unsub_callback?: (collected?: IrcMessageEvent[]) => void,
-    _collected?: IrcMessageEvent[],
-    callback: ((data: IrcMessageEvent) => void) | null
+    unsub_callback?: (collected?: RawIrcMessage[]) => void,
+    _collected?: RawIrcMessage[],
+    callback: ((data: RawIrcMessage) => void) | null
 }
 
 // export type msg_description = {
@@ -223,22 +223,22 @@ export class Deferred<T> {
 
 // don't worry about this. it's fine. probably
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isAsync = (obj: any): obj is async_task<IrcMessageEvent> => {
+const isAsync = (obj: any): obj is async_task<RawIrcMessage> => {
     if (obj.reply && obj.task) return true;
     else return false;
 }
 
 export class TaskQueue {
-    tasks: (task | async_task<IrcMessageEvent>)[] = [];
+    tasks: (task | async_task<RawIrcMessage>)[] = [];
     collector: Collector = new Collector();
     batch_collector = new BatchCollector();
     subscriptions: subscription[] = [];
 
     new_async_task(reply: string | Matchable, reject_on?: Matchable) {
         const id = uuidv4();
-        const d = new Deferred<IrcMessageEvent>();
+        const d = new Deferred<RawIrcMessage>();
 
-        const task: async_task<IrcMessageEvent> = {
+        const task: async_task<RawIrcMessage> = {
             id,
             reply,
             task: d,
@@ -253,12 +253,12 @@ export class TaskQueue {
      * @deprecated
      */
     subscribe(
-        callback: ((data: IrcMessageEvent) => void) | null,
+        callback: ((data: RawIrcMessage) => void) | null,
         options?: {
             until?: Matchable | (() => boolean);
             only?: Matchable;
             handle_errors?: string[] | Matchable;
-            unsub_callback?: (collected?: IrcMessageEvent[]) => void;
+            unsub_callback?: (collected?: RawIrcMessage[]) => void;
         }
     ) {
         const id = uuidv4();
@@ -281,7 +281,7 @@ export class TaskQueue {
         console.log("unsubscrumbled ", id);
     }
 
-    async resolve_tasks(event: IrcMessageEvent) {
+    async resolve_tasks(event: RawIrcMessage) {
         this.collector.handle(event);
         this.batch_collector.handle(event);
 
@@ -323,11 +323,11 @@ export class TaskQueue {
 
     }
 
-    async wait_for(reply: string | msg_description | msg_description[], opt?: { reject_on?: msg_description[] }): Promise<IrcMessageEvent> {
+    async wait_for(reply: string | msg_description | msg_description[], opt?: { reject_on?: msg_description[] }): Promise<RawIrcMessage> {
         return this.new_async_task(reply, opt?.reject_on);
     }
 
-    async collect_batch(type: string): Promise<IrcMessageEvent[]> {
+    async collect_batch(type: string): Promise<RawIrcMessage[]> {
         const c = new BatchCollection(type);
         this.batch_collector.add(c);
 
@@ -342,7 +342,7 @@ export class TaskQueue {
             reject_on?: msg_description[],
             include_start_and_finish?: boolean
         }
-    ): Promise<IrcMessageEvent[]> {
+    ): Promise<RawIrcMessage[]> {
         const collection = new Collection(start, include, finish, {
             reject_on: options?.reject_on,
             include_start_and_finish: options?.include_start_and_finish ?? false
@@ -353,7 +353,7 @@ export class TaskQueue {
     }
 }
 
-function resolve_async_task(task: async_task<IrcMessageEvent>, msg: IrcMessageEvent): boolean {
+function resolve_async_task(task: async_task<RawIrcMessage>, msg: RawIrcMessage): boolean {
     if (!task.task.resolve || !task.task.reject) throw new Error("task not yet initialised");
 
     task.task.resolve(msg);
@@ -365,7 +365,7 @@ export enum Wildcard {
     None = "-"
 }
 
-function do_we_care_about_it(what_were_looking_for: msg_description | msg_description[], msg: IrcMessageEvent): boolean {
+function do_we_care_about_it(what_were_looking_for: msg_description | msg_description[], msg: RawIrcMessage): boolean {
     const isArray = (obj: unknown): obj is Array<unknown> => {
         if (Object.prototype.toString.call(obj) === '[object Array]') return true;
         else return false;
@@ -378,7 +378,7 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
 
     return result;
 
-    function process_array(list: msg_description[], msg: IrcMessageEvent): boolean {
+    function process_array(list: msg_description[], msg: RawIrcMessage): boolean {
         let result = false;
         for (const only of list) {
             if (result) break;
@@ -387,7 +387,7 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
         return result;
     }
 
-    function process_single(only: msg_description, msg: IrcMessageEvent): boolean {
+    function process_single(only: msg_description, msg: RawIrcMessage): boolean {
         if (only.command != msg.command) return false;
         if (typeof only.params == "number" && msg.params.length != only.params) return false;
         if (only.params && typeof only.params != "number") {
@@ -414,7 +414,7 @@ function do_we_care_about_it(what_were_looking_for: msg_description | msg_descri
     }
 }
 
-function handle_async(task: async_task<IrcMessageEvent>, msg: IrcMessageEvent) {
+function handle_async(task: async_task<RawIrcMessage>, msg: RawIrcMessage) {
     if (!task.task.resolve || !task.task.reject) throw new Error("task not yet initialised");
 
     if (task.reject_on && task.reject_on.find(o => do_we_care_about_it(o, msg))) {

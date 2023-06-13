@@ -1,11 +1,11 @@
-import type { IrcConnection, IrcMessageEvent } from "./provider+connection";
+import type { IrcConnection, RawIrcMessage } from "./provider+connection";
 
 export class FeatureList {
     features: Feature[] = [];
 
     constructor(private conn: IrcConnection) { }
 
-    async process_isupport(data: IrcMessageEvent) {
+    async process_isupport(data: RawIrcMessage) {
         //
     }
 }
