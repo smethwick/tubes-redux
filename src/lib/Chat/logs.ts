@@ -55,7 +55,10 @@ export class MessageLogList {
             conn.send_raw(`CHATHISTORY BEFORE ${target} timestamp=${stamp} ${limit}`);
         }
 
-        const messages = await conn.task_queue.collect_batch(`chathistory ${target}`);
+        const messages = await conn.task_queue.collect_batch(
+            `get chathistory for ${target}`,
+            `chathistory ${target}`
+        );
 
         const result: Message[] = [];
 

@@ -1,10 +1,10 @@
 import { db, type Network } from "$lib/Storage/db";
 import { ProviderFlags } from "./flags";
-import { handle_raw_irc_msg, type Source } from "./Providers/common";
+import { CommandList, handle_raw_irc_msg, type Source } from "./Providers/common";
 import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
 import { saveMessage, turnIntoSomethingUseful } from "$lib/Storage/messages";
-import { Deferred, TaskQueue, Wildcard } from "./task";
+import { Deferred, MessageMask, MessageMaskGroup, TaskQueue, Wildcard } from "./task";
 import { Channel } from "./channel";
 import { pick_deterministic } from ".";
 import { Capability, CapabilityManager } from "./caps";
@@ -252,7 +252,10 @@ export abstract class IrcConnection {
         this.channels.push(channel);
         this.channel_store.set(this.channels);
         channel.join();
-        await this.task_queue.wait_for({ command: "JOIN" });
+        await this.task_queue.expect_message(
+            `wait to join ${chan}`,
+            ["JOIN", [chan]]
+        );
     }
 
     async join_persistent_channel(chan: string): Promise<void> {
@@ -322,15 +325,13 @@ export abstract class IrcConnection {
         this.send_raw("MOTD");
 
         const collected = await this.task_queue.collect(
-            // RPL_MOTDSTART
-            { command: "375" },
-            // RPL_MOTD
-            [{ command: "372" }],
-            // RPL_ENDOFMOTD
-            { command: "376" },
-            {
-                // ERR_NOSUCHSERVER and ERR_NOMOTD respectively
-                reject_on: [{ command: "402" }, /* { command: "422" } */]
+            `collect motd for ${this.connection_info.name}`, {
+                start: new MessageMask(CommandList.RPL_MOTDSTART),
+                include: new MessageMask(CommandList.RPL_MOTD),
+                finish: new MessageMask(CommandList.RPL_ENDOFMOTD),
+                reject_on: new MessageMaskGroup([
+                    new MessageMask(CommandList.ERR_NOSUCHSERVER)
+                ]),
             }
         )
 
@@ -435,12 +436,14 @@ export abstract class IrcConnection {
 
         this.send_raw("CAP END");
 
-        const welcome = await this.task_queue.wait_for("001", {
+        const welcome = await this.task_queue.expect_message(
+            "wait for welcome",
+            [CommandList.RPL_WELCOME], {
             reject_on: [
-                { command: "431" },
-                { command: "432" },
-                { command: "433" },
-                { command: "436" },
+                ["431"] /* ERR_NONICKNAMEGIVEN */,
+                ["432"] /* ERR_ERRONEUSNICKNAME */,
+                ["433"] /* ERR_NICKNAMEINUSE */,
+                ["436"] /* ERR_NICKCOLLISION */,
             ]
         }).catch(e => { throw new Error(e) });
 
@@ -488,7 +491,10 @@ export class Pinger {
     async ping() {
         setTimeout(async () => {
             this.conn.send_raw("PING tubes");
-            const msg = await this.conn.task_queue.wait_for({ command: "PONG", params: [Wildcard.Any, 'tubes'] });
+            const msg = await this.conn.task_queue.expect_message(
+                "await pong",
+                ["PONG", [Wildcard.Any, 'tubes']]
+            );
 
             // if we don't get a response after 30 seconds, assume the connection is dead.
             setTimeout(() => {

@@ -1,42 +1,183 @@
-/**
- * this is not a place of honor
- * no highly esteemed deed is commemorated here
- */
-
 import type { CommandList } from "./Providers/common";
 import type { RawIrcMessage } from "./provider+connection";
 import { v4 as uuidv4 } from 'uuid';
 
-export type task = {
-    id: string,
-    reply: string | msg_description,
-    complete: boolean,
-    callback: (data: RawIrcMessage) => void
+interface Matchable {
+    matches: (msg: RawIrcMessage) => boolean;
 }
 
-/**
- * similar to a {@link task}, but with promises, y'know?
- */
-export type async_task<T> = {
-    id: string,
-    reply: string | msg_description | msg_description[],
-    task: Deferred<T>,
-    reject_on?: msg_description[],
+interface Resolvable {
+    id: string;
+    /** 
+     * Resolve the item (i.e. do thing then delete self if applicable).
+     * @returns {boolean} True if the item is resolved
+     */
+    resolve: (msg: RawIrcMessage) => Promise<boolean>;
 }
 
-class BatchCollector {
-    collection_collection: BatchCollection[] = [];
+export enum Wildcard {
+    Any = "*",
+    None = "-"
+}
 
-    add(c: BatchCollection) {
-        this.collection_collection.push(c);
+export class TaskQueue {
+    tasks: Resolvable[] = [];
+
+    /**  Notify all tasks in the queue and remove resolved ones */
+    async resolve_tasks(event: RawIrcMessage) {
+        this.tasks = this.tasks.filter(async e => await e.resolve(event));
     }
 
-    async handle(data: RawIrcMessage) {
-        this.collection_collection = this.collection_collection.filter(o => o.resolve(data))
+    /**
+     * Expect a message to be received
+     * 
+     * @param args Mirrors {@link MessageMask}
+     * @param options.reject_on Reject when any of these {@link Matchable}s are found
+     * @param options.cutoff The amount of time to wait in ms before giving up hope
+     * @returns A promise that will either resolve to 
+     *          the message that matches or reject after the set cutoff time
+     *          or a rejectable message is found instead
+     */
+    async expect_message(
+        description: string,
+        args: ConstructorParameters<typeof MessageMask>,
+        options?: {
+            reject_on?: ConstructorParameters<typeof MessageMask>[],
+            cutoff?: number
+        }
+    ) {
+        const mask = new MessageMask(...args);
+        const expected = new ExpectedMessage(
+            description,
+            mask,
+            options?.reject_on?.map(o => new MessageMask(...o)),
+            options?.cutoff
+        );
+
+        this.tasks.push(expected)
+
+        return expected.promise()
+    }
+
+    async collect(
+        description: string,
+        options: {
+            start: Matchable | "immediately",
+            include: Matchable,
+            finish: Matchable,
+            reject_on?: Matchable,
+            include_start_and_finish?: boolean
+        }
+    ): Promise<RawIrcMessage[]> {
+        const collection = new Collection(
+            description,
+            options.start,
+            options.include,
+            options.finish,
+            {
+                reject_on: options.reject_on,
+                include_start_and_finish: options?.include_start_and_finish ?? false
+            }
+        );
+        this.tasks.push(collection);
+
+        return collection.task.promise;
+    }
+
+    /**
+     * 
+     * @param description A descriptive name for this subscription
+     * @param filters A list of {@link Matchables} to match against
+     * @param callback Runs every time a message is recieved that matches
+     *                 the provided filters. Use unsubscribe() 
+     *                 to remove the subscription from the task queue
+     * @returns nothing
+     */
+    subscribe(
+        description: string,
+        filters: Matchable[],
+        callback: (message: RawIrcMessage, unsubscribe: () => void) => void,
+    ) {
+        const subscription = new Subscription(
+            description,
+            filters,
+            callback,
+            this
+        );
+
+        this.tasks.push(subscription);
+
+        return subscription
+    }
+
+    /**
+     * Collect a list of messages using the IRCv3 
+     * {@link https://ircv3.net/specs/extensions/batch batch extension}
+     * @param description A descriptive label for this task
+     * @param type The type of the batch
+     */
+    async collect_batch(
+        description: string,
+        type: string,
+    ) {
+        const batch_collector = new BatchCollection(description, type);
+        this.tasks.push(batch_collector);
+
+        return batch_collector.task.promise;
+    }
+
+    remove_task(id: string) {
+        // NOTE: if there ever happens to be a memory leak here,
+        // it's likely because this function finished before
+        // resolve_tasks() could finish reassigning this.tasks.
+        // I have no idea if this will ever happen in practice
+        this.tasks = this.tasks.filter(o => o.id != id);
     }
 }
 
-class BatchCollection {
+class ExpectedMessage implements Resolvable {
+    public id: string;
+    private deferred = new Deferred<RawIrcMessage>();
+    private done = false;
+
+    /**
+     * 
+     * @param expected The Matchable to compare against incoming messages
+     * @param cutoff The amount of time in ms to wait for the message 
+     */
+    constructor(
+        public description: string,
+        public expected: Matchable,
+        public reject_on?: Matchable[],
+        cutoff: number = 5000,
+    ) {
+        this.id = uuidv4();
+
+        setTimeout(() => {
+            if (!this.done) this.deferred.reject!(`${this.description}: Timed Out`)
+        }, cutoff);
+    }
+
+    resolve = async (msg: RawIrcMessage) => {
+        if (this.reject_on?.find(o => o.matches(msg))) {
+            this.done = true;
+            this.deferred.reject!(JSON.stringify(msg));
+        }
+
+        if (this.expected.matches(msg)) {
+            this.done = true;
+            console.info(`expected message "${this.description}" recieved`)
+            this.deferred.resolve!(msg);
+            return true;
+        }
+
+        return false;
+    };
+
+    promise = () => this.deferred.promise
+}
+
+export class BatchCollection implements Resolvable {
     id: string;
     task = new Deferred<RawIrcMessage[]>();
     collection: RawIrcMessage[] = [];
@@ -44,12 +185,13 @@ class BatchCollection {
 
     private collecting = false;
 
-    constructor(public type: string) {
+    constructor(public description: string, public type: string) {
         this.id = uuidv4();
     }
 
-    resolve(event: RawIrcMessage): boolean {
-        if (do_we_care_about_it({ command: "BATCH", params: [Wildcard.Any, ...this.type.split(" ")] }, event)) {
+    async resolve(event: RawIrcMessage): Promise<boolean> {
+        const start_matcher = new MessageMask("BATCH", [Wildcard.Any, ...this.type.split(" ")]);
+        if (start_matcher.matches(event)) {
             this.collecting = true;
             this.name = event.params[0].replace("+", "");
             return true;
@@ -62,7 +204,8 @@ class BatchCollection {
         if (event.tags && event.tags.find(t => t.key == "batch" && t.value == this.name))
             this.collection.push(event);
 
-        if (event.command == "BATCH" && event.params[0] == `-${this.name}`) {
+        const end_matcher = new MessageMask("BATCH", [`-${this.name}`]);
+        if (end_matcher.matches(event)) {
             this.task.resolve(this.collection);
             return false;
         }
@@ -71,21 +214,16 @@ class BatchCollection {
     }
 }
 
-interface Matchable {
-    match: (msg: RawIrcMessage) => boolean;
-}
 
 /// Describes an IRC message that can be used to check
 /// against incoming irc messages
-class MessageMask implements Matchable {
+export class MessageMask implements Matchable {
     constructor(
-        public command: CommandList | Wildcard,
-        public params?: (string | Wildcard)[]
-    ) {
+        public command: string | Wildcard,
+        public params?: (string | Wildcard)[],
+    ) { }
 
-    }
-
-    match(msg: RawIrcMessage): boolean {
+    matches(msg: RawIrcMessage): boolean {
         return this._match_command(msg.command)
             && this._match_params(msg.params);
     }
@@ -117,28 +255,16 @@ class MessageMask implements Matchable {
     }
 }
 
-class MessageMaskGroup implements Matchable {
-    constructor(public masks: MessageMaskGroup) { }
+export class MessageMaskGroup implements Matchable {
+    constructor(public masks: MessageMask[]) { }
 
-    match(msg: RawIrcMessage): boolean {
+    matches(msg: RawIrcMessage): boolean {
         // Look for any masks that match
-        return Boolean(this.masks.find(o => o.match(msg)));
+        return Boolean(this.masks.find(o => o.matches(msg)));
     }
 }
 
-class Collector {
-    collection_collection: Collection[] = [];
-
-    async handle(data: RawIrcMessage) {
-        this.collection_collection = this.collection_collection.filter(o => o.resolve(data))
-    }
-
-    add(c: Collection) {
-        this.collection_collection.push(c);
-    }
-}
-
-class Collection {
+class Collection implements Resolvable {
     id: string;
     task = new Deferred<RawIrcMessage[]>();
     collection: RawIrcMessage[] = [];
@@ -148,7 +274,8 @@ class Collection {
     private reject_on?: Matchable;
 
     constructor(
-        private start: Matchable,
+        private description: string,
+        private start: Matchable | "immediately",
         private include: Matchable,
         private finish: Matchable,
         { reject_on, include_start_and_finish }: {
@@ -160,12 +287,17 @@ class Collection {
         this.include_start_and_finish = include_start_and_finish ?? false;
     }
 
-    resolve(data: RawIrcMessage): boolean {
+    async resolve(data: RawIrcMessage): Promise<boolean> {
         if (this.task.reject
             && this.reject_on
-            && this.reject_on.find(o => do_we_care_about_it(o, data))) this.task.reject(JSON.stringify(data));
+            && this.reject_on.matches(data)) this.task.reject(JSON.stringify(data));
 
-        if (do_we_care_about_it(this.start, data)) {
+        if (this.start == "immediately" && this.collecting == false) {
+            this.collecting = true;
+            this.collection.push(data);
+        }
+
+        if (this.start != "immediately" && this.start.matches(data)) {
             if (this.include_start_and_finish) this.collection.push(data);
             this.collecting = true;
             return true;
@@ -174,15 +306,15 @@ class Collection {
 
         if (!this.collecting) return true;
 
-        if (do_we_care_about_it(this.finish, data)) {
+        if (this.finish.matches(data)) {
             if (this.include_start_and_finish) this.collection.push(data);
             this.collecting = false;
-            console.log(`${this.id} finished collecting`, data);
+            console.info(`${this.description}: finished collecting`, data);
             this.task.resolve(this.collection);
             return false;
         }
 
-        if (this.include.find(o => do_we_care_about_it(o, data))) {
+        if (this.include.matches(data)) {
             this.collection.push(data);
             return true;
         };
@@ -191,237 +323,47 @@ class Collection {
     }
 }
 
-export type subscription = {
-    id: string,
-    until?: Matchable | (() => boolean),
-    only?: Matchable,
-    errors?: string[] | Matchable,
-    complete: boolean,
-    unsub_callback?: (collected?: RawIrcMessage[]) => void,
-    _collected?: RawIrcMessage[],
-    callback: ((data: RawIrcMessage) => void) | null
-}
-
-// export type msg_description = {
-//     command: string,
-//     params?: string[] | number,
-//     tags?: { key: string, value: string };
-// }
-
 export class Deferred<T> {
     promise: Promise<T>;
     reject: ((reason?: string) => void) | undefined;
     resolve: ((value: T | PromiseLike<T>) => void) | undefined;
 
+    rejected = false;
+    resolved = false;
+
     constructor() {
         this.promise = new Promise((resolve, reject) => {
-            this.reject = reject
-            this.resolve = resolve
+            this.reject = (reason?: string) => {
+                this.rejected = true;
+                reject(reason)
+            }
+            this.resolve = (value: T | PromiseLike<T>) => {
+                this.resolved = true;
+                resolve(value)
+            }
         })
     }
 }
 
-// don't worry about this. it's fine. probably
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isAsync = (obj: any): obj is async_task<RawIrcMessage> => {
-    if (obj.reply && obj.task) return true;
-    else return false;
-}
+export class Subscription implements Resolvable {
+    id = uuidv4();
 
-export class TaskQueue {
-    tasks: (task | async_task<RawIrcMessage>)[] = [];
-    collector: Collector = new Collector();
-    batch_collector = new BatchCollector();
-    subscriptions: subscription[] = [];
+    constructor(
+        public description: string,
+        public filters: Matchable[],
+        public callback: (message: RawIrcMessage, unsubscribe: () => void) => void,
+        private task_queue: TaskQueue,
+    ) { }
 
-    new_async_task(reply: string | Matchable, reject_on?: Matchable) {
-        const id = uuidv4();
-        const d = new Deferred<RawIrcMessage>();
-
-        const task: async_task<RawIrcMessage> = {
-            id,
-            reply,
-            task: d,
-            reject_on: reject_on
-        }
-        this.tasks.push(task);
-
-        return d.promise;
+    unsubscribe() {
+        this.task_queue.remove_task(this.id);
     }
 
-    /**
-     * @deprecated
-     */
-    subscribe(
-        callback: ((data: RawIrcMessage) => void) | null,
-        options?: {
-            until?: Matchable | (() => boolean);
-            only?: Matchable;
-            handle_errors?: string[] | Matchable;
-            unsub_callback?: (collected?: RawIrcMessage[]) => void;
-        }
-    ) {
-        const id = uuidv4();
-        const subscription: subscription = {
-            id,
-            until: options?.until,
-            only: options?.only,
-            complete: false,
-            errors: options?.handle_errors,
-
-            callback: callback,
-            unsub_callback: options?.unsub_callback,
-        };
-        this.subscriptions.push(subscription);
-        return id;
-    }
-
-    unsubscribe(id: string) {
-        this.subscriptions = this.subscriptions.filter((o) => o.id != id);
-        console.log("unsubscrumbled ", id);
-    }
-
-    async resolve_tasks(event: RawIrcMessage) {
-        this.collector.handle(event);
-        this.batch_collector.handle(event);
-
-        this.tasks = this.tasks.filter((o) => {
-            if (isAsync(o)) {
-                handle_async(o, event);
-            } else {
-                if (typeof o.reply == "string" && o.reply == event.command) { o.callback(event); return false; };
-                if (typeof o.reply != "string" && do_we_care_about_it(o.reply, event)) { o.callback(event); return false; };
-            }
-
-            return true;
-        });
-
-        const unsub = (o: subscription) => {
-            this.unsubscribe(o.id);
-            if (o.unsub_callback)
-                o.unsub_callback(o._collected);
-
-        }
-
-        this.subscriptions.forEach((o) => {
-            if (o.errors) o.errors.forEach(o => {
-                if (typeof o == "string" && o == event.command) throw o;
-                else if (typeof o != "string" && do_we_care_about_it(o, event)) throw o;
-            })
-
-            if (o.only && !do_we_care_about_it(o.only, event)) return;
-            if (o.callback) o.callback(event);
-
-            if (o.until && typeof o.until == "function") o.until() ? unsub(o) : null;
-            else if (o.until && do_we_care_about_it(o.until, event)) unsub(o);
-
-
-            if (o.unsub_callback) {
-                o._collected = o._collected ? [...o._collected, event] : [event];
-            }
-        });
-
-    }
-
-    async wait_for(reply: string | msg_description | msg_description[], opt?: { reject_on?: msg_description[] }): Promise<RawIrcMessage> {
-        return this.new_async_task(reply, opt?.reject_on);
-    }
-
-    async collect_batch(type: string): Promise<RawIrcMessage[]> {
-        const c = new BatchCollection(type);
-        this.batch_collector.add(c);
-
-        return c.task.promise;
-    }
-
-    async collect(
-        start: msg_description,
-        include: msg_description[],
-        finish: msg_description,
-        options?: {
-            reject_on?: msg_description[],
-            include_start_and_finish?: boolean
-        }
-    ): Promise<RawIrcMessage[]> {
-        const collection = new Collection(start, include, finish, {
-            reject_on: options?.reject_on,
-            include_start_and_finish: options?.include_start_and_finish ?? false
-        });
-        this.collector.add(collection);
-
-        return collection.task.promise;
-    }
-}
-
-function resolve_async_task(task: async_task<RawIrcMessage>, msg: RawIrcMessage): boolean {
-    if (!task.task.resolve || !task.task.reject) throw new Error("task not yet initialised");
-
-    task.task.resolve(msg);
-    return true;
-}
-
-export enum Wildcard {
-    Any = "*",
-    None = "-"
-}
-
-function do_we_care_about_it(what_were_looking_for: msg_description | msg_description[], msg: RawIrcMessage): boolean {
-    const isArray = (obj: unknown): obj is Array<unknown> => {
-        if (Object.prototype.toString.call(obj) === '[object Array]') return true;
-        else return false;
-    }
-    if (!what_were_looking_for) return true;
-
-    let result = false;
-    if (isArray(what_were_looking_for)) result = process_array(what_were_looking_for, msg);
-    else result = process_single(what_were_looking_for, msg);
-
-    return result;
-
-    function process_array(list: msg_description[], msg: RawIrcMessage): boolean {
-        let result = false;
-        for (const only of list) {
-            if (result) break;
-            result = process_single(only, msg);
-        }
-        return result;
-    }
-
-    function process_single(only: msg_description, msg: RawIrcMessage): boolean {
-        if (only.command != msg.command) return false;
-        if (typeof only.params == "number" && msg.params.length != only.params) return false;
-        if (only.params && typeof only.params != "number") {
-
-            const aaa = only.params.filter((o, i) => {
-                if (o == "*") return true;
-                if (o == "-") return false;
-                if (msg.params.at(i) == o) return true;
-                return false;
-            });
-
-            let res = true;
-            only.params.forEach((o, i) => {
-                if (aaa[i] != o && aaa[i] != "*") res = false;
-            })
-
-            if (!res) return false;
-        }
-        if (only.tags) {
-            if (!msg.tags?.includes(only.tags)) return false;
+    resolve = async (msg: RawIrcMessage) => {
+        if (this.filters.find(o => o.matches(msg))) {
+            this.callback(msg, () => this.unsubscribe());
         }
 
         return true;
-    }
-}
-
-function handle_async(task: async_task<RawIrcMessage>, msg: RawIrcMessage) {
-    if (!task.task.resolve || !task.task.reject) throw new Error("task not yet initialised");
-
-    if (task.reject_on && task.reject_on.find(o => do_we_care_about_it(o, msg))) {
-        task.task.reject(JSON.stringify(msg));
-        return false;
-    }
-
-    if (typeof task.reply == "string" && task.reply == msg.command) { resolve_async_task(task, msg); return false; };
-    if (typeof task.reply != "string" && do_we_care_about_it(task.reply, msg)) { resolve_async_task(task, msg); return false; };
+    };
 }

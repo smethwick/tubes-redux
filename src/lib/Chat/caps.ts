@@ -1,47 +1,49 @@
+import { CommandList } from "./Providers/common";
 import type { IrcConnection, RawIrcMessage } from "./provider+connection";
-import { Deferred, Wildcard } from "./task";
+import { Deferred, MessageMask, MessageMaskGroup, Subscription, Wildcard } from "./task";
 
 export class CapabilityManager {
     capabilities: Capability[] = [];
     available: Capability[] = [];
 
-    new_sub: string;
-    del_sub: string;
+    new_sub: Subscription;
+    del_sub: Subscription;
 
     constructor(private conn: IrcConnection) {
-        this.new_sub = this.conn.task_queue.subscribe((d) => this.new(d.params.last()), {
-            only: { command: "CAP", params: ["*", "NEW"] },
-        })
+        this.new_sub = this.conn.task_queue.subscribe(
+            `Receive new capabilities for connection ${conn.connection_info?.name}`,
+            [new MessageMask("CAP", [Wildcard.Any, "NEW"])],
+            (message) => this.new(message.params.last()),
+        )
 
-        this.del_sub = this.conn.task_queue.subscribe((d) => this.del(d.params.last()), {
-            only: { command: "CAP", params: ["*", "DEL"] },
-        })
+        this.del_sub = this.conn.task_queue.subscribe(
+            `Receive revoked capabilities for connection ${conn.connection_info?.name}`,
+            [new MessageMask("CAP", [Wildcard.Any, "DEL"])],
+            (message) => this.del(message.params.last()),
+        )
     }
 
     async negotiate() {
-        const wait_for_caps = new Deferred();
-
-        const collected_msgs: RawIrcMessage[] = []
-        this.conn.task_queue.subscribe(o => collected_msgs.push(o),
-            {
-                only: { command: "CAP", params: [Wildcard.Any, 'LS', Wildcard.Any] },
-                until: [
-                    { command: "001" },
-                    { command: "CAP", params: 3 }
-                ],
-                unsub_callback: async () => {
-                    for (const o of collected_msgs) {
-                        await this.process_caps(o);
-                    }
-                    if (wait_for_caps.resolve) wait_for_caps.resolve(null);
-                }
-            });
-
         this.conn.send_raw("CAP LS 302");
 
-        await wait_for_caps.promise;
+        const msgs = await this.conn.task_queue.collect(
+            "get avaliable capabilities", {
+            start: "immediately",
+            include: new MessageMaskGroup([
+                new MessageMask("CAP", [Wildcard.Any, "LS", Wildcard.Any]),
+            ]),
+            finish: new MessageMaskGroup([
+                new MessageMask(CommandList.RPL_WELCOME),
+                new MessageMask("CAP", [Wildcard.Any, "LS", Wildcard.Any])
+            ])
+        });
+
+        for (const msg of msgs) {
+            await this.process_caps(msg);
+        }
     }
 
+    // FIXME: who fucking wrote this
     private async process_caps(msg: RawIrcMessage) {
         if (!msg) throw new Error("server didn't send caps");
 
@@ -59,7 +61,7 @@ export class CapabilityManager {
         for (const cap_name of this.conn.requested_caps) {
             const cap = c.find((o) => o.cap == cap_name);
             if (cap) {
-                await cap.request();
+                cap.request();
                 this.capabilities.push(cap);
             }
         }
@@ -100,10 +102,11 @@ export class Capability {
         this.values = split_values;
     }
 
-
-
     async request() {
         this.conn.send_raw(`CAP REQ :${this.cap}`);
-        this.conn.task_queue.wait_for({ command: "CAP", params: ["ACK", this.cap] })
+        await this.conn.task_queue.expect_message(
+            `expect ACK for ${this.cap}`,
+            ["CAP", [Wildcard.Any, "ACK", this.cap]]
+        );
     }
 }

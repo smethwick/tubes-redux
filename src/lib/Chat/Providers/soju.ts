@@ -3,10 +3,10 @@ import { Channel } from "../channel";
 import { ProviderFlags } from "../flags";
 import { IrcConnection, IrcProvider, type ConnectionInfo, type RawIrcMessage } from "../provider+connection";
 import { Saslinator } from "../sasl";
-import { TaskQueue } from "../task";
+import { MessageMask, TaskQueue } from "../task";
 import { LocalIrcConnection } from "./local";
 
-async function get_info_bad() {    
+async function get_info_bad() {
     const login = localStorage.getItem("username");
     const password = localStorage.getItem("password");
     const url = localStorage.getItem("url");
@@ -34,7 +34,7 @@ export class SojuProvider extends IrcProvider {
     ) {
         super();
         if (opt.protocol == "tcp") throw new Error("TCP support is yet to be implemented");
-        
+
         this.proto = opt.protocol;
         this.task_queue = new TaskQueue();
     }
@@ -66,7 +66,10 @@ export class SojuProvider extends IrcProvider {
         })
 
         this.conn?.send_raw("BOUNCER LISTNETWORKS");
-        const collected = await this.conn?.task_queue.collect_batch("soju.im/bouncer-networks")
+        const collected = await this.conn?.task_queue.collect_batch(
+            `get bouncer networks for ${this.conn?.connection_info.name}`,
+            "soju.im/bouncer-networks"
+        )
         collected?.forEach(o => {
             const parsed = this.parse_listed_network(o);
             if (this.conn) this.connections.push([parsed[0], new SojuConnection(
@@ -127,10 +130,10 @@ export class SojuProvider extends IrcProvider {
 
 export class SojuConnection extends IrcConnection {
     requested_caps: string[] = [
-        'sasl', 
+        'sasl',
         'soju.im/bouncer-networks',
         'draft/chathistory',
-        'batch', 
+        'batch',
         'cap-notify',
         'server-time',
         'message-tags',
@@ -167,17 +170,22 @@ export class SojuConnection extends IrcConnection {
             this.get_motd();
             this.pinger.start();
 
-            this.task_queue.subscribe(d => {
-                if (d.source && d.source[0] == this.nick) {
-                    if (this.channels.find(o => o.name == d.params[0])) return;
-                    const channel = new Channel(this, d.params[0]);
-                    channel.setup();
-                    this.channels.push(channel)
-                    this.channel_store.set(this.channels);
+            this.task_queue.subscribe("listen for channels joined by the user",
+                [new MessageMask("JOIN")],
+                msg => {
+                    // if the source of the join message is us...
+                    if (msg.source && msg.source[0] == this.nick) {
+                        // and the channel isn't already in the list...
+                        if (this.channels.find(o => o.name == msg.params[0])) return;
+                        
+                        // make it and put it in the list
+                        const channel = new Channel(this, msg.params[0]);
+                        channel.setup();
+                        this.channels.push(channel)
+                        this.channel_store.set(this.channels);
+                    }
                 }
-            }, {
-                only: { command: "JOIN"},
-            })
+            );
         }
 
 
