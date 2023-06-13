@@ -3,16 +3,18 @@ import { writable, type Writable } from "svelte/store";
 import { MessageLogList } from "./logs";
 import { Nick } from "./nick";
 import type { IrcConnection, RawIrcMessage } from "./provider+connection";
+import { MessageMatcher, MessageMatcherGroup, Subscription, Wildcard, group, match } from "./task";
+import { CommandList } from "./Providers/common";
 
 export class Channel {
     nicks: Nick[];
     nicks_live: Writable<Nick[]>;
 
-    nicks_subscription?: string;
-    join_subscription?: string;
-    part_subscription?: string;
-    topic_subscription?: string;
-    topic_getter_subscription?: string;
+    nicks_subscription?: Subscription;
+    join_subscription?: Subscription;
+    part_subscription?: Subscription;
+    topic_subscription?: Subscription;
+    topic_getter_subscription?: Subscription;
 
     joined = false;
     joined_live = writable(this.joined);
@@ -35,55 +37,62 @@ export class Channel {
 
     async join() {
         this.conn.send_raw("JOIN " + this.name);
-        await this.conn.task_queue.wait_for({ command: "JOIN", params: [this.name] })
+        await this.conn.task_queue.expect_message(`join ${this.name}`, ["JOIN"]);
         await this.setup();
     }
 
     async setup() {
+
+        const end_of_names_matcher = match(
+            CommandList.RPL_ENDOFNAMES, ["*", this.name]
+        );
         this.nicks_subscription = this.conn.task_queue.subscribe(
-            d => this.process_names(d),
-            {
-                only: { command: "353", params: ["*", "*", this.name] },
-                until: { command: "366", params: ["*", this.name] }
+            `get names for ${this.name}`,
+            match(CommandList.RPL_NAMREPLY, [Wildcard.Any, Wildcard.Any, this.name]),
+            (msg, unsubscribe) => {
+                if (end_of_names_matcher.matches(msg)) unsubscribe();
+                this.process_names(msg);
             }
         );
 
         try {
-            await this.conn.task_queue.wait_for({ command: "366", params: ["*", this.name] }, {
-                reject_on: [
-                    { command: "461", params: ["*", this.name] },
-                    { command: "403", params: ["*", this.name] },
-                    { command: "405", params: ["*", this.name] },
-                    { command: "475", params: ["*", this.name] },
-                    { command: "474", params: ["*", this.name] },
-                    { command: "471", params: ["*", this.name] },
-                    { command: "473", params: ["*", this.name] },
-                    { command: "476", params: ["*", this.name] },
-                    { command: "477", params: ["*", this.name] },
-                ]
-            });
+            await this.conn.task_queue.expect_message(
+                "",
+                [CommandList.RPL_ENDOFNAMES, ["*", this.name]],
+                {
+                    reject_on: [
+                        ["461", ["*", this.name]],
+                        ["403", ["*", this.name]],
+                        ["405", ["*", this.name]],
+                        ["475", ["*", this.name]],
+                        ["474", ["*", this.name]],
+                        ["471", ["*", this.name]],
+                        ["473", ["*", this.name]],
+                        ["476", ["*", this.name]],
+                        ["477", ["*", this.name]],
+                    ]
+                });
         } catch (e) {
             throw new Error(String(e));
         }
 
         this.join_subscription = this.conn.task_queue.subscribe(
+            `listen for joins in ${this.name}`,
+            match("JOIN", [this.name]),
             d => this.process_join(d),
-            {
-                only: { command: "JOIN", params: [this.name] },
-            }
         );
 
         this.part_subscription = this.conn.task_queue.subscribe(
+            `listen for parts in ${this.name}`,
+            match("PART", [this.name]),
             d => this.process_part(d),
-            {
-                only: { command: "PART", params: [this.name] },
-            }
         );
 
         this.topic_subscription = this.conn.task_queue.subscribe(
-            d => this.process_topic(d), {
-            only: { command: "TOPIC", params: [this.name] },
-        });
+            `listen for topic changes in ${this.name}`,
+            match("TOPIC", [this.name]),
+            d => this.process_topic(d)
+        );
 
         await this.get_topic();
 
@@ -91,11 +100,11 @@ export class Channel {
     }
 
     cleanup() {
-        if (this.join_subscription) this.conn.task_queue.unsubscribe(this.join_subscription);
-        if (this.nicks_subscription) this.conn.task_queue.unsubscribe(this.nicks_subscription);
-        if (this.part_subscription) this.conn.task_queue.unsubscribe(this.part_subscription);
-        if (this.topic_getter_subscription) this.conn.task_queue.unsubscribe(this.topic_getter_subscription);
-        if (this.topic_subscription) this.conn.task_queue.unsubscribe(this.topic_subscription);
+        this.join_subscription?.unsubscribe();
+        this.nicks_subscription?.unsubscribe();
+        this.part_subscription?.unsubscribe();
+        this.topic_getter_subscription?.unsubscribe();
+        this.topic_subscription?.unsubscribe();
     }
 
     part(msg?: string) {
@@ -121,17 +130,17 @@ export class Channel {
             // if (!label) return;
             this.pending.push(msg_obj);
             this.pending_live.set(this.pending);
-            
+
             if (label) {
-                await this.conn.task_queue.wait_for({
-                    command: "PRIVMSG",
-                    tags: { key: "label", value: label }
-                });
+                await this.conn.task_queue.expect_message(
+                    "wait for echo'd message",
+                    ["PRIVMSG", [], { tags: [{ key: "label", value: label }] }]
+                );
             } else {
-                await this.conn.task_queue.wait_for({
-                    command: "PRIVMSG",
-                    params: [this.name, msg]
-                });
+                await this.conn.task_queue.expect_message(
+                    "wait for echo'd message",
+                    ["PRIVMSG", [this.name, msg]]
+                );
             }
 
             this.pending = [];
@@ -190,47 +199,47 @@ export class Channel {
         let timestamp: Date | undefined;
         let nick: Nick | undefined;
 
-        this.topic_getter_subscription = this.conn.task_queue.subscribe(o => {
-            if (o.command == "331") return
-            if (o.command == "332") {
-                topic = o.params.last();
-                this.topic = [topic, this.topic[1], this.topic[2]];
-                this.topic_live.set(this.topic);
+        const msgs = await this.conn.task_queue.collect(
+            `collect topic for ${this.name}`,
+            {
+                start: group([
+                    [CommandList.RPL_TOPIC, ['*', this.name]],
+                    [CommandList.RPL_NOTOPIC, ['*', this.name]],
+                ]),
+                include: group([
+                    [CommandList.RPL_TOPIC, ['*', this.name]],
+                    [CommandList.RPL_NOTOPIC, ['*', this.name]],
+                    [CommandList.RPL_TOPICWHOTIME, ['*', this.name]],
+                ]),
+                finish: match(CommandList.RPL_TOPICWHOTIME, ['*', this.name]),
+                reject_on: group([
+                    [CommandList.ERR_CHANOPRIVSNEEDED, ['*', this.name]],
+                    [CommandList.ERR_NOTONCHANNEL, ['*', this.name]],
+                    [CommandList.ERR_NOSUCHCHANNEL, ['*', this.name]],
+                ]),
+                include_start_and_finish: true,
             }
-            if (o.command == "333") {
-                nick = new Nick(o.params[2]);
-                timestamp = new Date(Number(o.params[3]) * 1000);
-                this.topic = [this.topic[0], nick, timestamp];
-                this.topic_live.set(this.topic);
+        );
+
+        for (const msg of msgs) {
+            switch (msg.command) {
+                case CommandList.RPL_TOPIC: {
+                    topic = msg.params.last();
+                    this.topic = [topic, this.topic[1], this.topic[2]];
+                    this.topic_live.set(this.topic);
+                    return;
+                }
+                case CommandList.RPL_NOTOPIC: return;
+                case CommandList.RPL_TOPICWHOTIME: {
+                    nick = new Nick(msg.params[2]);
+                    timestamp = new Date(Number(msg.params[3]) * 1000);
+                    this.topic = [this.topic[0], nick, timestamp];
+                    this.topic_live.set(this.topic);
+                    return;
+                }
+                default: return;
             }
-        }, {
-            until: [
-                // RPL_NOTOPIC
-                { command: "331", params: ["*", this.name] },
-                // RPL_TOPICWHOTIME
-                { command: "333", params: ["*", this.name] },
-            ],
-            only: [
-                // RPL_NOTOPIC
-                { command: "331", params: ["*", this.name] },
-                // RPL_TOPIC
-                { command: "332", params: ["*", this.name] },
-                // RPL_TOPICWHOTIME
-                { command: "333", params: ["*", this.name] },
-            ],
-            handle_errors: [
-                { command: "482", params: ["*", this.name] },
-                { command: "442", params: ["*", this.name] },
-                { command: "403", params: ["*", this.name] },
-                { command: "461", params: ["*"] },
-            ],
-        });
-
-        await this.conn.task_queue.wait_for([
-            { command: "331", params: ["*", this.name] },
-            { command: "333", params: ["*", this.name] },
-        ]);
-
+        }
         // this.topic = [topic, nick, timestamp];
         // this.topic_live.set(this.topic);
 

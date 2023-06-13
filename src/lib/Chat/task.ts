@@ -31,7 +31,7 @@ export class TaskQueue {
     /**
      * Expect a message to be received
      * 
-     * @param args Mirrors {@link MessageMask}
+     * @param args Mirrors {@link MessageMatcher}
      * @param options.reject_on Reject when any of these {@link Matchable}s are found
      * @param options.cutoff The amount of time to wait in ms before giving up hope
      * @returns A promise that will either resolve to 
@@ -40,17 +40,17 @@ export class TaskQueue {
      */
     async expect_message(
         description: string,
-        args: ConstructorParameters<typeof MessageMask>,
+        args: ConstructorParameters<typeof MessageMatcher>,
         options?: {
-            reject_on?: ConstructorParameters<typeof MessageMask>[],
+            reject_on?: ConstructorParameters<typeof MessageMatcher>[],
             cutoff?: number
         }
     ) {
-        const mask = new MessageMask(...args);
+        const mask = new MessageMatcher(...args);
         const expected = new ExpectedMessage(
             description,
             mask,
-            options?.reject_on?.map(o => new MessageMask(...o)),
+            options?.reject_on?.map(o => new MessageMatcher(...o)),
             options?.cutoff
         );
 
@@ -95,7 +95,7 @@ export class TaskQueue {
      */
     subscribe(
         description: string,
-        filters: Matchable[],
+        filters: Matchable,
         callback: (message: RawIrcMessage, unsubscribe: () => void) => void,
     ) {
         const subscription = new Subscription(
@@ -190,7 +190,7 @@ export class BatchCollection implements Resolvable {
     }
 
     async resolve(event: RawIrcMessage): Promise<boolean> {
-        const start_matcher = new MessageMask("BATCH", [Wildcard.Any, ...this.type.split(" ")]);
+        const start_matcher = new MessageMatcher("BATCH", [Wildcard.Any, ...this.type.split(" ")]);
         if (start_matcher.matches(event)) {
             this.collecting = true;
             this.name = event.params[0].replace("+", "");
@@ -204,7 +204,7 @@ export class BatchCollection implements Resolvable {
         if (event.tags && event.tags.find(t => t.key == "batch" && t.value == this.name))
             this.collection.push(event);
 
-        const end_matcher = new MessageMask("BATCH", [`-${this.name}`]);
+        const end_matcher = new MessageMatcher("BATCH", [`-${this.name}`]);
         if (end_matcher.matches(event)) {
             this.task.resolve(this.collection);
             return false;
@@ -215,17 +215,23 @@ export class BatchCollection implements Resolvable {
 }
 
 
-/// Describes an IRC message that can be used to check
-/// against incoming irc messages
-export class MessageMask implements Matchable {
+/**
+ * Describes an IRC message that can be used to check 
+ * against incoming irc messages 
+ */
+export class MessageMatcher implements Matchable {
     constructor(
         public command: string | Wildcard,
         public params?: (string | Wildcard)[],
+        public extras?: {
+            tags?: { key: string, value: string }[]
+        }
     ) { }
 
     matches(msg: RawIrcMessage): boolean {
         return this._match_command(msg.command)
-            && this._match_params(msg.params);
+            && this._match_params(msg.params)
+            && this._match_tags(msg.tags);
     }
 
     _match_command(input_command: string): boolean {
@@ -253,16 +259,29 @@ export class MessageMask implements Matchable {
 
         return result;
     }
+
+    _match_tags(input_tags: { key: string, value?: string }[] | undefined) {
+        if (!this.extras?.tags) return true;
+
+        return JSON.stringify(input_tags) == JSON.stringify(this.extras.tags);
+    }
 }
 
-export class MessageMaskGroup implements Matchable {
-    constructor(public masks: MessageMask[]) { }
+export class MessageMatcherGroup implements Matchable {
+    constructor(public masks: MessageMatcher[]) { }
 
     matches(msg: RawIrcMessage): boolean {
         // Look for any masks that match
         return Boolean(this.masks.find(o => o.matches(msg)));
     }
 }
+
+
+export const match = (...args: ConstructorParameters<typeof MessageMatcher>) =>
+    new MessageMatcher(...args);
+
+export const group = (matchers: ConstructorParameters<typeof MessageMatcher>[]) =>
+    new MessageMatcherGroup(matchers.map(o => new MessageMatcher(...o)));
 
 class Collection implements Resolvable {
     id: string;
@@ -350,7 +369,7 @@ export class Subscription implements Resolvable {
 
     constructor(
         public description: string,
-        public filters: Matchable[],
+        public filters: Matchable,
         public callback: (message: RawIrcMessage, unsubscribe: () => void) => void,
         private task_queue: TaskQueue,
     ) { }
@@ -360,7 +379,7 @@ export class Subscription implements Resolvable {
     }
 
     resolve = async (msg: RawIrcMessage) => {
-        if (this.filters.find(o => o.matches(msg))) {
+        if (this.filters.matches(msg)) {
             this.callback(msg, () => this.unsubscribe());
         }
 

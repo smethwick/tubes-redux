@@ -3,7 +3,7 @@ import { Channel } from "../channel";
 import { ProviderFlags } from "../flags";
 import { IrcConnection, IrcProvider, type ConnectionInfo, type RawIrcMessage } from "../provider+connection";
 import { Saslinator } from "../sasl";
-import { MessageMask, TaskQueue } from "../task";
+import { MessageMatcher, TaskQueue, match } from "../task";
 import { LocalIrcConnection } from "./local";
 
 async function get_info_bad() {
@@ -171,13 +171,13 @@ export class SojuConnection extends IrcConnection {
             this.pinger.start();
 
             this.task_queue.subscribe("listen for channels joined by the user",
-                [new MessageMask("JOIN")],
+                match("JOIN"),
                 msg => {
                     // if the source of the join message is us...
                     if (msg.source && msg.source[0] == this.nick) {
                         // and the channel isn't already in the list...
                         if (this.channels.find(o => o.name == msg.params[0])) return;
-                        
+
                         // make it and put it in the list
                         const channel = new Channel(this, msg.params[0]);
                         channel.setup();

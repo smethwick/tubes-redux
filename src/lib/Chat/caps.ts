@@ -1,6 +1,6 @@
 import { CommandList } from "./Providers/common";
 import type { IrcConnection, RawIrcMessage } from "./provider+connection";
-import { Deferred, MessageMask, MessageMaskGroup, Subscription, Wildcard } from "./task";
+import { Deferred, MessageMatcher, MessageMatcherGroup, Subscription, Wildcard, group, match } from "./task";
 
 export class CapabilityManager {
     capabilities: Capability[] = [];
@@ -12,13 +12,13 @@ export class CapabilityManager {
     constructor(private conn: IrcConnection) {
         this.new_sub = this.conn.task_queue.subscribe(
             `Receive new capabilities for connection ${conn.connection_info?.name}`,
-            [new MessageMask("CAP", [Wildcard.Any, "NEW"])],
+            match("CAP", [Wildcard.Any, "NEW"]),
             (message) => this.new(message.params.last()),
         )
 
         this.del_sub = this.conn.task_queue.subscribe(
             `Receive revoked capabilities for connection ${conn.connection_info?.name}`,
-            [new MessageMask("CAP", [Wildcard.Any, "DEL"])],
+            match("CAP", [Wildcard.Any, "DEL"]),
             (message) => this.del(message.params.last()),
         )
     }
@@ -29,12 +29,12 @@ export class CapabilityManager {
         const msgs = await this.conn.task_queue.collect(
             "get avaliable capabilities", {
             start: "immediately",
-            include: new MessageMaskGroup([
-                new MessageMask("CAP", [Wildcard.Any, "LS", Wildcard.Any]),
+            include: group([
+                ["CAP", [Wildcard.Any, "LS", Wildcard.Any]],
             ]),
-            finish: new MessageMaskGroup([
-                new MessageMask(CommandList.RPL_WELCOME),
-                new MessageMask("CAP", [Wildcard.Any, "LS", Wildcard.Any])
+            finish: group([
+                [CommandList.RPL_WELCOME],
+                ["CAP", [Wildcard.Any, "LS", Wildcard.Any]]
             ])
         });
 
@@ -105,7 +105,7 @@ export class Capability {
     async request() {
         this.conn.send_raw(`CAP REQ :${this.cap}`);
         await this.conn.task_queue.expect_message(
-            `expect ACK for ${this.cap}`,
+            `${this.conn.connection_info.name}: expect ACK for ${this.cap}`,
             ["CAP", [Wildcard.Any, "ACK", this.cap]]
         );
     }

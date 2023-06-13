@@ -1,7 +1,7 @@
 import { pick_deterministic } from ".";
 import { CommandList } from "./Providers/common";
 import type { IrcConnection } from "./provider+connection";
-import { Wildcard } from "./task";
+import { MessageMatcher, MessageMatcherGroup, Wildcard, group, match } from "./task";
 
 const colours: [string, string, string, string][] = [
     ["text-red-600", "hover:bg-red-50 dark:hover:bg-red-950", "#dc2626", "red"],
@@ -44,34 +44,32 @@ export class Nick {
 
     async whois(conn: IrcConnection) {
         conn.send_raw(`WHOIS ${this.name}`);
-        const msgs = await conn.task_queue.collect(
-            { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISUSER },
-            [
-                // sometimes programming is bad
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISCERTFP },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISREGNICK },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISUSER },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISSERVER },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISOPERATOR },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISIDLE },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISCHANNELS },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISSPECIAL },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISACCOUNT },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISACTUALLY },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISHOST },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISMODES },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_WHOISSECURE },
-                { params: [Wildcard.Any, this.name], command: CommandList.RPL_AWAY },
-            ],
-            { command: CommandList.RPL_ENDOFWHOIS },
-            {
-                include_start_and_finish: true,
-                reject_on: [
-                    { command: CommandList.ERR_NOSUCHNICK },
-                    { command: CommandList.ERR_NOSUCHSERVER },
-                ],
-            },
-        );
+        const msgs = await conn.task_queue.collect(`get WHOIS info for ${this.name}`, {
+            start: match(CommandList.RPL_WHOISUSER, [Wildcard.Any, this.name]),
+            include: group([
+                CommandList.RPL_WHOISCERTFP,
+                CommandList.RPL_WHOISREGNICK,
+                CommandList.RPL_WHOISUSER,
+                CommandList.RPL_WHOISSERVER,
+                CommandList.RPL_WHOISOPERATOR,
+                CommandList.RPL_WHOISIDLE,
+                CommandList.RPL_WHOISCHANNELS,
+                CommandList.RPL_WHOISSPECIAL,
+                CommandList.RPL_WHOISACCOUNT,
+                CommandList.RPL_WHOISACTUALLY,
+                CommandList.RPL_WHOISHOST,
+                CommandList.RPL_WHOISMODES,
+                CommandList.RPL_WHOISSECURE,
+                CommandList.RPL_AWAY,
+            ].map(o => [o, [Wildcard.Any, this.name]])),
+            finish: match(CommandList.RPL_ENDOFWHOIS),
+
+            include_start_and_finish: true,
+            reject_on: group([
+                [CommandList.ERR_NOSUCHNICK],
+                [CommandList.ERR_NOSUCHSERVER],
+            ]),
+        });
 
         const user = msgs.find(o => o.command == CommandList.RPL_WHOISUSER);
 

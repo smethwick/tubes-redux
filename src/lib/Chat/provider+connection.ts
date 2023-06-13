@@ -4,7 +4,7 @@ import { CommandList, handle_raw_irc_msg, type Source } from "./Providers/common
 import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
 import { saveMessage, turnIntoSomethingUseful } from "$lib/Storage/messages";
-import { Deferred, MessageMask, MessageMaskGroup, TaskQueue, Wildcard } from "./task";
+import { Deferred, match, MessageMatcher, MessageMatcherGroup, TaskQueue, Wildcard } from "./task";
 import { Channel } from "./channel";
 import { pick_deterministic } from ".";
 import { Capability, CapabilityManager } from "./caps";
@@ -326,14 +326,11 @@ export abstract class IrcConnection {
 
         const collected = await this.task_queue.collect(
             `collect motd for ${this.connection_info.name}`, {
-                start: new MessageMask(CommandList.RPL_MOTDSTART),
-                include: new MessageMask(CommandList.RPL_MOTD),
-                finish: new MessageMask(CommandList.RPL_ENDOFMOTD),
-                reject_on: new MessageMaskGroup([
-                    new MessageMask(CommandList.ERR_NOSUCHSERVER)
-                ]),
-            }
-        )
+            start: match(CommandList.RPL_MOTDSTART),
+            include: match(CommandList.RPL_MOTD),
+            finish: match(CommandList.RPL_ENDOFMOTD),
+            reject_on: match(CommandList.ERR_NOSUCHSERVER),
+        });
 
         // update the store when everything's been recieved
         this.motd.set(collected

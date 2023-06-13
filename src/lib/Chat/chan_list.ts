@@ -1,4 +1,6 @@
+import { CommandList } from "./Providers/common";
 import type { IrcConnection, RawIrcMessage } from "./provider+connection";
+import { MessageMatcher, match } from "./task";
 
 export type ListEntry = [channel: string, client_count: number, topic: string]
 
@@ -6,14 +8,12 @@ export class ChannelCollector {
     static async get_channels(conn: IrcConnection): Promise<ListEntry[]> {
         conn.send_raw("LIST");
         const msgs = await conn.task_queue.collect(
-            // RPL_LIST
-            { command: "322" },
-            // RPL_LIST
-            [{ command: "322" }],
-            // RPL_LISTEND
-            { command: "323" },
-            { include_start_and_finish: true }
-        );
+            `get channel list for ${conn.connection_info.name}`, {
+            start: "immediately",
+            include: match(CommandList.RPL_LIST),
+            finish: match(CommandList.RPL_LISTEND),
+            include_start_and_finish: true,
+        });
 
         const result: ListEntry[] = [];
         msgs.forEach(msg => {
