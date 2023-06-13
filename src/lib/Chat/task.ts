@@ -3,6 +3,7 @@
  * no highly esteemed deed is commemorated here
  */
 
+import type { CommandList } from "./Providers/common";
 import type { IrcMessageEvent } from "./provider+connection";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -70,8 +71,59 @@ class BatchCollection {
     }
 }
 
-class MessageDescription {
+interface Matchable {
+    match: (msg: IrcMessageEvent) => boolean;
+}
 
+/// Describes an IRC message that can be used to check
+/// against incoming irc messages
+class MessageMask implements Matchable {
+    constructor(
+        public command: CommandList | Wildcard,
+        public params?: (string | Wildcard)[]
+    ) {
+
+    }
+
+    match(msg: IrcMessageEvent): boolean {
+        return this._match_command(msg.command)
+            && this._match_params(msg.params);
+    }
+
+    _match_command(input_command: string): boolean {
+        // if the command is a wildcard, do the corresponding thing
+        if (this.command == Wildcard.Any) return true;
+        if (this.command == Wildcard.None) return false;
+
+        return this.command == input_command
+    }
+
+    _match_params(input_params: string[]): boolean {
+        let result = true;
+
+        this.params?.forEach((e, idx) => {
+            // if something doesn't match, return immedately
+            if (result = false) return result;
+
+            const matcher = input_params?.[idx];
+
+            if (e == Wildcard.Any) result = true;
+            if (e == Wildcard.None) result = false;
+
+            if (e == matcher) result = true
+        });
+
+        return result;
+    }
+}
+
+class MessageMaskGroup implements Matchable {
+    constructor(public masks: MessageMaskGroup) { }
+
+    match(msg: IrcMessageEvent): boolean {
+        // Look for any masks that match
+        return Boolean(this.masks.find(o => o.match(msg)));
+    }
 }
 
 class Collector {
@@ -93,14 +145,14 @@ class Collection {
 
     private collecting = false;
     private include_start_and_finish;
-    private reject_on?: msg_description[];
+    private reject_on?: Matchable;
 
     constructor(
-        private start: msg_description,
-        private include: msg_description[],
-        private finish: msg_description | msg_description[],
+        private start: Matchable,
+        private include: Matchable,
+        private finish: Matchable,
         { reject_on, include_start_and_finish }: {
-            reject_on?: msg_description[], include_start_and_finish?: boolean
+            reject_on?: Matchable, include_start_and_finish?: boolean
         },
     ) {
         this.id = uuidv4();
@@ -141,20 +193,20 @@ class Collection {
 
 export type subscription = {
     id: string,
-    until?: msg_description | msg_description[] | (() => boolean),
-    only?: msg_description | msg_description[],
-    errors?: string[] | msg_description[],
+    until?: Matchable | (() => boolean),
+    only?: Matchable,
+    errors?: string[] | Matchable,
     complete: boolean,
     unsub_callback?: (collected?: IrcMessageEvent[]) => void,
     _collected?: IrcMessageEvent[],
     callback: ((data: IrcMessageEvent) => void) | null
 }
 
-export type msg_description = {
-    command: string,
-    params?: string[] | number,
-    tags?: {key: string, value: string};
-}
+// export type msg_description = {
+//     command: string,
+//     params?: string[] | number,
+//     tags?: { key: string, value: string };
+// }
 
 export class Deferred<T> {
     promise: Promise<T>;
@@ -182,7 +234,7 @@ export class TaskQueue {
     batch_collector = new BatchCollector();
     subscriptions: subscription[] = [];
 
-    new_async_task(reply: string | msg_description | msg_description[], reject_on?: msg_description[]) {
+    new_async_task(reply: string | Matchable, reject_on?: Matchable) {
         const id = uuidv4();
         const d = new Deferred<IrcMessageEvent>();
 
@@ -203,9 +255,9 @@ export class TaskQueue {
     subscribe(
         callback: ((data: IrcMessageEvent) => void) | null,
         options?: {
-            until?: msg_description | msg_description[] | (() => boolean);
-            only?: msg_description | msg_description[];
-            handle_errors?: string[] | msg_description[];
+            until?: Matchable | (() => boolean);
+            only?: Matchable;
+            handle_errors?: string[] | Matchable;
             unsub_callback?: (collected?: IrcMessageEvent[]) => void;
         }
     ) {

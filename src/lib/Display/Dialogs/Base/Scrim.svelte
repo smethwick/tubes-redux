@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Target } from 'phosphor-svelte';
-	import { quadOut } from 'svelte/easing';
+	import { expoOut, quadOut } from 'svelte/easing';
 	import { fade, fly, scale } from 'svelte/transition';
 
-	const duration = 125;
+	export let transition_duration = 200;
 
 	export let isopen = false;
 
@@ -28,7 +28,7 @@
 <div
 	class="absolute left-0 top-0 z-[9999]
     flex h-screen w-screen place-items-center justify-center bg-black/70"
-	transition:fade={{ duration }}
+	transition:fade={{ duration: transition_duration, easing: expoOut }}
 	bind:this={div}
 	on:click={(e) => {
 		if (e.target == div) close();
