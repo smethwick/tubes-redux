@@ -1,5 +1,5 @@
 import { pick_deterministic } from ".";
-import { CommandList } from "./Providers/common";
+import { IrcCommand } from "./Providers/common";
 import type { IrcConnection } from "./provider+connection";
 import { MessageMatcher, MessageMatcherGroup, Wildcard, group, match } from "./task";
 
@@ -45,44 +45,44 @@ export class Nick {
     async whois(conn: IrcConnection) {
         conn.send_raw(`WHOIS ${this.name}`);
         const msgs = await conn.task_queue.collect(`get WHOIS info for ${this.name}`, {
-            start: match(CommandList.RPL_WHOISUSER, [Wildcard.Any, this.name]),
+            start: match(IrcCommand.RPL_WHOISUSER, [Wildcard.Any, this.name]),
             include: group([
-                CommandList.RPL_WHOISCERTFP,
-                CommandList.RPL_WHOISREGNICK,
-                CommandList.RPL_WHOISUSER,
-                CommandList.RPL_WHOISSERVER,
-                CommandList.RPL_WHOISOPERATOR,
-                CommandList.RPL_WHOISIDLE,
-                CommandList.RPL_WHOISCHANNELS,
-                CommandList.RPL_WHOISSPECIAL,
-                CommandList.RPL_WHOISACCOUNT,
-                CommandList.RPL_WHOISACTUALLY,
-                CommandList.RPL_WHOISHOST,
-                CommandList.RPL_WHOISMODES,
-                CommandList.RPL_WHOISSECURE,
-                CommandList.RPL_AWAY,
+                IrcCommand.RPL_WHOISCERTFP,
+                IrcCommand.RPL_WHOISREGNICK,
+                IrcCommand.RPL_WHOISUSER,
+                IrcCommand.RPL_WHOISSERVER,
+                IrcCommand.RPL_WHOISOPERATOR,
+                IrcCommand.RPL_WHOISIDLE,
+                IrcCommand.RPL_WHOISCHANNELS,
+                IrcCommand.RPL_WHOISSPECIAL,
+                IrcCommand.RPL_WHOISACCOUNT,
+                IrcCommand.RPL_WHOISACTUALLY,
+                IrcCommand.RPL_WHOISHOST,
+                IrcCommand.RPL_WHOISMODES,
+                IrcCommand.RPL_WHOISSECURE,
+                IrcCommand.RPL_AWAY,
             ].map(o => [o, [Wildcard.Any, this.name]])),
-            finish: match(CommandList.RPL_ENDOFWHOIS),
+            finish: match(IrcCommand.RPL_ENDOFWHOIS),
 
             include_start_and_finish: true,
             reject_on: group([
-                [CommandList.ERR_NOSUCHNICK],
-                [CommandList.ERR_NOSUCHSERVER],
+                [IrcCommand.ERR_NOSUCHNICK],
+                [IrcCommand.ERR_NOSUCHSERVER],
             ]),
         });
 
-        const user = msgs.find(o => o.command == CommandList.RPL_WHOISUSER);
+        const user = msgs.find(o => o.command == IrcCommand.RPL_WHOISUSER);
 
         const nick = user?.params[1];
         const username = user?.params[2];
         const realname = user?.params.last();
 
         const idle_for =
-            Number(msgs.find(o => o.command == CommandList.RPL_WHOISIDLE)?.params[2]);
+            Number(msgs.find(o => o.command == IrcCommand.RPL_WHOISIDLE)?.params[2]);
         const server =
-            msgs.find(o => o.command == CommandList.RPL_WHOISSERVER)?.params[2];
-        const host = msgs.find(o => o.command == CommandList.RPL_WHOISHOST)?.params.last();
-        const registered = Boolean(msgs.find(o => o.command == CommandList.RPL_WHOISREGNICK));
+            msgs.find(o => o.command == IrcCommand.RPL_WHOISSERVER)?.params[2];
+        const host = msgs.find(o => o.command == IrcCommand.RPL_WHOISHOST)?.params.last();
+        const registered = Boolean(msgs.find(o => o.command == IrcCommand.RPL_WHOISREGNICK));
 
         const resp: WhoisResponse = {
             idle_for,

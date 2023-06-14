@@ -1,4 +1,4 @@
-import { CommandList } from "./Providers/common";
+import { IrcCommand } from "./Providers/common";
 import type { IrcConnection, RawIrcMessage } from "./provider+connection";
 import { MessageMatcher, match } from "./task";
 
@@ -10,8 +10,8 @@ export class ChannelCollector {
         const msgs = await conn.task_queue.collect(
             `get channel list for ${conn.connection_info.name}`, {
             start: "immediately",
-            include: match(CommandList.RPL_LIST),
-            finish: match(CommandList.RPL_LISTEND),
+            include: match(IrcCommand.RPL_LIST),
+            finish: match(IrcCommand.RPL_LISTEND),
             include_start_and_finish: true,
         });
 

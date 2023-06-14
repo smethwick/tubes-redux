@@ -1,6 +1,6 @@
 import { db, type Network } from "$lib/Storage/db";
 import { ProviderFlags } from "./flags";
-import { CommandList, handle_raw_irc_msg, type Source } from "./Providers/common";
+import { IrcCommand, handle_raw_irc_msg, type Source } from "./Providers/common";
 import { writable, type Writable } from "svelte/store"
 import AsyncLock from "async-lock";
 import { saveMessage, turnIntoSomethingUseful } from "$lib/Storage/messages";
@@ -326,10 +326,10 @@ export abstract class IrcConnection {
 
         const collected = await this.task_queue.collect(
             `collect motd for ${this.connection_info.name}`, {
-            start: match(CommandList.RPL_MOTDSTART),
-            include: match(CommandList.RPL_MOTD),
-            finish: match(CommandList.RPL_ENDOFMOTD),
-            reject_on: match(CommandList.ERR_NOSUCHSERVER),
+            start: match(IrcCommand.RPL_MOTDSTART),
+            include: match(IrcCommand.RPL_MOTD),
+            finish: match(IrcCommand.RPL_ENDOFMOTD),
+            reject_on: match(IrcCommand.ERR_NOSUCHSERVER),
         });
 
         // update the store when everything's been recieved
@@ -435,7 +435,7 @@ export abstract class IrcConnection {
 
         const welcome = await this.task_queue.expect_message(
             "wait for welcome",
-            [CommandList.RPL_WELCOME], {
+            [IrcCommand.RPL_WELCOME], {
             reject_on: [
                 ["431"] /* ERR_NONICKNAMEGIVEN */,
                 ["432"] /* ERR_ERRONEUSNICKNAME */,

@@ -1,5 +1,5 @@
 import AsyncLock from "async-lock";
-import type { CommandList } from "./Providers/common";
+import type { IrcCommand } from "./Providers/common";
 import type { RawIrcMessage } from "./provider+connection";
 import { v4 as uuidv4 } from 'uuid';
 

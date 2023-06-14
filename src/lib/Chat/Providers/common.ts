@@ -85,7 +85,7 @@ export function transform_user_line(source: string): Source {
 }
 
 
-export enum CommandList {
+export enum IrcCommand {
     UNKNOWN = "???",
     PRIVMSG = "PRIVMSG",
     RPL_WELCOME = "001",

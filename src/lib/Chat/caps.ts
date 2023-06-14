@@ -1,4 +1,4 @@
-import { CommandList } from "./Providers/common";
+import { IrcCommand } from "./Providers/common";
 import type { IrcConnection, RawIrcMessage } from "./provider+connection";
 import { Deferred, MessageMatcher, MessageMatcherGroup, Subscription, Wildcard, group, match } from "./task";
 
@@ -33,7 +33,7 @@ export class CapabilityManager {
                 ["CAP", [Wildcard.Any, "LS", Wildcard.Any, Wildcard.Any]],
             ]),
             finish: group([
-                [CommandList.RPL_WELCOME],
+                [IrcCommand.RPL_WELCOME],
                 ["CAP", [Wildcard.Any, "LS", Wildcard.Any]]
             ]),
             include_start_and_finish: true,

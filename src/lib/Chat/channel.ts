@@ -4,7 +4,7 @@ import { MessageLogList } from "./logs";
 import { Nick } from "./nick";
 import type { IrcConnection, RawIrcMessage } from "./provider+connection";
 import { MessageMatcher, MessageMatcherGroup, Subscription, Wildcard, group, match } from "./task";
-import { CommandList } from "./Providers/common";
+import { IrcCommand } from "./Providers/common";
 
 export class Channel {
     nicks: Nick[];
@@ -45,7 +45,7 @@ export class Channel {
         const names_msgs = await this.conn.task_queue.collect(
             `get names for ${this.name}`, {
             start: 'immediately',
-            include: match(CommandList.RPL_NAMREPLY, [Wildcard.Any, Wildcard.Any, this.name]),
+            include: match(IrcCommand.RPL_NAMREPLY, [Wildcard.Any, Wildcard.Any, this.name]),
             finish: match(
                 "366", [Wildcard.Any, this.name]
             ),
@@ -191,19 +191,19 @@ export class Channel {
             `collect topic for ${this.name}`,
             {
                 start: group([
-                    [CommandList.RPL_TOPIC, ['*', this.name]],
-                    [CommandList.RPL_NOTOPIC, ['*', this.name]],
+                    [IrcCommand.RPL_TOPIC, ['*', this.name]],
+                    [IrcCommand.RPL_NOTOPIC, ['*', this.name]],
                 ]),
                 include: group([
-                    [CommandList.RPL_TOPIC, ['*', this.name]],
-                    [CommandList.RPL_NOTOPIC, ['*', this.name]],
-                    [CommandList.RPL_TOPICWHOTIME, ['*', this.name]],
+                    [IrcCommand.RPL_TOPIC, ['*', this.name]],
+                    [IrcCommand.RPL_NOTOPIC, ['*', this.name]],
+                    [IrcCommand.RPL_TOPICWHOTIME, ['*', this.name]],
                 ]),
-                finish: match(CommandList.RPL_TOPICWHOTIME, ['*', this.name]),
+                finish: match(IrcCommand.RPL_TOPICWHOTIME, ['*', this.name]),
                 reject_on: group([
-                    [CommandList.ERR_CHANOPRIVSNEEDED, ['*', this.name]],
-                    [CommandList.ERR_NOTONCHANNEL, ['*', this.name]],
-                    [CommandList.ERR_NOSUCHCHANNEL, ['*', this.name]],
+                    [IrcCommand.ERR_CHANOPRIVSNEEDED, ['*', this.name]],
+                    [IrcCommand.ERR_NOTONCHANNEL, ['*', this.name]],
+                    [IrcCommand.ERR_NOSUCHCHANNEL, ['*', this.name]],
                 ]),
                 include_start_and_finish: true,
             }
@@ -211,14 +211,14 @@ export class Channel {
 
         for (const msg of msgs) {
             switch (msg.command) {
-                case CommandList.RPL_TOPIC: {
+                case IrcCommand.RPL_TOPIC: {
                     topic = msg.params.last();
                     this.topic = [topic, this.topic[1], this.topic[2]];
                     this.topic_live.set(this.topic);
                     return;
                 }
-                case CommandList.RPL_NOTOPIC: return;
-                case CommandList.RPL_TOPICWHOTIME: {
+                case IrcCommand.RPL_NOTOPIC: return;
+                case IrcCommand.RPL_TOPICWHOTIME: {
                     nick = new Nick(msg.params[2]);
                     timestamp = new Date(Number(msg.params[3]) * 1000);
                     this.topic = [this.topic[0], nick, timestamp];
