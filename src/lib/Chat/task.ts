@@ -3,6 +3,9 @@ import type { CommandList } from "./Providers/common";
 import type { RawIrcMessage } from "./provider+connection";
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * An item that can be matched against an IRC message
+ */
 interface Matchable {
     matches: (msg: RawIrcMessage) => boolean;
 }
@@ -17,7 +20,9 @@ interface Resolvable {
 }
 
 export enum Wildcard {
+    /** Accepts any value */
     Any = "*",
+    /** Rejects all values */
     None = "-"
 }
 
@@ -63,6 +68,16 @@ export class TaskQueue {
         return expected.promise()
     }
 
+    /**
+     * 
+     * @param description A short description of the collection
+     * @param options.start The trigger message to start collection
+     * @param options.include Messages to include in the collection
+     * @param options.finish The trigger message to finish collection and return the result
+     * @param options.reject_on Throws an error if matched
+     * @param options.include_start_and_finish Whether or not to include the start and finish messages in the collection
+     * @returns A list of the collected messages
+     */
     async collect(
         description: string,
         options: {
@@ -78,7 +93,6 @@ export class TaskQueue {
             options.start,
             options.include,
             options.finish,
-            this,
             {
                 reject_on: options.reject_on,
                 include_start_and_finish: options?.include_start_and_finish ?? false
@@ -137,6 +151,10 @@ export class TaskQueue {
         return batch_collector.task.promise;
     }
 
+    /**
+     * Remove a task from the queue
+     * @param id the uuid of the task
+     */
     async remove_task(id: string) {
         // NOTE: if there ever happens to be a memory leak here,
         // it's likely because this function finished before
@@ -155,7 +173,7 @@ class ExpectedMessage implements Resolvable {
 
     /**
      * 
-     * @param expected The Matchable to compare against incoming messages
+     * @param expected The {@link Matchable} to compare against incoming messages
      * @param cutoff The amount of time in ms to wait for the message 
      */
     constructor(
@@ -311,7 +329,6 @@ class Collection implements Resolvable {
         private start: Matchable | "immediately",
         private include: Matchable,
         private finish: Matchable,
-        private tq: TaskQueue,
         { reject_on, include_start_and_finish }: {
             reject_on?: Matchable, include_start_and_finish?: boolean
         },
