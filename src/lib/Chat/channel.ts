@@ -42,53 +42,41 @@ export class Channel {
     }
 
     async setup() {
+        const names_msgs = await this.conn.task_queue.collect(
+            `get names for ${this.name}`, {
+            start: 'immediately',
+            include: match(CommandList.RPL_NAMREPLY, [Wildcard.Any, Wildcard.Any, this.name]),
+            finish: match(
+                "366", [Wildcard.Any, this.name]
+            ),
+            reject_on: group([
+                ["461", ["*", this.name]],
+                ["403", ["*", this.name]],
+                ["405", ["*", this.name]],
+                ["475", ["*", this.name]],
+                ["474", ["*", this.name]],
+                ["471", ["*", this.name]],
+                ["473", ["*", this.name]],
+                ["476", ["*", this.name]],
+                ["477", ["*", this.name]],
+            ])
+        });
 
-        const end_of_names_matcher = match(
-            CommandList.RPL_ENDOFNAMES, ["*", this.name]
-        );
-        this.nicks_subscription = this.conn.task_queue.subscribe(
-            `get names for ${this.name}`,
-            match(CommandList.RPL_NAMREPLY, [Wildcard.Any, Wildcard.Any, this.name]),
-            (msg, unsubscribe) => {
-                if (end_of_names_matcher.matches(msg)) unsubscribe();
-                this.process_names(msg);
-            }
-        );
+        names_msgs.forEach(o => this.process_names(o));
 
-        try {
-            await this.conn.task_queue.expect_message(
-                "",
-                [CommandList.RPL_ENDOFNAMES, ["*", this.name]],
-                {
-                    reject_on: [
-                        ["461", ["*", this.name]],
-                        ["403", ["*", this.name]],
-                        ["405", ["*", this.name]],
-                        ["475", ["*", this.name]],
-                        ["474", ["*", this.name]],
-                        ["471", ["*", this.name]],
-                        ["473", ["*", this.name]],
-                        ["476", ["*", this.name]],
-                        ["477", ["*", this.name]],
-                    ]
-                });
-        } catch (e) {
-            throw new Error(String(e));
-        }
-
-        this.join_subscription = this.conn.task_queue.subscribe(
+        this.join_subscription = await this.conn.task_queue.subscribe(
             `listen for joins in ${this.name}`,
             match("JOIN", [this.name]),
             d => this.process_join(d),
         );
 
-        this.part_subscription = this.conn.task_queue.subscribe(
+        this.part_subscription = await this.conn.task_queue.subscribe(
             `listen for parts in ${this.name}`,
             match("PART", [this.name]),
             d => this.process_part(d),
         );
 
-        this.topic_subscription = this.conn.task_queue.subscribe(
+        this.topic_subscription = await this.conn.task_queue.subscribe(
             `listen for topic changes in ${this.name}`,
             match("TOPIC", [this.name]),
             d => this.process_topic(d)

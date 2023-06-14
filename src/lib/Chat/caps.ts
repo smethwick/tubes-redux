@@ -6,21 +6,21 @@ export class CapabilityManager {
     capabilities: Capability[] = [];
     available: Capability[] = [];
 
-    new_sub: Subscription;
-    del_sub: Subscription;
+    new_sub?: Subscription;
+    del_sub?: Subscription;
 
     constructor(private conn: IrcConnection) {
-        this.new_sub = this.conn.task_queue.subscribe(
+        this.conn.task_queue.subscribe(
             `Receive new capabilities for connection ${conn.connection_info?.name}`,
             match("CAP", [Wildcard.Any, "NEW"]),
             (message) => this.new(message.params.last()),
-        )
+        ).then(value => this.new_sub = value)
 
-        this.del_sub = this.conn.task_queue.subscribe(
+        this.conn.task_queue.subscribe(
             `Receive revoked capabilities for connection ${conn.connection_info?.name}`,
             match("CAP", [Wildcard.Any, "DEL"]),
             (message) => this.del(message.params.last()),
-        )
+        ).then(value => this.del_sub = value)
     }
 
     async negotiate() {
@@ -30,12 +30,13 @@ export class CapabilityManager {
             "get avaliable capabilities", {
             start: "immediately",
             include: group([
-                ["CAP", [Wildcard.Any, "LS", Wildcard.Any]],
+                ["CAP", [Wildcard.Any, "LS", Wildcard.Any, Wildcard.Any]],
             ]),
             finish: group([
                 [CommandList.RPL_WELCOME],
                 ["CAP", [Wildcard.Any, "LS", Wildcard.Any]]
-            ])
+            ]),
+            include_start_and_finish: true,
         });
 
         for (const msg of msgs) {

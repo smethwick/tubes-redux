@@ -1,3 +1,4 @@
+import AsyncLock from "async-lock";
 import type { CommandList } from "./Providers/common";
 import type { RawIrcMessage } from "./provider+connection";
 import { v4 as uuidv4 } from 'uuid';
@@ -22,10 +23,13 @@ export enum Wildcard {
 
 export class TaskQueue {
     tasks: Resolvable[] = [];
+    lock = new AsyncLock();
 
     /**  Notify all tasks in the queue and remove resolved ones */
     async resolve_tasks(event: RawIrcMessage) {
-        this.tasks = this.tasks.filter(async e => await e.resolve(event));
+        await this.lock.acquire("lock", () => {
+            this.tasks = this.tasks.filter(async e => await e.resolve(event));
+        })
     }
 
     /**
@@ -74,12 +78,15 @@ export class TaskQueue {
             options.start,
             options.include,
             options.finish,
+            this,
             {
                 reject_on: options.reject_on,
                 include_start_and_finish: options?.include_start_and_finish ?? false
             }
         );
-        this.tasks.push(collection);
+        await this.lock.acquire("lock", () => {
+            this.tasks.push(collection);
+        });
 
         return collection.task.promise;
     }
@@ -93,7 +100,7 @@ export class TaskQueue {
      *                 to remove the subscription from the task queue
      * @returns nothing
      */
-    subscribe(
+    async subscribe(
         description: string,
         filters: Matchable,
         callback: (message: RawIrcMessage, unsubscribe: () => void) => void,
@@ -105,7 +112,9 @@ export class TaskQueue {
             this
         );
 
-        this.tasks.push(subscription);
+        await this.lock.acquire("lock", () => {
+            this.tasks.push(subscription);
+        });
 
         return subscription
     }
@@ -121,17 +130,21 @@ export class TaskQueue {
         type: string,
     ) {
         const batch_collector = new BatchCollection(description, type);
-        this.tasks.push(batch_collector);
+        await this.lock.acquire("lock", () => {
+            this.tasks.push(batch_collector);
+        });
 
         return batch_collector.task.promise;
     }
 
-    remove_task(id: string) {
+    async remove_task(id: string) {
         // NOTE: if there ever happens to be a memory leak here,
         // it's likely because this function finished before
         // resolve_tasks() could finish reassigning this.tasks.
         // I have no idea if this will ever happen in practice
-        this.tasks = this.tasks.filter(o => o.id != id);
+        await this.lock.acquire("lock", () => {
+            this.tasks = this.tasks.filter(o => o.id != id);
+        });
     }
 }
 
@@ -245,6 +258,7 @@ export class MessageMatcher implements Matchable {
     _match_params(input_params: string[]): boolean {
         let result = true;
 
+
         this.params?.forEach((e, idx) => {
             // if something doesn't match, return immedately
             if (result = false) return result;
@@ -297,6 +311,7 @@ class Collection implements Resolvable {
         private start: Matchable | "immediately",
         private include: Matchable,
         private finish: Matchable,
+        private tq: TaskQueue,
         { reject_on, include_start_and_finish }: {
             reject_on?: Matchable, include_start_and_finish?: boolean
         },
@@ -313,7 +328,6 @@ class Collection implements Resolvable {
 
         if (this.start == "immediately" && this.collecting == false) {
             this.collecting = true;
-            this.collection.push(data);
         }
 
         if (this.start != "immediately" && this.start.matches(data)) {

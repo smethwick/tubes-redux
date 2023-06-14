@@ -19,7 +19,6 @@ export class Saslinator {
             ["AUTHENTICATE", ['+']]
         )
         
-        console.log("here")
         this.conn.send_raw(`AUTHENTICATE ${window.btoa(
             `${this.info.username}\0${this.info.username}\0${this.info.password}`
         )}`);
